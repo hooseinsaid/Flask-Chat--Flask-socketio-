@@ -4,14 +4,14 @@ from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Le
 from chezchat.models import Users, History
 
 class UserRegistrationForm(FlaskForm):
-    name_surname = StringField('Company Name', validators=[DataRequired(), Length(min=4, max=64)])
+    name_surname = StringField('Name and Surname', validators=[DataRequired(), Length(min=2, max=128)])
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=64)], render_kw={"placeholder": "username"})
     password = PasswordField('Password', validators=[DataRequired()])
-    confirm_password = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('company_password', message='passwords must match')])
+    confirm_password = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password', message='passwords must match')])
     submit = SubmitField('Register')
 
     def validate_username(self, username):
-        user = Companies.query.filter_by(username=username.data).first()
+        user = Users.query.filter_by(username=username.data).first()
         if user is not None:
             raise ValidationError('Username is already taken. Please choose a different one')
 
@@ -22,4 +22,8 @@ class LoginForm(FlaskForm):
 
 class MessageForm(FlaskForm):
     message = TextAreaField('Message')
+    submit = SubmitField('Send')
+
+class CreateRoomForm(FlaskForm):
+    name = StringField('Group name',  validators=[DataRequired()])
     submit = SubmitField('Send')

@@ -1,41 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Chez Chat</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
-    </head>
-    <body>
-        <script type="text/javascript" charset="utf-8">
-            $(document).ready(function() {
-                var socket = io.connect('http://localhost:5000');
-                socket.on('connect', function() {
-                    socket.send('User has connected');
-                });
+{% extends "base.html" %}
 
-                socket.on('message', function(msg) {
-                    $("#messages").append('<li>'+msg+'</li>')
-                });
+{% block socketio %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+{% endblock %}
 
-                $('#sendbutton').on('click', function() {
-                    socket.send($('#myMessage').val());
-                    $('#myMessage').val('')
-                });
+
+{% block content %}
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function() {
+            var socket = io.connect(window.location.href);
+            socket.on('connect', function() {
+                socket.send('{{ current_user.username }} has connected');
+            });
+            socket.on('message', function(msg) {
+                $("#messages").append('<li>'+msg+'</li>')
             });
 
-        </script>
-        <ul id="messages">
-            {% for msg in messages %}
-             <li>{{ msg.messages }}</li>
-            {% endfor %}
+            $('#sendbutton').on('click', function() {
+                socket.send($('#myMessage').val());
+                $('#myMessage').val('')
+            });
+        });
+
+    </script>
+    <button data-toggle="modal" data-target="#myModal">New group</button>
+    <a href="{{ url_for('logout') }}"><button>Logout</button></a>
+
+    {% for room in rooms %}
+        <ul>
+            <a href="{{ url_for('home', r=room.room_url) }}"><h4><li>{{ room.name }}</li></h4></a>
         </ul>
-        {{ form.message(id="myMessage") }}
-        {{ form.submit(id="sendbutton") }}<br>
-        {% for error in form.message.errors %}
-        {{ error }}
+    {% endfor %}
+
+    <form id="form2" action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="modal fade" id="myModal">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 400px; margin: 1.75rem auto;">
+                <div class="modal-content" style="margin: .5rem;">
+
+                    <div class="modal-header">
+                        <h4 class="modal-title" style="font-size: 14px; font-weight: 600;">New group</h4>
+                        <button type="button" class="close close-button" data-dismiss="modal" style="outline: none">&times;</button>
+                    </div>
+
+                    <div class="modal-body" style="max-height: 430px; overflow: auto;">
+                        {{ form2.name }}
+                    </div>
+
+                    <div class="modal-footer">
+                        {{ form2.submit() }}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </form>
+    
+    <h1><em>{{ current_room.name }}</em></h1>
+
+    <ul id="messages">
+        {% for msg in current_room.room_history %}
+            <li>{{ msg.messages }}</li>
         {% endfor %}
-    </body>
-</html>
+    </ul>
+    {% if current_room %}
+        {{ form.message(id="myMessage") }}
+        {{ form.submit(id="sendbutton") }}
+    {% endif %}
+{% endblock %}
 
