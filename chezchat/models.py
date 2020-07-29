@@ -39,6 +39,7 @@ class Room(db.Model):
     room_id = db.Column(db.Integer, primary_key=True)
     room_url = db.Column(db.String, unique=True)
     name = db.Column(db.String(128), index=True)
+    private_room = db.Column(db.Boolean, default=False)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     room_history = db.relationship('History', backref='room_records', lazy='dynamic')

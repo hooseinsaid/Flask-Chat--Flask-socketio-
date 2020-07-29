@@ -25,5 +25,5 @@ class MessageForm(FlaskForm):
     submit = SubmitField('Send')
 
 class CreateRoomForm(FlaskForm):
-    name = StringField('Group name',  validators=[DataRequired()])
-    submit = SubmitField('Send')
+    name = StringField('Group name',  validators=[DataRequired(), Length(min=4, max=128)])
+    submit = SubmitField('Create room')

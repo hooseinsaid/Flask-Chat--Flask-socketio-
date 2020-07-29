@@ -10,7 +10,14 @@ from flask_login import current_user, login_user, logout_user, login_required
 def home():
     form = MessageForm()
     form2 = CreateRoomForm()
+    check_private_rooms = []
     current_room = None
+    rooms = current_user.room_subscribed
+    all_users = Users.query.all()
+    all_rooms = Room.query.all()
+    for room_check in all_rooms:
+        if room_check.private_room == True:
+            check_private_rooms.append(room_check.name)
     if request.args.get("r"):
         current_room = Room.query.filter_by(room_url=request.args.get("r")).first()
         if current_room not in current_user.room_subscribed:
@@ -19,7 +26,6 @@ def home():
             session['current_room'] = current_room.room_id
     else:
         session.pop('current_room', None)
-    rooms = current_user.room_subscribed
     if form2.submit.data:
         if form2.validate_on_submit():
             # consider making this a seperate function
@@ -32,7 +38,7 @@ def home():
         else:
             flash('Room not created. Make sure the name name field is not empty')
         return redirect(url_for('home'))
-    return render_template('chatroom.html', form=form, form2=form2, rooms=rooms, current_user=current_user, current_room=current_room)
+    return render_template('chatroom.html', form=form, form2=form2, rooms=rooms, current_user=current_user, current_room=current_room, all_rooms=all_rooms, all_users=all_users, check_private_rooms=check_private_rooms)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -68,10 +74,37 @@ def logout():
     flash('Login again from here to continue chatting')
     return redirect(url_for('login'))
 
+@app.route('/add-contact', methods=['GET', 'POST'])
+def add_contact():
+    if request.form.get("join_room"):
+        room = Room.query.filter_by(room_id=request.form.get("join_room")).first()
+        if room is not None:
+            if room not in current_user.room_subscribed:
+                room.subscribers.append(current_user)
+                db.session.commit()
+    if request.form.get("add_user"):
+        user = Users.query.filter_by(id=request.form.get("add_user")).first()
+        if user is not None:
+            private_room_name = (f'{user.id}{current_user.id}')
+            private_room_name2 = (f'{current_user.id}{user.id}')
+            if not Room.query.filter_by(name=private_room_name).first():
+                if not Room.query.filter_by(name=private_room_name2).first():
+                    private_room = Room(name=private_room_name, room_created=current_user, private_room=True)
+                    private_room.create_room_url()
+                    db.session.add(private_room)
+                    private_room.subscribers.append(current_user)
+                    private_room.subscribers.append(user)
+                    db.session.commit()
+    return redirect(url_for('home'))
+
+
+
+
 @socketio.on('message')
 def handleMessage(msg):
     current_room = Room.query.filter_by(room_id=session.get('current_room')).first()
-    message = History(messages=msg, user_history=current_user, room_records=current_room)
-    db.session.add(message)
+    if current_room is not None:
+        message = History(messages=msg, user_history=current_user, room_records=current_room)
+        db.session.add(message)
     db.session.commit()
     send(msg, broadcast=True)
