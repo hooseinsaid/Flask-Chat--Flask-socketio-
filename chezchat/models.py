@@ -32,7 +32,7 @@ class History(db.Model):
     msg_id = db.Column(db.Integer, primary_key=True)
     messages = db.Column(db.String)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    author = db.Column(db.Integer, db.ForeignKey('users.id'))
     room_id = db.Column(db.Integer, db.ForeignKey('room.room_id'))
 
 class Room(db.Model):
@@ -41,7 +41,7 @@ class Room(db.Model):
     name = db.Column(db.String(128), index=True)
     private_room = db.Column(db.Boolean, default=False)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     room_history = db.relationship('History', backref='room_records', lazy='dynamic')
 
     def create_room_url(self):

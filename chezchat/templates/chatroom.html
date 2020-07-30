@@ -9,9 +9,9 @@
     <script type="text/javascript" charset="utf-8">
         $(document).ready(function() {
             var socket = io.connect(window.location.href);
-            socket.on('connect', function() {
-                socket.send('{{ current_user.username }} has connected');
-            });
+            // socket.on('connect', function() {
+            //     socket.send('{{ current_user.username }} has connected');
+            // });
             
             socket.on('message', function(msg) {
                 $("#messages").append('<li>'+msg+'</li>')
@@ -22,8 +22,22 @@
                 $('#myMessage').val('')
             });
         });
-    </script>
+    </script>  
+
+    {% if current_room.private_room == False %}
+        <h1><em>Current Room: {{ current_room.name }}</em></h1>
+    {% elif current_room.private_room != False %}
+        {% for recipient in room_members %}
+            {% if recipient != current_user %}
+                <h1><em>Current Room: {{ recipient.name_surname }}</em></h1>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
     <button data-toggle="modal" data-target="#myModal">New group</button>
+    {% if current_room is not none %}
+    <button data-toggle="modal" data-target="#myModal2">Group info</button>
+    {% endif %}
     <a href="{{ url_for('logout') }}"><button>Logout</button></a>
 
     <strong>Current User: {{ current_user.username }}</strong>
@@ -37,12 +51,10 @@
     {% endfor %}
 
     <h1>Friends</h1>
-    {% for room in rooms %}
-        {% if room.private_room == True %}
-            <ul>
-                <a href="{{ url_for('home', r=room.room_url) }}"><h4><li>{{ room.name }}</li></h4></a>
-            </ul>
-        {% endif %}    
+    {% for friend, room in zipped_friends_list %}
+        <ul>
+            <a href="{{ url_for('home', r=room.room_url) }}"><h4><li>{{ friend.name_surname }}</li></h4></a>
+        </ul>
     {% endfor %}
 
     <form action="{{ url_for('add_contact') }}" method="post" novalidate>
@@ -77,7 +89,7 @@
 
                     <div class="modal-header">
                         <h4 class="modal-title" style="font-size: 14px; font-weight: 600;">New group</h4>
-                        <button type="button" class="close close-button" data-dismiss="modal" style="outline: none">&times;</button>
+                        <button type="button" class="close close-button" data-dismiss="modal" style="outline: none; font-weight: 500; font-size: 17px;">close</button>
                     </div>
 
                     <div class="modal-body" style="max-height: 430px; overflow: auto;">
@@ -92,8 +104,31 @@
             </div>
         </div>
     </form>
-    
-    <h1><em>{{ current_room.name }}</em></h1>
+
+    <div class="modal fade" id="myModal2">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px; margin: 1.75rem auto;">
+            <div class="modal-content" style="margin: .5rem;">
+
+                <div class="modal-header">
+                    <h4 class="modal-title" style="font-size: 14px; font-weight: 600;">Group info</h4>
+                    <button type="button" class="close close-button" data-dismiss="modal" style="outline: none; font-weight: 500; font-size: 17px;">close</button>
+                </div>
+
+                <div class="modal-body" style="max-height: 430px; overflow: auto;">
+                    {% for member in room_members %}
+                    {% if current_room.private_room == False %}
+                        {% if member.id == current_room.created_by %}
+                            <strong>{{ member.name_surname }} ADMIN</strong><br>
+                        {% else %}
+                            <strong>{{ member.name_surname }}</strong><br>
+                        {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+    </div>
 
     <ul id="messages">
         {% for msg in current_room.room_history %}

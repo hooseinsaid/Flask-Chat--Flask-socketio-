@@ -11,14 +11,25 @@ def home():
     form = MessageForm()
     form2 = CreateRoomForm()
     check_private_rooms = []
+    friends_list = []
+    room_members = []
     current_room = None
-    rooms = current_user.room_subscribed
     all_users = Users.query.all()
     all_rooms = Room.query.all()
+    rooms = current_user.room_subscribed
+    private_friend_room = []
+    for room in rooms:
+        if room.private_room == True:
+            for friends_id in room.name:
+                if int(friends_id) != current_user.id:
+                    friends_list.append(Users.query.filter_by(id=friends_id).first())
+                    private_friend_room.append(room)
+    zipped_friends_list = zip(friends_list, private_friend_room)
     for room_check in all_rooms:
         if room_check.private_room == True:
             check_private_rooms.append(room_check.name)
     if request.args.get("r"):
+        room_members = Users.query.filter(Users.room_subscribed.any(room_url=request.args.get("r"))).all()
         current_room = Room.query.filter_by(room_url=request.args.get("r")).first()
         if current_room not in current_user.room_subscribed:
             abort(403)
@@ -36,9 +47,9 @@ def home():
             db.session.commit()
             flash(f'{new_room.name} has been created')
         else:
-            flash('Room not created. Make sure the name name field is not empty')
+            flash('Room not created. Make sure the name field is not empty')
         return redirect(url_for('home'))
-    return render_template('chatroom.html', form=form, form2=form2, rooms=rooms, current_user=current_user, current_room=current_room, all_rooms=all_rooms, all_users=all_users, check_private_rooms=check_private_rooms)
+    return render_template('chatroom.html', form=form, form2=form2, rooms=rooms, room_members=room_members, current_user=current_user, current_room=current_room, all_rooms=all_rooms, all_users=all_users, check_private_rooms=check_private_rooms, zipped_friends_list=zipped_friends_list)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -96,9 +107,6 @@ def add_contact():
                     private_room.subscribers.append(user)
                     db.session.commit()
     return redirect(url_for('home'))
-
-
-
 
 @socketio.on('message')
 def handleMessage(msg):
