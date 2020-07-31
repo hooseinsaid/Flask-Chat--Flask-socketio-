@@ -1,28 +1,6 @@
 {% extends "base.html" %}
 
-{% block socketio %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
-{% endblock %}
-
-
 {% block content %}
-    <script type="text/javascript" charset="utf-8">
-        $(document).ready(function() {
-            var socket = io.connect(window.location.href);
-            // socket.on('connect', function() {
-            //     socket.send('{{ current_user.username }} has connected');
-            // });
-            
-            socket.on('message', function(msg) {
-                $("#messages").append('<li>'+msg+'</li>')
-            });
-
-            $('#sendbutton').on('click', function() {
-                socket.send($('#myMessage').val());
-                $('#myMessage').val('')
-            });
-        });
-    </script>  
 
     {% if current_room.private_room == False %}
         <h1><em>Current Room: {{ current_room.name }}</em></h1>
@@ -79,8 +57,6 @@
         {% endfor %}
     </form>
 
- 
-
     <form id="form2" action="" method="post" novalidate>
         {{ form.hidden_tag() }}
         <div class="modal fade" id="myModal">
@@ -132,12 +108,27 @@
 
     <ul id="messages">
         {% for msg in current_room.room_history %}
-            <li>{{ msg.messages }}</li>
+            <li>{{ msg.author }} says {{ msg.messages }} @ {{ moment(msg.timestamp).format('MMM-D H:mm') }}</li>
         {% endfor %}
     </ul>
     {% if current_room %}
         {{ form.message(id="myMessage") }}
         {{ form.submit(id="sendbutton") }}
     {% endif %}
+{% endblock %}
+
+{% block socketio %}
+
+    <!-- Get current_user.username -->
+    <script type="text/javascript">
+        const username = '{{ current_user.username }}';
+    </script>
+
+    <!-- SocketIO JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+
+    <!-- Custom SocketIO JS -->
+    <script src="{{ url_for('static', filename='scripts/socketio.js') }}"></script>
+    
 {% endblock %}
 

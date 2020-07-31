@@ -32,7 +32,7 @@ class History(db.Model):
     msg_id = db.Column(db.Integer, primary_key=True)
     messages = db.Column(db.String)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    author = db.Column(db.Integer, db.ForeignKey('users.id'))
+    author = db.Column(db.String, db.ForeignKey('users.username'))
     room_id = db.Column(db.Integer, db.ForeignKey('room.room_id'))
 
 class Room(db.Model):

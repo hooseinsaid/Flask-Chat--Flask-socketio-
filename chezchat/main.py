@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect, url_for, session, abort, request
-from flask_socketio import send
-from chezchat import socketio, app, db
+from flask_socketio import send, emit, join_room, leave_room
+from chezchat import socketio, app, db, moment
 from chezchat.models import Users, History, Room
 from chezchat.forms import *
 from flask_login import current_user, login_user, logout_user, login_required
@@ -46,10 +46,13 @@ def home():
             new_room.subscribers.append(current_user)
             db.session.commit()
             flash(f'{new_room.name} has been created')
+            return redirect(url_for('home'))
         else:
-            flash('Room not created. Make sure the name field is not empty')
-        return redirect(url_for('home'))
-    return render_template('chatroom.html', form=form, form2=form2, rooms=rooms, room_members=room_members, current_user=current_user, current_room=current_room, all_rooms=all_rooms, all_users=all_users, check_private_rooms=check_private_rooms, zipped_friends_list=zipped_friends_list)
+            flash('Room not created. Make sure the name field is not empty and is at least 4 characters long ')
+    return render_template('chatroom.html', form=form, form2=form2, rooms=rooms, room_members=room_members, 
+                            current_user=current_user, current_room=current_room, all_rooms=all_rooms, 
+                            all_users=all_users, check_private_rooms=check_private_rooms, 
+                            zipped_friends_list=zipped_friends_list)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -100,6 +103,7 @@ def add_contact():
             private_room_name2 = (f'{current_user.id}{user.id}')
             if not Room.query.filter_by(name=private_room_name).first():
                 if not Room.query.filter_by(name=private_room_name2).first():
+                    # copy this into a function along with the other create general
                     private_room = Room(name=private_room_name, room_created=current_user, private_room=True)
                     private_room.create_room_url()
                     db.session.add(private_room)
@@ -108,11 +112,20 @@ def add_contact():
                     db.session.commit()
     return redirect(url_for('home'))
 
-@socketio.on('message')
-def handleMessage(msg):
+@socketio.on('handle_messages')
+def handleMessage(data):
     current_room = Room.query.filter_by(room_id=session.get('current_room')).first()
     if current_room is not None:
-        message = History(messages=msg, user_history=current_user, room_records=current_room)
+        message = History(messages=data['msg'], user_history=current_user, room_records=current_room)
         db.session.add(message)
     db.session.commit()
-    send(msg, broadcast=True)
+    emit('handle_messages', data, broadcast=True)
+
+# triggered when the server pongs the client and can't connect with it
+@socketio.on('disconnect')
+def disconnect():
+    emit('on_disconnect', {'username': current_user.username}, broadcast=True)
+
+@socketio.on('on_connect')
+def connect(data):
+    emit('on_connect', {'username': data['username']}, broadcast=True, send_to_self=False)
