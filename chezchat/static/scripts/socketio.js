@@ -29,11 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // receives the message emitted by the on_disconnect event
     socket.on('on_disconnect', data => {
-        alert(data.username + ' is offline')
+        alert(`${data.username} is offline`)
     });
 
     // receives the message emitted by the on_connect event
     socket.on('on_connect', data => {
-        alert(data.username + ' is online')
+        alert(`${data.username} is online`)
     });
 });

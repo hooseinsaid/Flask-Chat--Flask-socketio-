@@ -1,4 +1,4 @@
-from chezchat import app
+from chezchat import app, socketio
 
 if __name__ == '__main__':
     socketio.run(app)

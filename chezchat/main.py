@@ -126,6 +126,7 @@ def handleMessage(data):
 def disconnect():
     emit('on_disconnect', {'username': current_user.username}, broadcast=True)
 
+# triggered when client establishes a connection with the server
 @socketio.on('on_connect')
 def connect(data):
-    emit('on_connect', {'username': data['username']}, broadcast=True, send_to_self=False)
+    emit('on_connect', {'username': data['username']}, broadcast=True)

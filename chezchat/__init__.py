@@ -7,7 +7,7 @@ from flask_moment import Moment
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, engineio_logger=True)
 
 moment = Moment(app)
 
