@@ -1,8 +1,16 @@
+import os
 import secrets
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-from chezchat import db, login
+from chezchat import db, login, app
 from flask_login import UserMixin
+
+@app.before_request
+def before_request():
+    db_dir = os.path.join(app.root_path, 'database.db')
+    if not os.path.exists(db_dir):
+        db.create_all()
+        print('db created')
 
 room_members = db.Table('room_members',
                         db.Column('user_id', db.Integer, db.ForeignKey('users.id')),

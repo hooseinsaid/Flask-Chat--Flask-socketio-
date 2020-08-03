@@ -6,10 +6,6 @@ from chezchat.models import Users, History, Room
 from chezchat.forms import *
 from flask_login import current_user, login_user, logout_user, login_required
 
-@app.before_request
-def before_request():
-    db.create_all()
-
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
