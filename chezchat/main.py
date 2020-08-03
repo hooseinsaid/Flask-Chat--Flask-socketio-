@@ -127,6 +127,7 @@ def handleMessage(data):
 @socketio.on('disconnect')
 def test_disconnect():
     current_user.last_seen = datetime.utcnow()
+    current_user.last_seen_update_on_server_restart = False
     db.session.commit()
     emit('on_disconnect', {'username': current_user.username}, include_self=False, broadcast=True)
 
@@ -143,6 +144,7 @@ def on_connect(data):
 def get_user():
     status = 'online'
     user = Users.query.filter_by(username=request.json['user']).first()
-    if user.last_seen > user.online_at:
+    if user.last_seen >= user.online_at:
         status = 'offline'
-    return jsonify(username=user.username, last_seen=user.last_seen, online_at=user.online_at, status=status)
+    return jsonify(username=user.username, last_seen=user.last_seen, online_at=user.online_at, 
+                   forced_offline=user.last_seen_update_on_server_restart, status=status)

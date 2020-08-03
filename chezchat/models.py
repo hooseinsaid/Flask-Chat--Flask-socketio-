@@ -23,6 +23,7 @@ class Users(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     online_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_seen_update_on_server_restart = db.Column(db.Boolean)
     user_history = db.relationship('History', backref='user_history', lazy='dynamic')
     room_created = db.relationship('Room', backref='room_created', lazy='dynamic')
     room_subscribed = db.relationship('Room', secondary=room_members, backref=db.backref('subscribers', lazy='dynamic'))

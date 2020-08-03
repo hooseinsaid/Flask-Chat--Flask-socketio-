@@ -2,16 +2,16 @@ document.addEventListener('DOMContentLoaded', () => {
     var socket = io();
     moment.locale('en-gb')
 
-    function noDays_btw_dates(lastSeen) {
+    function noHours_btw_dates(lastSeen) {
         var currentDate = new Date();
 
         // To calculate the time difference of two dates 
         var Difference_In_Time = moment(currentDate) - moment(lastSeen);
         
         // To calculate the no. of days between two dates 
-        var Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
+        var Difference_In_Hours = Difference_In_Time / (1000 * 3600);
 
-        return Difference_In_Days;
+        return Difference_In_Hours;
     }
 
     function verify_status() {
@@ -25,13 +25,21 @@ document.addEventListener('DOMContentLoaded', () => {
         xhttp.onreadystatechange = function() {
             if (this.readyState === 4 && this.status === 200) {
                 var data = JSON.parse(this.responseText);
-                var days = noDays_btw_dates(data['last_seen'])
+                var hours = noHours_btw_dates(data['last_seen'])
                 if (data['status'] === 'offline') {
-                    if (days <= 6) {
-                        document.getElementById("user_status").innerHTML = `${data['username']} was last seen ${moment(data['last_seen']).subtract(days, 'days').calendar()} from verify_status`;
+                    if (data['forced_offline'] == true) {
+                        document.getElementById("user_status").innerHTML = `${data['username']} is offline from verify_status after server crashed`;
                     }
                     else {
-                        document.getElementById("user_status").innerHTML = `${data['username']} was last seen ${moment(data['last_seen']).format('LL')} from verify_status`;
+                        if (hours <= 1) {
+                            document.getElementById("user_status").innerHTML = `${data['username']} was last seen ${moment(data['last_seen']).fromNow()} from verify_status`;
+                        }
+                        else if (hours > 1 && hours <= (6 * 24)) {
+                            document.getElementById("user_status").innerHTML = `${data['username']} was last seen ${moment(data['last_seen']).subtract(hours/24, 'days').calendar()} from verify_status`;
+                        }
+                        else {
+                            document.getElementById("user_status").innerHTML = `${data['username']} was last seen ${moment(data['last_seen']).format('LL')} from verify_status`;
+                        }
                     }
                 }
                 else {

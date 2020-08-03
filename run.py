@@ -8,11 +8,12 @@ def update_db_after_restart():
     for user in users:
         if user.online_at > user.last_seen:
             user.last_seen = datetime.utcnow()
+            user.last_seen_update_on_server_restart = True
     db.session.commit()
 
 @manager.command
 def runserver():
-    db_dir = os.path.join(app.root_path, 'chezchat', 'database.db')
+    db_dir = os.path.join(app.root_path, 'database.db')
     if os.path.exists(db_dir):
         update_db_after_restart()
     socketio.run(app)
