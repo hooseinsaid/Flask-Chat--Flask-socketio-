@@ -6,4 +6,4 @@ To get the this running locally:
 - `virtualenv venv` to create a virtual environment
 - `venv\Scripts\activate` to activate your virtual environment 
 - `pip install -r requirements.txt` to install all req'd dependencies
-- `python run.py` to get the server initialized for eventlet
+- `python run.py runserver` to get the server initialized for eventlet and update database on server start
