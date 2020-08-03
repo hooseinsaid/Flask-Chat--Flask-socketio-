@@ -2,4 +2,5 @@
 /migrations
 /.vscode
 /__pycache__
+chezchat/__pycache__
 /chezchat/database.db
