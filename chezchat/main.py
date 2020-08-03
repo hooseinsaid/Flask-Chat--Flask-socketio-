@@ -1,9 +1,14 @@
-from flask import render_template, flash, redirect, url_for, session, abort, request
+from datetime import datetime
+from flask import render_template, flash, redirect, url_for, session, abort, request, jsonify
 from flask_socketio import send, emit, join_room, leave_room
 from chezchat import socketio, app, db, moment
 from chezchat.models import Users, History, Room
 from chezchat.forms import *
 from flask_login import current_user, login_user, logout_user, login_required
+
+@app.before_request
+def before_request():
+    db.create_all()
 
 @app.route('/', methods=['GET', 'POST'])
 @login_required
@@ -89,6 +94,7 @@ def logout():
     return redirect(url_for('login'))
 
 @app.route('/add-contact', methods=['GET', 'POST'])
+@login_required
 def add_contact():
     if request.form.get("join_room"):
         room = Room.query.filter_by(room_id=request.form.get("join_room")).first()
@@ -119,14 +125,28 @@ def handleMessage(data):
         message = History(messages=data['msg'], user_history=current_user, room_records=current_room)
         db.session.add(message)
     db.session.commit()
-    emit('handle_messages', data, broadcast=True)
+    emit('handle_messages', data, include_self=False, broadcast=True)
 
 # triggered when the server pongs the client and can't connect with it
 @socketio.on('disconnect')
-def disconnect():
-    emit('on_disconnect', {'username': current_user.username}, broadcast=True)
+def test_disconnect():
+    current_user.last_seen = datetime.utcnow()
+    db.session.commit()
+    emit('on_disconnect', {'username': current_user.username}, include_self=False, broadcast=True)
 
 # triggered when client establishes a connection with the server
+# find a way to store user sessions and sid and disconnect the old one if user initiates a new connect()
 @socketio.on('on_connect')
-def connect(data):
-    emit('on_connect', {'username': data['username']}, broadcast=True)
+def on_connect(data):
+    current_user.online_at = datetime.utcnow()
+    db.session.commit()
+    emit('on_connect', {'username': data['username']}, include_self=False, broadcast=True)
+
+@app.route('/get-user', methods=['GET', 'POST'])
+@login_required
+def get_user():
+    status = 'online'
+    user = Users.query.filter_by(username=request.json['user']).first()
+    if user.last_seen > user.online_at:
+        status = 'offline'
+    return jsonify(username=user.username, last_seen=user.last_seen, online_at=user.online_at, status=status)

@@ -1,1 +1,5 @@
 /venv
+/migrations
+/.vscode
+/__pycache__
+/chezchat/database.db

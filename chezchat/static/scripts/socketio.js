@@ -1,39 +1,109 @@
 document.addEventListener('DOMContentLoaded', () => {
-    var socket = io()
+    var socket = io();
+    moment.locale('en-gb')
 
-    // triggered when the client successfully connect to the server
+    function noDays_btw_dates(lastSeen) {
+        var currentDate = new Date();
+
+        // To calculate the time difference of two dates 
+        var Difference_In_Time = moment(currentDate) - moment(lastSeen);
+        
+        // To calculate the no. of days between two dates 
+        var Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
+
+        return Difference_In_Days;
+    }
+
+    function verify_status() {
+        // query the db on connect of current_user using ajax to 
+        // know the current recipient's status and update id #user_status below
+        // grab current user variable on the page and query with it
+        // document.getElementById("user_status").innerHTML = '';
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "/get-user", true);
+        xhttp.setRequestHeader("Content-Type", "application/json"); 
+        xhttp.onreadystatechange = function() {
+            if (this.readyState === 4 && this.status === 200) {
+                var data = JSON.parse(this.responseText);
+                var days = noDays_btw_dates(data['last_seen'])
+                if (data['status'] === 'offline') {
+                    if (days <= 6) {
+                        document.getElementById("user_status").innerHTML = `${data['username']} was last seen ${moment(data['last_seen']).subtract(days, 'days').calendar()} from verify_status`;
+                    }
+                    else {
+                        document.getElementById("user_status").innerHTML = `${data['username']} was last seen ${moment(data['last_seen']).format('LL')} from verify_status`;
+                    }
+                }
+                else {
+                    document.getElementById("user_status").innerHTML = `${data['username']} is ${data['status']} from verify_status`;
+                }
+            }
+        };
+        var data = JSON.stringify({'user': document.getElementById('get_user_status').innerHTML});
+        xhttp.send(data);
+    }
+
+    // triggered when the client tries to connect to the server
     // and it emits to the on_connect event on the server side
     socket.on('connect', () => {
-        socket.emit('on_connect', {'username': username })
+        socket.emit('on_connect', {'username': username });
+        
+        verify_status();
+
+        // enable send button and text input again when server or client is back online
+        document.getElementById("sendbutton").disabled = false;
+        document.getElementById("myMessage").disabled = false;
+        document.getElementById("my_status").innerHTML = 'You are online';
     });
 
     // triggered when the client pings the server and can't connect
     socket.on('disconnect', () => {
-        alert('Cannot reach the server at this moment');
+        // alert('Cannot reach the server at this moment');
+        console.log('Cannot reach the server at this moment');
+
+        document.getElementById("user_status").innerHTML = '';
+        document.getElementById("my_status").innerHTML = 'Cannot reach the server at this moment';
+
+        // disable send button and text input until server or client is back online
+        document.getElementById("sendbutton").disabled = true;
+        document.getElementById("myMessage").disabled = true;
     });
 
     // emits to handle_messages event on the server side
     document.querySelector('#sendbutton').onclick = () => {
-        socket.emit('handle_messages', {'msg': document.querySelector('#myMessage').value, 'username': username });
+        var data = {'msg': document.querySelector('#myMessage').value, 'username': username };
+        socket.emit('handle_messages', data);
+        append_msgs(data);
         document.querySelector('#myMessage').value = '';
     }
-
-    // receives message from an unnamed event on the server sent using 'send()'
-    // and displays them to a client
-    socket.on('handle_messages', data => {
+    
+    function append_msgs(data) {
         const local_time = moment().format('MMM-D H:mm');
         const li = document.createElement('li');
-        li.innerHTML = data.username+' says '+data.msg+' @ '+local_time;
-        document.getElementById("messages").append(li); 
+        li.innerHTML = `${data.username} says ${data.msg} @ ${local_time}`;
+        document.getElementById("messages").append(li);
+    }
+
+    // receives message from an the handle_messages event on the server side and displays them to a client
+    socket.on('handle_messages', data => { 
+        append_msgs(data);
     });
 
     // receives the message emitted by the on_disconnect event
     socket.on('on_disconnect', data => {
-        alert(`${data.username} is offline`)
+        // alert(`${data.username} is offline`)
+        console.log(`${data.username} is offline`);
+
+        // get the html element and update it
+        document.getElementById("user_status").innerHTML = `${data.username} is offline from on_disconnect`;
     });
 
-    // receives the message emitted by the on_connect event
+    // receives the message emitted by the on_connect event and confirms that the client is connected to the server
     socket.on('on_connect', data => {
-        alert(`${data.username} is online`)
+        // alert(`${data.username} is online`)
+        console.log(`${data.username} is online`);
+
+        // get the html element and update it
+        document.getElementById("user_status").innerHTML = `${data.username} is online from on_connect`;
     });
 });

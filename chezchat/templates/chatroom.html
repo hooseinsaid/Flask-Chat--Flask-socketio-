@@ -7,10 +7,14 @@
     {% elif current_room.private_room != False %}
         {% for recipient in room_members %}
             {% if recipient != current_user %}
-                <h1><em>Current Room: {{ recipient.name_surname }}</em></h1>
+                <h1><em>Recipient: {{ recipient.name_surname }}</em></h1>
+                <h3><em id="user_status"></em></h3>
+                <!-- to get user status with ajax -->
+                <div id="get_user_status" hidden>{{ recipient.username }}</div>
             {% endif %}
         {% endfor %}
     {% endif %}
+    <h3><em id="my_status"></em></h3>
 
     <button data-toggle="modal" data-target="#myModal">New group</button>
     {% if current_room is not none %}
@@ -18,6 +22,7 @@
     {% endif %}
     <a href="{{ url_for('logout') }}"><button>Logout</button></a>
 
+    <!-- add online offline fxn -->
     <strong>Current User: {{ current_user.username }}</strong>
     <h1>My rooms</h1>
     {% for room in rooms %}
