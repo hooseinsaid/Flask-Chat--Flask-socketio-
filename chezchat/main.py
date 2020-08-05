@@ -123,21 +123,25 @@ def handleMessage(data):
     db.session.commit()
     emit('handle_messages', data, include_self=False, broadcast=True)
 
+@socketio.on('connect')
+def test_connect():
+    print(f'\n\n\n\n{current_user.username} has connection re-established\n\n\n\n')
+    current_user.online_at = datetime.utcnow()
+    db.session.commit()
+    emit('broadcast', {'username': current_user.username, 'info': 'online'}, include_self=False, broadcast=True)
+
 # triggered when the server pongs the client and can't connect with it
 @socketio.on('disconnect')
 def test_disconnect():
+    print(f'\n\n\n\n{current_user.username} has connection lost\n\n\n\n')
     current_user.last_seen = datetime.utcnow()
     current_user.last_seen_update_on_server_restart = False
     db.session.commit()
-    emit('on_disconnect', {'username': current_user.username}, include_self=False, broadcast=True)
+    emit('broadcast', {'username': current_user.username, 'info': 'offline'}, include_self=False, broadcast=True)
 
-# triggered when client establishes a connection with the server
-# find a way to store user sessions and sid and disconnect the old one if user initiates a new connect()
-@socketio.on('on_connect')
-def on_connect(data):
-    current_user.online_at = datetime.utcnow()
-    db.session.commit()
-    emit('on_connect', {'username': data['username']}, include_self=False, broadcast=True)
+@socketio.on('broadcast')
+def broadcast(data):
+    emit('broadcast', {'username': data['username'], 'info': data['info']}, include_self=False, broadcast=True)
 
 @app.route('/get-user', methods=['GET', 'POST'])
 @login_required
