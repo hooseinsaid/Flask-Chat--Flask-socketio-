@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // know the current recipient's status and update id #user_status below
         // grab current user variable on the page and query with it
         var xhttp = new XMLHttpRequest();
-        xhttp.open("POST", "/get-user", true);
+        xhttp.open("POST", "/get-user-status", true);
         xhttp.setRequestHeader("Content-Type", "application/json"); 
 
         xhttp.onreadystatechange = function() {
@@ -125,7 +125,23 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleKeyUp(e) {
         clearTimeout(timer); // prevent errant multiple timeouts from being generated
         timer = setTimeout(() => {
+            // emit to broadcast so that the server knows that we are done typing so verify_status can be called
+            // to verify the users online/offline status afresh
             socket.emit('broadcast', {'username': username, 'info': 'verify_status' });
         }, timeoutVal);
     }
+            
+    socket.on('error', function() {
+        console.log("error");
+    });
+
+    socket.on('reconnect', function() {
+        console.log("reconnect");
+        myStatus.innerHTML = 'Reconnected';
+    });
+
+    socket.on('reconnecting', function() {
+        console.log("reconnecting");
+        myStatus.innerHTML = 'Reconnecting...';
+    });
 });

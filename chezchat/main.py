@@ -89,30 +89,45 @@ def logout():
     flash('Login again from here to continue chatting')
     return redirect(url_for('login'))
 
-@app.route('/add-contact', methods=['GET', 'POST'])
+@app.route('/join-room', methods=['GET', 'POST'])
 @login_required
-def add_contact():
-    if request.form.get("join_room"):
-        room = Room.query.filter_by(room_id=request.form.get("join_room")).first()
-        if room is not None:
-            if room not in current_user.room_subscribed:
-                room.subscribers.append(current_user)
+def join_room():
+    room = Room.query.filter_by(room_id=request.json['room_id']).first()
+    if room is not None:
+        if room not in current_user.room_subscribed:
+            room.subscribers.append(current_user)
+            db.session.commit()
+    return jsonify()
+
+@app.route('/add-user', methods=['GET', 'POST'])
+@login_required
+def add_user():
+    private_room = None
+    user_to_add = Users.query.filter_by(id=request.json['user_id']).first()
+    if user_to_add is not None:
+        private_room_name = (f'{user_to_add.id}{current_user.id}')
+        private_room_name2 = (f'{current_user.id}{user_to_add.id}')
+        if not Room.query.filter_by(name=private_room_name).first():
+            if not Room.query.filter_by(name=private_room_name2).first():
+                private_room = Room(name=private_room_name, room_created=current_user, private_room=True)
+                private_room.create_room_url()
+                db.session.add(private_room)
+                private_room.subscribers.append(current_user)
+                private_room.subscribers.append(user_to_add)
                 db.session.commit()
-    if request.form.get("add_user"):
-        user = Users.query.filter_by(id=request.form.get("add_user")).first()
-        if user is not None:
-            private_room_name = (f'{user.id}{current_user.id}')
-            private_room_name2 = (f'{current_user.id}{user.id}')
-            if not Room.query.filter_by(name=private_room_name).first():
-                if not Room.query.filter_by(name=private_room_name2).first():
-                    # copy this into a function along with the other create general
-                    private_room = Room(name=private_room_name, room_created=current_user, private_room=True)
-                    private_room.create_room_url()
-                    db.session.add(private_room)
-                    private_room.subscribers.append(current_user)
-                    private_room.subscribers.append(user)
-                    db.session.commit()
-    return redirect(url_for('home'))
+    if private_room is not None:
+        return jsonify(roomID=private_room.room_id)
+    else:
+        return "<h1>An error has occurred</h1>"
+
+@app.route('/remove-user', methods=['GET', 'POST'])
+@login_required
+def remove_user():
+    private_room = Room.query.filter_by(room_id=request.json['room_id']).first()
+    if private_room is not None:
+        db.session.delete(private_room)
+        db.session.commit()
+    return jsonify()
 
 @socketio.on('handle_messages')
 def handleMessage(data):
@@ -125,6 +140,8 @@ def handleMessage(data):
 
 @socketio.on('connect')
 def test_connect():
+    # use session to put the sid generated when the client connects in session
+    # like this session[current_user.username] = sid
     print(f'\n\n\n\n{current_user.username} has connection re-established\n\n\n\n')
     current_user.online_at = datetime.utcnow()
     db.session.commit()
@@ -143,7 +160,7 @@ def test_disconnect():
 def broadcast(data):
     emit('broadcast', {'username': data['username'], 'info': data['info']}, include_self=False, broadcast=True)
 
-@app.route('/get-user', methods=['GET', 'POST'])
+@app.route('/get-user-status', methods=['GET', 'POST'])
 @login_required
 def get_user():
     status = 'online'

@@ -22,45 +22,56 @@
     {% endif %}
     <a href="{{ url_for('logout') }}"><button>Logout</button></a>
 
-    <!-- add online offline fxn -->
     <strong>Current User: {{ current_user.username }}</strong>
     <h1>My rooms</h1>
+    <div id="roomsPanel">
     {% for room in rooms %}
         {% if room.private_room == False %}
-            <ul>
-                <a href="{{ url_for('home', r=room.room_url) }}"><h4><li>{{ room.name }}</li></h4></a>
-            </ul>
+            <div>
+                {{ room.name }}
+            </div>
         {% endif %}
     {% endfor %}
+    </div>
 
     <h1>Friends</h1>
-    {% for friend, room in zipped_friends_list %}
-        <ul>
-            <a href="{{ url_for('home', r=room.room_url) }}"><h4><li>{{ friend.name_surname }}</li></h4></a>
-        </ul>
-    {% endfor %}
+    <div id="friendsPanel">
+        {% for friend, room in zipped_friends_list %}
+            <!-- onclick a function should trigger ajax to get the needed -->
+            <div id="{{ room.room_id }}">
+                {{ friend.name_surname }}
+                <button name="{{ friend.name_surname }}" value="{{ friend.id }}" onclick="removeUser(this)">Remove user</button>
+            </div>
+        {% endfor %}
+    </div>
 
-    <form action="{{ url_for('add_contact') }}" method="post" novalidate>
-        <h1>All available rooms</h1>
+    <h1>All available rooms</h1>
+    </div id="availableRooms">
         {% for room in all_rooms %}
             {% if room.private_room == False and room not in current_user.room_subscribed %}
+            <div>
                 {{ room.name }}
-                <button type="submit" name="join_room" value="{{ room.room_id }}">Join Room</button>
+                <button name="room.name" value="{{ room.room_id }}" onclick="joinRoom(this)">Join room</button>
+            </div>
             {% endif %}
         {% endfor %}
+    <div>   
 
-        <h1>All available users</h1>
+    <h1>All available users</h1>
+    <div id="availableUsers">
         {% for user in all_users %}
             {% if user != current_user %}
                 {% set my_string = current_user.id ~ user.id ~ '' %}
                 {% set my_string2 = user.id ~ current_user.id ~ '' %}
                 {% if my_string not in check_private_rooms and my_string2 not in check_private_rooms %}
+                <div>
                     {{ user.name_surname }}
-                    <button type="submit" name="add_user" value="{{ user.id }}">Add User</button>
+                    <button name="{{ user.name_surname }}" value="{{ user.id }}" onclick="addUser(this)">Add user</button>
+                </div>
                 {% endif %}
             {% endif %}
         {% endfor %}
-    </form>
+    </div>
 
     <form id="form2" action="" method="post" novalidate>
         {{ form.hidden_tag() }}
@@ -134,6 +145,9 @@
 
     <!-- Custom SocketIO JS -->
     <script src="{{ url_for('static', filename='scripts/socketio.js') }}"></script>
+
+    <!-- Helper scripts for functionality -->
+    <script src="{{ url_for('static', filename='scripts/extras.js') }}"></script>
     
 {% endblock %}
 
