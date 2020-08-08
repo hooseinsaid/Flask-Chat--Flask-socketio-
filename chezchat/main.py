@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, flash, redirect, url_for, session, abort, request, jsonify
 from flask_socketio import send, emit, join_room, leave_room
 from chezchat import socketio, app, db, moment
-from chezchat.models import Users, History, Room
+from chezchat.models import *
 from chezchat.forms import *
 from flask_login import current_user, login_user, logout_user, login_required
 
@@ -33,7 +33,8 @@ def home():
         room_members = Users.query.filter(Users.room_subscribed.any(room_url=request.args.get("r"))).all()
         current_room = Room.query.filter_by(room_url=request.args.get("r")).first()
         if current_room not in current_user.room_subscribed:
-            abort(403)
+            # abort(403)
+            pass
         else:
             session['current_room'] = current_room.room_id
     else:
@@ -54,6 +55,18 @@ def home():
                             current_user=current_user, current_room=current_room, all_rooms=all_rooms, 
                             all_users=all_users, check_private_rooms=check_private_rooms, 
                             zipped_friends_list=zipped_friends_list)
+
+@app.route('/private-room', methods=['GET', 'POST'])
+@login_required
+def private_room():
+    current_room = Room.query.filter_by(room_id=request.json['room_id']).first()
+    room_schema = RoomSchema()
+    current_room_schema = room_schema.dump(current_room)
+    if current_room not in current_user.room_subscribed:
+        abort(403)
+    else:
+        session['current_room'] = current_room.room_id
+    return jsonify({'current_room' : current_room_schema})
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -99,6 +112,16 @@ def join_room():
             db.session.commit()
     return jsonify()
 
+@app.route('/leave-room', methods=['GET', 'POST'])
+@login_required
+def leave_room():
+    room = Room.query.filter_by(room_id=request.json['room_id']).first()
+    if room is not None:
+        if room in current_user.room_subscribed:
+            room.subscribers.remove(current_user)
+            db.session.commit()
+    return jsonify()
+
 @app.route('/add-user', methods=['GET', 'POST'])
 @login_required
 def add_user():
@@ -124,7 +147,10 @@ def add_user():
 @login_required
 def remove_user():
     private_room = Room.query.filter_by(room_id=request.json['room_id']).first()
+    room_history = private_room.room_history
     if private_room is not None:
+        for history in room_history:
+            db.session.delete(history)
         db.session.delete(private_room)
         db.session.commit()
     return jsonify()

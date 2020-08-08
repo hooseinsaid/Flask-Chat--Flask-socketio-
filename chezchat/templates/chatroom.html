@@ -2,19 +2,13 @@
 
 {% block content %}
 
-    {% if current_room.private_room == False %}
-        <h1><em>Current Room: {{ current_room.name }}</em></h1>
-    {% elif current_room.private_room != False %}
-        {% for recipient in room_members %}
-            {% if recipient != current_user %}
-                <h1><em>Recipient: {{ recipient.name_surname }}</em></h1>
-                <h3><em id="user_status"></em></h3>
-                <!-- to get user status with ajax -->
-                <div id="get_user_status" hidden>{{ recipient.username }}</div>
-            {% endif %}
-        {% endfor %}
-    {% endif %}
+    <!-- My status -->
     <h3><em id="my_status"></em></h3>
+
+    <h4><em><div id="currentRoomName"></div></em></h4>
+    <h6><em><div id="user_status"></div></em></h6>
+    <!-- I have this guys ID on button click assign this the button value -->
+    <div id="get_user_status" hidden></div>
 
     <button data-toggle="modal" data-target="#myModal">New group</button>
     {% if current_room is not none %}
@@ -22,40 +16,30 @@
     {% endif %}
     <a href="{{ url_for('logout') }}"><button>Logout</button></a>
 
-    <strong>Current User: {{ current_user.username }}</strong>
-    <h1>My rooms</h1>
-    <div id="roomsPanel">
-    {% for room in rooms %}
-        {% if room.private_room == False %}
-            <div>
-                {{ room.name }}
-            </div>
-        {% endif %}
-    {% endfor %}
-    </div>
 
+    <strong>Current User: {{ current_user.username }}</strong>
     <h1>Friends</h1>
     <div id="friendsPanel">
         {% for friend, room in zipped_friends_list %}
             <!-- onclick a function should trigger ajax to get the needed -->
-            <div id="{{ room.room_id }}">
+            <div id="{{ room.room_id }}" onclick="getCurrentPrivateRoom(this); verify_status(); loadInputResource()">
                 {{ friend.name_surname }}
-                <button name="{{ friend.name_surname }}" value="{{ friend.id }}" onclick="removeUser(this)">Remove user</button>
+                <button id="{{ friend.id }}" name="{{ friend.name_surname }}" value="{{ friend.username }}" onclick="removeUser(this)">Remove user</button>
             </div>
         {% endfor %}
     </div>
 
-    <h1>All available rooms</h1>
-    </div id="availableRooms">
-        {% for room in all_rooms %}
-            {% if room.private_room == False and room not in current_user.room_subscribed %}
-            <div>
+    <h1>My rooms</h1>
+    <div id="roomsPanel">
+    {% for room in rooms %}
+        {% if room.private_room == False %}
+            <div id="{{ room.room_id }}">
                 {{ room.name }}
-                <button name="room.name" value="{{ room.room_id }}" onclick="joinRoom(this)">Join room</button>
+                <button name="{{ room.name }}" value="{{ room.room_id }}" onclick="leaveRoom(this)">Leave room</button>
             </div>
-            {% endif %}
-        {% endfor %}
-    <div>   
+        {% endif %}
+    {% endfor %}
+    </div>
 
     <h1>All available users</h1>
     <div id="availableUsers">
@@ -66,9 +50,21 @@
                 {% if my_string not in check_private_rooms and my_string2 not in check_private_rooms %}
                 <div>
                     {{ user.name_surname }}
-                    <button name="{{ user.name_surname }}" value="{{ user.id }}" onclick="addUser(this)">Add user</button>
+                    <button id="{{ user.id }}" name="{{ user.name_surname }}" value="{{ user.username }}" onclick="addUser(this)">Add user</button>
                 </div>
                 {% endif %}
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <h1>All available rooms</h1>
+    <div id="availableRooms">
+        {% for room in all_rooms %}
+            {% if room.private_room == False and room not in current_user.room_subscribed %}
+            <div>
+                {{ room.name }}
+                <button name="{{ room.name }}" value="{{ room.room_id }}" onclick="joinRoom(this)">Join room</button>
+            </div>
             {% endif %}
         {% endfor %}
     </div>
@@ -122,15 +118,15 @@
         </div>
     </div>
 
-    <ul id="messages">
-        {% for msg in current_room.room_history %}
-            <li>{{ msg.author }} says {{ msg.messages }} @ {{ moment(msg.timestamp).format('MMM-D H:mm') }}</li>
-        {% endfor %}
-    </ul>
-    {% if current_room %}
-        {{ form.message(id="myMessage") }}
-        {{ form.submit(id="sendbutton") }}
-    {% endif %}
+    <!-- not necessary to do this with flask forms as it should be created on ajax server response -->
+    <ul id="messages"></ul>
+
+    <!-- message input and submit box to be replaced with html ones -->
+    <div id="msgInput">
+        <input id="myMessage" type="text" name="message">
+        <input id="sendbutton" type="submit" name="submit" value="Send">
+    </div>
+
 {% endblock %}
 
 {% block socketio %}

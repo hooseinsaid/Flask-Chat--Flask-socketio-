@@ -2,7 +2,7 @@ import os
 import secrets
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-from chezchat import db, login, app
+from chezchat import db, ma, login, app
 from flask_login import UserMixin
 
 @app.before_request
@@ -60,3 +60,14 @@ class Room(db.Model):
         if room is not None:
            self.create_room_url()
         self.room_url = random_hex
+
+class HistorySchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = History
+        include_fk = True
+
+class RoomSchema(ma.SQLAlchemyAutoSchema):
+    room_history = ma.Nested(HistorySchema, many=True)
+    class Meta:
+        model = Room
+        include_fk = True

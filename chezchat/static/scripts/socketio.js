@@ -1,67 +1,71 @@
-document.addEventListener('DOMContentLoaded', () => {
-    var socket = io();
-    moment.locale('en-gb')
+let timer, timeoutVal = 2000; // time it takes to wait for user to stop typing in ms
+var messageInput = document.getElementById("myMessage");
+var messageSendButton = document.getElementById("sendbutton");
+var getUser = document.getElementById("get_user_status");
+var userStatusInfo = document.getElementById("user_status");
+var myStatus = document.getElementById("my_status");
 
-    let timer, timeoutVal = 2000; // time it takes to wait for user to stop typing in ms
-    messageInput = document.getElementById("myMessage");
-    messageSendButton = document.getElementById("sendbutton");
-    getUser = document.getElementById("get_user_status");
-    userStatusInfo = document.getElementById("user_status");
-    myStatus = document.getElementById("my_status");
+function verify_status() {
+    // query the db on connect of current_user using ajax to 
+    // know the current recipient's status and update id #user_status below
+    // grab current user variable on the page and query with it
+    console.log(document.getElementById("myMessage"));
+    var xhttp = new XMLHttpRequest();
+    xhttp.open("POST", "/get-user-status", true);
+    xhttp.setRequestHeader("Content-Type", "application/json"); 
 
-    function verify_status() {
-        // query the db on connect of current_user using ajax to 
-        // know the current recipient's status and update id #user_status below
-        // grab current user variable on the page and query with it
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("POST", "/get-user-status", true);
-        xhttp.setRequestHeader("Content-Type", "application/json"); 
+    xhttp.onreadystatechange = function() {
 
-        xhttp.onreadystatechange = function() {
+        if (this.readyState === 4 && this.status === 200) {
 
-            if (this.readyState === 4 && this.status === 200) {
-
-                var data = JSON.parse(this.responseText);
-                var hours = (moment() - moment(data['last_seen'])) / (1000 * 3600)
-                console.log(hours)
-                
-                if (data['status'] === 'offline') {
-                    if (data['forced_offline'] == true) {
-                        userStatusInfo.innerHTML = `${data['username']} is offline from verify_status after server crashed`;
-                    }
-                    else {
-                        if (hours <= (24 * 7)) {
-                            userStatusInfo.innerHTML = `${data['username']} was last seen ${moment(data['last_seen']).fromNow()} from verify_status`;
-                        }
-                        else {
-                            userStatusInfo.innerHTML = `${data['username']} was last seen ${moment(data['last_seen']).format('LL')} from verify_status`;
-                        }
-                    }
+            var data = JSON.parse(this.responseText);
+            var hours = (moment() - moment(data['last_seen'])) / (1000 * 3600)
+            console.log(hours)
+            
+            if (data['status'] === 'offline') {
+                if (data['forced_offline'] == true) {
+                    userStatusInfo.innerHTML = `${data['username']} is offline from verify_status after server crashed`;
                 }
                 else {
-                    userStatusInfo.innerHTML = `${data['username']} is ${data['status']} from verify_status`;
+                    if (hours <= (24 * 7)) {
+                        userStatusInfo.innerHTML = `${data['username']} was last seen ${moment(data['last_seen']).fromNow()} from verify_status`;
+                    }
+                    else {
+                        userStatusInfo.innerHTML = `${data['username']} was last seen ${moment(data['last_seen']).format('LL')} from verify_status`;
+                    }
                 }
             }
-        };
-        var data = JSON.stringify({'user': getUser.innerHTML});
-        xhttp.send(data);
-    }
+            else {
+                userStatusInfo.innerHTML = `${data['username']} is ${data['status']} from verify_status`;
+            }
+        }
+    };
+    var data = JSON.stringify({'user': getUser.innerHTML});
+    xhttp.send(data);
+}
 
-    if (!userStatusInfo.innerHTML) {
-        setInterval(verify_status, 20000);
-    }
+
+document.addEventListener('DOMContentLoaded', () => {
+    var socket = io();
+    
+    // update the presence status of the recipient
+    setInterval(function() {
+        if(getUser.innerHTML) {
+            verify_status();    
+        }
+    }, 20000);
 
     // triggered when the client tries to connect to the server
     // and it emits to the on_connect event on the server side
     socket.on('connect', () => {
-        
-        verify_status();
-        console.log('verify status running from connect')
-
-        // enable send button and text input again when server or client is back online
-        messageSendButton.disabled = false;
-        messageInput.disabled = false;
+        console.log('Verify Status running from connect')
         myStatus.innerHTML = 'You are online';
+        
+        // enable send button and text input again when server or client is back online
+        if (messageInput || messageSendButton) {
+            messageSendButton.disabled = false;
+            messageInput.disabled = false;
+        }
     });
 
     // triggered when the client pings the server and can't connect
@@ -69,20 +73,26 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Cannot reach the server at this moment');
 
         userStatusInfo.innerHTML = '';
+        myStatus.innerHTML = 'Cannot reach the server at this moment';
 
         // disable send button and text input until server or client is back online
-        messageSendButton.disabled = true;
-        messageInput.disabled = true;
-        myStatus.innerHTML = 'Cannot reach the server at this moment';
+        if (messageInput || messageSendButton) {
+            messageSendButton.disabled = true;
+            messageInput.disabled = true;
+        }
     });
 
+
     // emits to handle_messages event on the server side
-    document.querySelector('#sendbutton').onclick = () => {
-        var data = {'msg': document.querySelector('#myMessage').value, 'username': username };
-        socket.emit('handle_messages', data);
-        append_msgs(data);
-        document.querySelector('#myMessage').value = '';
+    if (messageSendButton) {
+        document.querySelector('#sendbutton').onclick = () => {
+            var data = {'msg': document.querySelector('#myMessage').value, 'username': username };
+            socket.emit('handle_messages', data);
+            append_msgs(data);
+            document.querySelector('#myMessage').value = '';
+        }
     }
+    
     
     function append_msgs(data) {
         const local_time = moment().format('MMM-D H:mm');
@@ -110,9 +120,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-
-    messageInput.addEventListener('keypress', handleKeyPress);
-    messageInput.addEventListener('keyup', handleKeyUp);
+    if (messageInput) {
+        messageInput.addEventListener('keypress', handleKeyPress);
+        messageInput.addEventListener('keyup', handleKeyUp);
+    }
+    
 
     // when user is pressing down on keys, clear the timeout
     function handleKeyPress(e) {
