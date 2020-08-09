@@ -22,7 +22,7 @@
     <div id="friendsPanel">
         {% for friend, room in zipped_friends_list %}
             <!-- onclick a function should trigger ajax to get the needed -->
-            <div id="{{ room.room_id }}" onclick="getCurrentPrivateRoom(this); verify_status(); loadInputResource()">
+            <div id="{{ room.room_id }}" onclick="getCurrentPrivateRoom(this); verify_status();">
                 {{ friend.name_surname }}
                 <button id="{{ friend.id }}" name="{{ friend.name_surname }}" value="{{ friend.username }}" onclick="removeUser(this)">Remove user</button>
             </div>

@@ -6,6 +6,8 @@ from chezchat.models import *
 from chezchat.forms import *
 from flask_login import current_user, login_user, logout_user, login_required
 
+current_room_session = None
+
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
@@ -29,16 +31,16 @@ def home():
     for room_check in all_rooms:
         if room_check.private_room == True:
             check_private_rooms.append(room_check.name)
-    if request.args.get("r"):
-        room_members = Users.query.filter(Users.room_subscribed.any(room_url=request.args.get("r"))).all()
-        current_room = Room.query.filter_by(room_url=request.args.get("r")).first()
-        if current_room not in current_user.room_subscribed:
-            # abort(403)
-            pass
-        else:
-            session['current_room'] = current_room.room_id
-    else:
-        session.pop('current_room', None)
+    # if request.args.get("r"):
+    #     room_members = Users.query.filter(Users.room_subscribed.any(room_url=request.args.get("r"))).all()
+    #     current_room = Room.query.filter_by(room_url=request.args.get("r")).first()
+    #     if current_room not in current_user.room_subscribed:
+    #         abort(403)
+    #         pass
+    #     else:
+    #         session['current_room'] = current_room.room_id
+    # else:
+    #     session.pop('current_room', None)
     if form2.submit.data:
         if form2.validate_on_submit():
             # consider making this a seperate function
@@ -59,13 +61,15 @@ def home():
 @app.route('/private-room', methods=['GET', 'POST'])
 @login_required
 def private_room():
+    global current_room_session
     current_room = Room.query.filter_by(room_id=request.json['room_id']).first()
     room_schema = RoomSchema()
     current_room_schema = room_schema.dump(current_room)
     if current_room not in current_user.room_subscribed:
         abort(403)
     else:
-        session['current_room'] = current_room.room_id
+        current_room_session = request.json['room_id']
+        print(f"\n\n\n{current_room_session} from private\n\n\n")
     return jsonify({'current_room' : current_room_schema})
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -125,6 +129,7 @@ def leave_room():
 @app.route('/add-user', methods=['GET', 'POST'])
 @login_required
 def add_user():
+    print(f"\n\n\n{current_room_session} from add user\n\n\n")
     private_room = None
     user_to_add = Users.query.filter_by(id=request.json['user_id']).first()
     if user_to_add is not None:
@@ -146,6 +151,9 @@ def add_user():
 @app.route('/remove-user', methods=['GET', 'POST'])
 @login_required
 def remove_user():
+    global current_room_session
+    current_room_session = None
+    print(f"\n\n\n{current_room_session} from remove user\n\n\n")
     private_room = Room.query.filter_by(room_id=request.json['room_id']).first()
     room_history = private_room.room_history
     if private_room is not None:
@@ -157,7 +165,10 @@ def remove_user():
 
 @socketio.on('handle_messages')
 def handleMessage(data):
-    current_room = Room.query.filter_by(room_id=session.get('current_room')).first()
+    print(f"\n\n\n{current_room_session} from handle msgs \n\n\n")
+    if current_room_session is not None:
+        current_room = Room.query.filter_by(room_id=current_room_session).first()
+    print(f"\n\n\n{current_room.room_id} from handle msgs query \n\n\n")
     if current_room is not None:
         message = History(messages=data['msg'], user_history=current_user, room_records=current_room)
         db.session.add(message)

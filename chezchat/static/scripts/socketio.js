@@ -4,12 +4,12 @@ var messageSendButton = document.getElementById("sendbutton");
 var getUser = document.getElementById("get_user_status");
 var userStatusInfo = document.getElementById("user_status");
 var myStatus = document.getElementById("my_status");
+var currentRoomName = document.getElementById("currentRoomName");
 
 function verify_status() {
     // query the db on connect of current_user using ajax to 
     // know the current recipient's status and update id #user_status below
     // grab current user variable on the page and query with it
-    console.log(document.getElementById("myMessage"));
     var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/get-user-status", true);
     xhttp.setRequestHeader("Content-Type", "application/json"); 
@@ -47,6 +47,10 @@ function verify_status() {
 
 document.addEventListener('DOMContentLoaded', () => {
     var socket = io();
+
+    
+    messageSendButton.hidden = true;
+    messageInput.hidden = true;
     
     // update the presence status of the recipient
     setInterval(function() {
@@ -59,13 +63,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // and it emits to the on_connect event on the server side
     socket.on('connect', () => {
         console.log('Verify Status running from connect')
+
+        getUser.innerHTML = '';
+        userStatusInfo.innerHTML = '';
+        currentRoomName.innerHTML = '';
         myStatus.innerHTML = 'You are online';
-        
-        // enable send button and text input again when server or client is back online
-        if (messageInput || messageSendButton) {
-            messageSendButton.disabled = false;
-            messageInput.disabled = false;
-        }
     });
 
     // triggered when the client pings the server and can't connect
@@ -73,12 +75,13 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Cannot reach the server at this moment');
 
         userStatusInfo.innerHTML = '';
+        currentRoomName.innerHTML = '';
+        getUser.innerHTML = '';
         myStatus.innerHTML = 'Cannot reach the server at this moment';
 
         // disable send button and text input until server or client is back online
         if (messageInput || messageSendButton) {
-            messageSendButton.disabled = true;
-            messageInput.disabled = true;
+            clearInputResources(true);
         }
     });
 
@@ -115,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // get the html element and update it
-        if (data.username == getUser.innerHTML && data.info != 'verify_status') {
+        if (getUser.innerHTML && data.info != 'verify_status') {
             userStatusInfo.innerHTML = `${data.username} is ${data.info} from broadcast`;
         }
     });
