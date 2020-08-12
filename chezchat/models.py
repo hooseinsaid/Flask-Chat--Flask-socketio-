@@ -47,19 +47,11 @@ class History(db.Model):
 
 class Room(db.Model):
     room_id = db.Column(db.Integer, primary_key=True)
-    room_url = db.Column(db.String, unique=True)
     name = db.Column(db.String(128), index=True)
     private_room = db.Column(db.Boolean, default=False)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     room_history = db.relationship('History', backref='room_records', lazy='dynamic')
-
-    def create_room_url(self):
-        random_hex = secrets.token_hex(16)
-        room = Room.query.filter_by(room_url=random_hex).first()
-        if room is not None:
-           self.create_room_url()
-        self.room_url = random_hex
 
 class HistorySchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -70,4 +62,12 @@ class RoomSchema(ma.SQLAlchemyAutoSchema):
     room_history = ma.Nested(HistorySchema, many=True)
     class Meta:
         model = Room
+        include_fk = True
+
+class UsersSchema(ma.SQLAlchemyAutoSchema):
+    user_history = ma.Nested(HistorySchema, many=True)
+    room_created = ma.Nested(RoomSchema, many=True)
+    room_subscribed = ma.Nested(RoomSchema, many=True)
+    class Meta:
+        model = Users
         include_fk = True

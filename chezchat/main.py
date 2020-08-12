@@ -6,17 +6,14 @@ from chezchat.models import *
 from chezchat.forms import *
 from flask_login import current_user, login_user, logout_user, login_required
 
-current_room_session = None
+sessionID = {}
 
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
-    form = MessageForm()
-    form2 = CreateRoomForm()
+    form = CreateRoomForm()
     check_private_rooms = []
     friends_list = []
-    room_members = []
-    current_room = None
     all_users = Users.query.all()
     all_rooms = Room.query.all()
     rooms = current_user.room_subscribed
@@ -31,21 +28,11 @@ def home():
     for room_check in all_rooms:
         if room_check.private_room == True:
             check_private_rooms.append(room_check.name)
-    # if request.args.get("r"):
-    #     room_members = Users.query.filter(Users.room_subscribed.any(room_url=request.args.get("r"))).all()
-    #     current_room = Room.query.filter_by(room_url=request.args.get("r")).first()
-    #     if current_room not in current_user.room_subscribed:
-    #         abort(403)
-    #         pass
-    #     else:
-    #         session['current_room'] = current_room.room_id
-    # else:
-    #     session.pop('current_room', None)
-    if form2.submit.data:
-        if form2.validate_on_submit():
-            # consider making this a seperate function
-            new_room = Room(name=form2.name.data, room_created=current_user)
-            new_room.create_room_url()
+
+    # use ajax to avoid redirect maybe
+    if form.submit.data:
+        if form.validate_on_submit():
+            new_room = Room(name=form.name.data, room_created=current_user)
             db.session.add(new_room)
             new_room.subscribers.append(current_user)
             db.session.commit()
@@ -53,24 +40,23 @@ def home():
             return redirect(url_for('home'))
         else:
             flash('Room not created. Make sure the name field is not empty and is at least 4 characters long ')
-    return render_template('chatroom.html', form=form, form2=form2, rooms=rooms, room_members=room_members, 
-                            current_user=current_user, current_room=current_room, all_rooms=all_rooms, 
-                            all_users=all_users, check_private_rooms=check_private_rooms, 
-                            zipped_friends_list=zipped_friends_list)
+    return render_template('chatroom.html', form=form, rooms=rooms, current_user=current_user, all_rooms=all_rooms, 
+                            all_users=all_users, check_private_rooms=check_private_rooms, zipped_friends_list=zipped_friends_list)
 
-@app.route('/private-room', methods=['GET', 'POST'])
+@app.route('/room-details', methods=['GET', 'POST'])
 @login_required
-def private_room():
-    global current_room_session
+def room_details():
     current_room = Room.query.filter_by(room_id=request.json['room_id']).first()
-    room_schema = RoomSchema()
-    current_room_schema = room_schema.dump(current_room)
-    if current_room not in current_user.room_subscribed:
-        abort(403)
+    if current_room is not None and current_room in current_user.room_subscribed:
+        room_members = current_room.subscribers
+        room_schema = RoomSchema()
+        current_room_schema = room_schema.dump(current_room)
+        users_schema = UsersSchema(many=True, exclude=("password_hash",))
+        room_members_schema = users_schema.dump(room_members)
     else:
-        current_room_session = request.json['room_id']
-        print(f"\n\n\n{current_room_session} from private\n\n\n")
-    return jsonify({'current_room' : current_room_schema})
+        abort(403)
+    return jsonify({'current_room' : current_room_schema, 'room_members' : room_members_schema})
+    
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -129,16 +115,14 @@ def leave_room():
 @app.route('/add-user', methods=['GET', 'POST'])
 @login_required
 def add_user():
-    print(f"\n\n\n{current_room_session} from add user\n\n\n")
     private_room = None
-    user_to_add = Users.query.filter_by(id=request.json['user_id']).first()
+    user_to_add = Users.query.filter_by(username=request.json['user_username']).first()
     if user_to_add is not None:
         private_room_name = (f'{user_to_add.id}{current_user.id}')
         private_room_name2 = (f'{current_user.id}{user_to_add.id}')
         if not Room.query.filter_by(name=private_room_name).first():
             if not Room.query.filter_by(name=private_room_name2).first():
                 private_room = Room(name=private_room_name, room_created=current_user, private_room=True)
-                private_room.create_room_url()
                 db.session.add(private_room)
                 private_room.subscribers.append(current_user)
                 private_room.subscribers.append(user_to_add)
@@ -151,51 +135,97 @@ def add_user():
 @app.route('/remove-user', methods=['GET', 'POST'])
 @login_required
 def remove_user():
-    global current_room_session
-    current_room_session = None
-    print(f"\n\n\n{current_room_session} from remove user\n\n\n")
     private_room = Room.query.filter_by(room_id=request.json['room_id']).first()
-    room_history = private_room.room_history
     if private_room is not None:
+        # name is changed so it doesn't conflict when we want to add the user again
+        # room is not deleted so we don't have a primary key mess
+        private_room.name = f'Deletedby{current_user.username}'
+        room_history = private_room.room_history
+        room_members = private_room.subscribers
+        recipients_list = handle_recipients(private_room)
+        # work on this later to be able to remove users from dom when they are removed without refreshing
+        # for recipient in recipients_list:
+        #     socketio.emit('update_users', {'room_id': private_room.room_id}, room=recipient)
+        for member in room_members:
+            private_room.subscribers.remove(member)
         for history in room_history:
             db.session.delete(history)
-        db.session.delete(private_room)
         db.session.commit()
     return jsonify()
 
 @socketio.on('handle_messages')
 def handleMessage(data):
-    print(f"\n\n\n{current_room_session} from handle msgs \n\n\n")
-    if current_room_session is not None:
-        current_room = Room.query.filter_by(room_id=current_room_session).first()
-    print(f"\n\n\n{current_room.room_id} from handle msgs query \n\n\n")
+    # fix session_current_room in room_id below
+    session_current_room = data['room_id']
+    print(f'\n\n{session_current_room} handle msgs\n\n')
+    current_room = Room.query.filter_by(room_id=session_current_room).first()
+    # set room_id from here received from json data
     if current_room is not None:
         message = History(messages=data['msg'], user_history=current_user, room_records=current_room)
         db.session.add(message)
-    db.session.commit()
-    emit('handle_messages', data, include_self=False, broadcast=True)
+        db.session.commit()
+        recipients_list = handle_recipients(current_room)
+        print(f'\n\n{recipients_list}\n\n from return fxn')
+        # When emitting a msg and the list is empty alert the sender that his msg has not been delivered as he has been kicked
+    for recipient in recipients_list:
+        emit('handle_messages', data, room=recipient)
+
+def handle_recipients(current_room):
+    recipients_list = []
+    room_members_username_list = []
+    room_members = current_room.subscribers
+
+    for member in room_members:
+        room_members_username_list.append(member.username)
+    
+    for key in sessionID.keys():
+        # the sorting of who to message as a funtion
+        if key in room_members_username_list and key != current_user.username:
+            recipients_list.append(sessionID[key])
+            print(f"{key} appended")
+        print(recipients_list)
+    return recipients_list
+
 
 @socketio.on('connect')
 def test_connect():
+    # global sessionID
     # use session to put the sid generated when the client connects in session
     # like this session[current_user.username] = sid
-    print(f'\n\n\n\n{current_user.username} has connection re-established\n\n\n\n')
+    sessionID[current_user.username] = request.sid
+    print(f'\n\n\n\n{current_user.username} with {request.sid} has connection re-established')
+    print(f"{sessionID[current_user.username]} dictionary")
+    print(sessionID)
+    print(f'\n\n\n\n')
     current_user.online_at = datetime.utcnow()
     db.session.commit()
+    # here thing will work differently check all the rooms I belong to and emit to them
     emit('broadcast', {'username': current_user.username, 'info': 'online'}, include_self=False, broadcast=True)
 
 # triggered when the server pongs the client and can't connect with it
 @socketio.on('disconnect')
 def test_disconnect():
-    print(f'\n\n\n\n{current_user.username} has connection lost\n\n\n\n')
+    sessionID.pop(current_user.username, None)
+    print(f'\n\n\n\n{current_user.username} with {request.sid} has connection lost\n\n\n\n')
+    print(f'\n\n\n\n{sessionID} dictionary')
     current_user.last_seen = datetime.utcnow()
     current_user.last_seen_update_on_server_restart = False
     db.session.commit()
+    # here thing will work differently check all the rooms I belong to and emit to them
     emit('broadcast', {'username': current_user.username, 'info': 'offline'}, include_self=False, broadcast=True)
 
 @socketio.on('broadcast')
 def broadcast(data):
-    emit('broadcast', {'username': data['username'], 'info': data['info']}, include_self=False, broadcast=True)
+    session_current_room = data['room_id']
+    print(f'\n\n{session_current_room} from broadcast\n\n')
+    # fix session_current_room in room_id below get value from emiited events. will be stored in local storage
+    current_room = Room.query.filter_by(room_id=session_current_room).first()
+    if current_room:
+        recipients_list = handle_recipients(current_room)
+        print(f'\n\n{recipients_list}from return fxn broadcast\n\n')
+        # here the members of the room I mean to address will get the msg
+        for recipient in recipients_list:
+            emit('broadcast', {'username': data['username'], 'info': data['info']}, room=recipient)
 
 @app.route('/get-user-status', methods=['GET', 'POST'])
 @login_required

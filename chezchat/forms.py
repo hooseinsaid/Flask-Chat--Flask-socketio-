@@ -20,10 +20,6 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Sign In')
 
-class MessageForm(FlaskForm):
-    message = TextAreaField('Message')
-    submit = SubmitField('Send')
-
 class CreateRoomForm(FlaskForm):
     name = StringField('Group name',  validators=[DataRequired(), Length(min=4, max=128)])
     submit = SubmitField('Create room')

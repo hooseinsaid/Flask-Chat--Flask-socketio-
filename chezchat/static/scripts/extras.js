@@ -1,4 +1,3 @@
-var xhttp = new XMLHttpRequest();
 
 function ajaxCalls(params, element, callback) {
     var xhttp = new XMLHttpRequest();
@@ -30,7 +29,7 @@ function processAddUser(data, element) {
     var div = document.createElement('div');
     div.id = data['roomID']
     div.innerHTML = userName;
-    div.setAttribute("onclick","getCurrentPrivateRoom(this); verify_status()");
+    div.setAttribute("onclick","getCurrentRoom(this); verify_status()");
     var button = document.createElement('button'); 
     button.id = userID;
     button.name = userName;
@@ -96,7 +95,9 @@ function processJoinRoom(data, element) {
     var div = document.createElement('div');
     div.id = roomID;
     div.innerHTML = roomName;
-    var button = document.createElement('button'); 
+    div.setAttribute("onclick","getCurrentRoom(this)");
+    var button = document.createElement('button');
+    button.id = "roomView"
     button.name = roomName;
     button.value = roomID;
     button.setAttribute("onclick","leaveRoom(this);");
@@ -110,6 +111,13 @@ function processJoinRoom(data, element) {
 }
 
 function leaveRoom(element) {
+
+    clearInputResources(true);
+
+    document.getElementById("currentRoomName").innerHTML = '';
+    document.getElementById("user_status").innerHTML = '';
+    document.getElementById("get_user_status").innerHTML = '';
+    
     var roomID = element.value;
     var roomName = element.name;
 
@@ -138,30 +146,61 @@ function processLeaveRoom(data, element) {
     element.parentNode.remove();
 }
 
-function getCurrentPrivateRoom(element) {
+function getCurrentRoom(element) {
     friendName = element.getElementsByTagName("button")[0].name;
     friendUsername = element.getElementsByTagName("button")[0].value;
-    privateRoomID = element.id;
+    roomID = element.id;
+
+    localStorage.setItem("current_room_id", roomID);
+
+    document.getElementById("get_user_status").innerHTML = "";
+    document.getElementById("user_status").innerHTML = "";
+    document.getElementById("currentRoomName").innerHTML = friendName;
     
     // set this value so that verify_status can function from socketio.js
-    document.getElementById("get_user_status").innerHTML = friendUsername;
+    if (element.getElementsByTagName("button")[0].id !== "roomView") {
+        document.getElementById("get_user_status").innerHTML = friendUsername;
+    }
 
-    document.getElementById("currentRoomName").innerHTML = friendName;
+    console.log(document.getElementById("get_user_status").innerHTML)
 
-    var params = {'url': '/private-room', 'payload': privateRoomID, 'key': 'room_id'};
-    ajaxCalls(params, element, processgetCurrentPrivateRoom);
+    var params = {'url': '/room-details', 'payload': roomID, 'key': 'room_id'};
+    ajaxCalls(params, element, processgetCurrentRoom);
 }
 
-function processgetCurrentPrivateRoom(data, element) {
+function processgetCurrentRoom(data, element) {
+    // clear old messaged to display fresh ones
     clearInputResources(false);
 
+    InfoModalBody = document.getElementById("roomInfoModal");
+    messageDisplay = document.getElementById("messages")
+
+    InfoModalBody.innerHTML = '';
+
     current_room = data.current_room;
+    console.log(current_room);
     room_history = current_room.room_history;
     for (x in room_history) {
         msg = room_history[x];
         const li = document.createElement('li');
         li.innerHTML = `${msg['author']} says ${msg['messages']} @ ${moment(msg['timestamp']).format('MMM-D H:mm')}`;
-        document.getElementById("messages").append(li);
+        messageDisplay.append(li);
+    }
+
+    room_members = data.room_members;
+    console.log(room_members);
+    if (current_room.private_room !== true) {
+        for (x in room_members) {
+            member = room_members[x];
+            const div = document.createElement('div');
+            if (member.id === current_room.created_by) {
+                div.innerHTML = `${member.name_surname} ADMIN`;
+            }
+            else {
+                div.innerHTML = member.name_surname;
+            }
+            InfoModalBody.append(div);
+        }
     }
 }
 
@@ -169,6 +208,7 @@ function clearInputResources(value) {
     
     document.getElementById("myMessage").hidden = value;
     document.getElementById("sendbutton").hidden = value;
+    document.getElementById("roomInfoModal").innerHTML = "";
 
     // clears the message li
     var msgContent = document.getElementById("messages");
@@ -178,3 +218,5 @@ function clearInputResources(value) {
         }
     }
 }
+
+// set localstorage on click of a room, clear on offline or fresh online. transmit this value with each emit

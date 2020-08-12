@@ -40,6 +40,7 @@ function verify_status() {
             }
         }
     };
+    console.log(getUser.innerHTML)
     var data = JSON.stringify({'user': getUser.innerHTML});
     xhttp.send(data);
 }
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     var socket = io();
 
     
+    localStorage.removeItem("current_room_id");
     messageSendButton.hidden = true;
     messageInput.hidden = true;
     
@@ -64,6 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.on('connect', () => {
         console.log('Verify Status running from connect')
 
+        
+        localStorage.removeItem("current_room_id");
+
         getUser.innerHTML = '';
         userStatusInfo.innerHTML = '';
         currentRoomName.innerHTML = '';
@@ -73,6 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // triggered when the client pings the server and can't connect
     socket.on('disconnect', () => {
         console.log('Cannot reach the server at this moment');
+
+        localStorage.removeItem("current_room_id");
 
         userStatusInfo.innerHTML = '';
         currentRoomName.innerHTML = '';
@@ -89,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // emits to handle_messages event on the server side
     if (messageSendButton) {
         document.querySelector('#sendbutton').onclick = () => {
-            var data = {'msg': document.querySelector('#myMessage').value, 'username': username };
+            var data = {'msg': document.querySelector('#myMessage').value, 'username': username, 'room_id': localStorage.getItem('current_room_id') };
             socket.emit('handle_messages', data);
             append_msgs(data);
             document.querySelector('#myMessage').value = '';
@@ -107,21 +114,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // receives message from an the handle_messages event on the server side and displays them to a client
     socket.on('handle_messages', data => { 
         append_msgs(data);
+        alert(`${data.username} says ${data.msg}`)
     });
 
     // receives the message emitted by broadcast event and confirms that the client is connected/disconnected to/from the server
     socket.on('broadcast', data => {
         console.log(`${data.username} is ${data.info}`);
         
-        if (data.info == 'verify_status') {
+        if (data.info == 'verify_status' && getUser.innerHTML) {
             verify_status();
         }
+
+        alert(`${data.username} is ${data.info}`)
 
         // get the html element and update it
         if (getUser.innerHTML && data.info != 'verify_status') {
             userStatusInfo.innerHTML = `${data.username} is ${data.info} from broadcast`;
         }
     });
+
+    // socket.on('update_users', data => {
+    //     roomID = `".${data.room_id}"`
+    //     console.log(roomID)
+    //     final = document.getElementById("friendsPanel").document.querySelectorAll(roomID)
+    //     console.log(final)
+    // });
 
     if (messageInput) {
         messageInput.addEventListener('keypress', handleKeyPress);
@@ -132,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // when user is pressing down on keys, clear the timeout
     function handleKeyPress(e) {
         clearTimeout(timer);
-        socket.emit('broadcast', {'username': username, 'info': 'typing' });
+        socket.emit('broadcast', {'username': username, 'info': 'typing', 'room_id': localStorage.getItem('current_room_id')});
     }
 
     // when the user has stopped pressing on keys, set the timeout
@@ -142,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         timer = setTimeout(() => {
             // emit to broadcast so that the server knows that we are done typing so verify_status can be called
             // to verify the users online/offline status afresh
-            socket.emit('broadcast', {'username': username, 'info': 'verify_status' });
+            socket.emit('broadcast', {'username': username, 'info': 'verify_status', 'room_id': localStorage.getItem('current_room_id') });
         }, timeoutVal);
     }
             

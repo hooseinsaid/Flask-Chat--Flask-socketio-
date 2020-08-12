@@ -11,9 +11,9 @@
     <div id="get_user_status" hidden></div>
 
     <button data-toggle="modal" data-target="#myModal">New group</button>
-    {% if current_room is not none %}
+
+    <!-- should show when a group/room is clicked and should get the info by ajax-->
     <button data-toggle="modal" data-target="#myModal2">Group info</button>
-    {% endif %}
     <a href="{{ url_for('logout') }}"><button>Logout</button></a>
 
 
@@ -21,9 +21,10 @@
     <h1>Friends</h1>
     <div id="friendsPanel">
         {% for friend, room in zipped_friends_list %}
-            <!-- onclick a function should trigger ajax to get the needed -->
-            <div id="{{ room.room_id }}" onclick="getCurrentPrivateRoom(this); verify_status();">
+            <!-- onclick a function triggers ajax to get the needed -->
+            <div id="{{ room.room_id }}" class="{{ room.room_id }}" onclick="getCurrentRoom(this); verify_status()">
                 {{ friend.name_surname }}
+                <!-- possible ID conflict as I use room id here too -->
                 <button id="{{ friend.id }}" name="{{ friend.name_surname }}" value="{{ friend.username }}" onclick="removeUser(this)">Remove user</button>
             </div>
         {% endfor %}
@@ -33,9 +34,9 @@
     <div id="roomsPanel">
     {% for room in rooms %}
         {% if room.private_room == False %}
-            <div id="{{ room.room_id }}">
+            <div id="{{ room.room_id }}" onclick="getCurrentRoom(this)">
                 {{ room.name }}
-                <button name="{{ room.name }}" value="{{ room.room_id }}" onclick="leaveRoom(this)">Leave room</button>
+                <button id="roomView" name="{{ room.name }}" value="{{ room.room_id }}" onclick="leaveRoom(this)">Leave room</button>
             </div>
         {% endif %}
     {% endfor %}
@@ -69,7 +70,7 @@
         {% endfor %}
     </div>
 
-    <form id="form2" action="" method="post" novalidate>
+    <form action="" method="post" novalidate>
         {{ form.hidden_tag() }}
         <div class="modal fade" id="myModal">
             <div class="modal-dialog modal-dialog-centered" style="max-width: 400px; margin: 1.75rem auto;">
@@ -81,11 +82,11 @@
                     </div>
 
                     <div class="modal-body" style="max-height: 430px; overflow: auto;">
-                        {{ form2.name }}
+                        {{ form.name }}
                     </div>
 
                     <div class="modal-footer">
-                        {{ form2.submit() }}
+                        {{ form.submit() }}
                     </div>
 
                 </div>
@@ -102,16 +103,8 @@
                     <button type="button" class="close close-button" data-dismiss="modal" style="outline: none; font-weight: 500; font-size: 17px;">close</button>
                 </div>
 
-                <div class="modal-body" style="max-height: 430px; overflow: auto;">
-                    {% for member in room_members %}
-                    {% if current_room.private_room == False %}
-                        {% if member.id == current_room.created_by %}
-                            <strong>{{ member.name_surname }} ADMIN</strong><br>
-                        {% else %}
-                            <strong>{{ member.name_surname }}</strong><br>
-                        {% endif %}
-                    {% endif %}
-                    {% endfor %}
+                <div id="roomInfoModal" class="modal-body" style="max-height: 430px; overflow: auto;">
+
                 </div>
 
             </div>
@@ -129,7 +122,7 @@
 
 {% endblock %}
 
-{% block socketio %}
+{% block scripts %}
 
     <!-- Get current_user.username -->
     <script type="text/javascript">
