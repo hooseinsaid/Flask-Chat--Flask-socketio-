@@ -15,14 +15,13 @@ function ajaxCalls(params, element, callback) {
 }
 
 function addUser(element) {
-    var userID = element.id
-    var params = {'url': '/add-user', 'payload': userID, 'key': 'user_id'};
+    var userUsername = element.value
+    var params = {'url': '/add-user', 'payload': userUsername, 'key': 'user_username'};
     ajaxCalls(params, element, processAddUser);
 }
 
 function processAddUser(data, element) {
     
-    var userID = element.id;
     var userName = element.name;
     var userUsername = element.value;
 
@@ -30,8 +29,7 @@ function processAddUser(data, element) {
     div.id = data['roomID']
     div.innerHTML = userName;
     div.setAttribute("onclick","getCurrentRoom(this); verify_status()");
-    var button = document.createElement('button'); 
-    button.id = userID;
+    var button = document.createElement('button');
     button.name = userName;
     button.value = userUsername;
     button.setAttribute("onclick","removeUser(this);");
@@ -60,14 +58,12 @@ function removeUser(element) {
 
 function processRemoveUser(data, element) {
 
-    var friendID = element.id;
     var friendName = element.name;
     var friendUsername = element.value;
 
     var div = document.createElement('div');
     div.innerHTML = friendName;
-    var button = document.createElement('button'); 
-    button.id = friendID;
+    var button = document.createElement('button');
     button.name = friendName;
     button.value = friendUsername;
     button.setAttribute("onclick","addUser(this);");

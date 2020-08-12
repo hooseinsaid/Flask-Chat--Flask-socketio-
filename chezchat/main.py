@@ -128,6 +128,10 @@ def add_user():
                 private_room.subscribers.append(user_to_add)
                 db.session.commit()
     if private_room is not None:
+        recipients_list = handle_recipients(private_room)
+        # work on this later to be able to remove users from dom when they are removed without refreshing
+        for recipient in recipients_list:
+            socketio.emit('update_add_users', {'roomID': private_room.room_id, 'user_to_add': current_user.username}, room=recipient)
         return jsonify(roomID=private_room.room_id)
     else:
         return "<h1>An error has occurred</h1>"
@@ -144,8 +148,8 @@ def remove_user():
         room_members = private_room.subscribers
         recipients_list = handle_recipients(private_room)
         # work on this later to be able to remove users from dom when they are removed without refreshing
-        # for recipient in recipients_list:
-        #     socketio.emit('update_users', {'room_id': private_room.room_id}, room=recipient)
+        for recipient in recipients_list:
+            socketio.emit('update_remove_users', {'room_id': private_room.room_id, 'user': current_user.username}, room=recipient)
         for member in room_members:
             private_room.subscribers.remove(member)
         for history in room_history:

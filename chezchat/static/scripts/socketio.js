@@ -133,12 +133,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // socket.on('update_users', data => {
-    //     roomID = `".${data.room_id}"`
-    //     console.log(roomID)
-    //     final = document.getElementById("friendsPanel").document.querySelectorAll(roomID)
-    //     console.log(final)
-    // });
+    socket.on('update_remove_users', data => {
+        const roomID = data.room_id
+        var userElement = document.getElementById(roomID).firstElementChild
+        processRemoveUser(data, userElement)
+        alert(`${data.user} removed you`)
+    });
+
+    socket.on('update_add_users', data => {
+        const userAdd = data.user_to_add
+        var userElement = document.querySelectorAll(`button[value=${CSS.escape(userAdd)}]`)[0]
+        processAddUser(data, userElement)
+        alert(`${userAdd} added you`)
+    });
 
     if (messageInput) {
         messageInput.addEventListener('keypress', handleKeyPress);
