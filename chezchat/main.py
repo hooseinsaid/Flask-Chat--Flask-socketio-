@@ -1,7 +1,7 @@
 from datetime import datetime
 from flask import render_template, flash, redirect, url_for, session, abort, request, jsonify
 from flask_socketio import send, emit, join_room, leave_room
-from chezchat import socketio, app, db, moment
+from chezchat import socketio, app, db
 from chezchat.models import *
 from chezchat.forms import *
 from flask_login import current_user, login_user, logout_user, login_required
@@ -120,16 +120,15 @@ def add_user():
     if user_to_add is not None:
         private_room_name = (f'{user_to_add.id}{current_user.id}')
         private_room_name2 = (f'{current_user.id}{user_to_add.id}')
-        if not Room.query.filter_by(name=private_room_name).first():
-            if not Room.query.filter_by(name=private_room_name2).first():
-                private_room = Room(name=private_room_name, room_created=current_user, private_room=True)
-                db.session.add(private_room)
-                private_room.subscribers.append(current_user)
-                private_room.subscribers.append(user_to_add)
-                db.session.commit()
+        if not (Room.query.filter_by(name=private_room_name).first() and Room.query.filter_by(name=private_room_name2).first()):
+            private_room = Room(name=private_room_name, room_created=current_user, private_room=True)
+            db.session.add(private_room)
+            private_room.subscribers.append(current_user)
+            private_room.subscribers.append(user_to_add)
+            db.session.commit()
     if private_room is not None:
         recipients_list = handle_recipients(private_room)
-        # work on this later to be able to remove users from dom when they are removed without refreshing
+        # sends an emit to the user who has been removed by the current_user and updates their friend's list automatically without refreshing
         for recipient in recipients_list:
             socketio.emit('update_add_users', {'roomID': private_room.room_id, 'user_to_add': current_user.username}, room=recipient)
         return jsonify(roomID=private_room.room_id)
@@ -147,7 +146,7 @@ def remove_user():
         room_history = private_room.room_history
         room_members = private_room.subscribers
         recipients_list = handle_recipients(private_room)
-        # work on this later to be able to remove users from dom when they are removed without refreshing
+        # sends an emit to the user who has been removed by the current_user and updates their friend's list automatically without refreshing
         for recipient in recipients_list:
             socketio.emit('update_remove_users', {'room_id': private_room.room_id, 'user': current_user.username}, room=recipient)
         for member in room_members:

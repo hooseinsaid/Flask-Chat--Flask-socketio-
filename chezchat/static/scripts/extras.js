@@ -143,6 +143,9 @@ function processLeaveRoom(data, element) {
 }
 
 function getCurrentRoom(element) {
+
+    document.getElementById("pre-user-select").hidden = true;
+
     friendName = element.getElementsByTagName("button")[0].name;
     friendUsername = element.getElementsByTagName("button")[0].value;
     roomID = element.id;
@@ -178,8 +181,9 @@ function processgetCurrentRoom(data, element) {
     room_history = current_room.room_history;
     for (x in room_history) {
         msg = room_history[x];
+        console.log(msg)
         const li = document.createElement('li');
-        li.innerHTML = `${msg['author']} says ${msg['messages']} @ ${moment(msg['timestamp']).format('MMM-D H:mm')}`;
+        li.innerHTML = `${msg['author']} says ${msg['messages']} @ ${moment.utc(msg['timestamp']).local().format('MMM-D H:mm')}`;
         messageDisplay.append(li);
     }
 
@@ -202,8 +206,10 @@ function processgetCurrentRoom(data, element) {
 
 function clearInputResources(value) {
     
-    document.getElementById("myMessage").hidden = value;
-    document.getElementById("sendbutton").hidden = value;
+    // document.getElementById("myMessage").hidden = value;
+    // document.getElementById("sendbutton").hidden = value;
+
+    document.getElementById("msgInput").hidden = value;
     document.getElementById("roomInfoModal").innerHTML = "";
 
     // clears the message li

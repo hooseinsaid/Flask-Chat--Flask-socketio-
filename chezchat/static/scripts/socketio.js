@@ -51,8 +51,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
     localStorage.removeItem("current_room_id");
-    messageSendButton.hidden = true;
-    messageInput.hidden = true;
+
+    document.getElementById("msgInput").hidden = true;
+    
+    // messageSendButton.hidden = true;
+    // messageInput.hidden = true;
     
     // update the presence status of the recipient
     setInterval(function() {
@@ -120,16 +123,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // receives the message emitted by broadcast event and confirms that the client is connected/disconnected to/from the server
     socket.on('broadcast', data => {
         console.log(`${data.username} is ${data.info}`);
-        
-        if (data.info == 'verify_status' && getUser.innerHTML) {
+        // compare data.username and getUserInfo and if they're the same show the typing or online msg
+        // for notification use a callback. when the msg is delivered increase a counter or something
+        // when a user logs in elsewhere, log them out on the previous place and display an alert saying they've 
+        // been loggeg out of the previous place they were logged in
+        if (data.info == 'verify_status' && getUser.innerHTML == data.username) {
             verify_status();
         }
 
-        alert(`${data.username} is ${data.info}`)
 
         // get the html element and update it
-        if (getUser.innerHTML && data.info != 'verify_status') {
+        if (getUser.innerHTML == data.username && data.info != 'verify_status') {
             userStatusInfo.innerHTML = `${data.username} is ${data.info} from broadcast`;
+            // alert(`${data.username} is ${data.info}`)
         }
     });
 
@@ -138,6 +144,15 @@ document.addEventListener('DOMContentLoaded', () => {
         var userElement = document.getElementById(roomID).firstElementChild
         processRemoveUser(data, userElement)
         alert(`${data.user} removed you`)
+
+
+        if (data.user === getUser.innerHTML) {
+            
+            document.getElementById("user_status").innerHTML = "";
+            document.getElementById("currentRoomName").innerHTML = "";
+            document.getElementById("get_user_status").innerHTML = "";
+            clearInputResources(true);
+        }
     });
 
     socket.on('update_add_users', data => {

@@ -2,74 +2,124 @@
 
 {% block content %}
 
-    <!-- My status -->
-    <h3><em id="my_status"></em></h3>
-
-    <h4><em><div id="currentRoomName"></div></em></h4>
-    <h6><em><div id="user_status"></div></em></h6>
-    <!-- I have this guys ID on button click assign this the button value -->
-    <div id="get_user_status" hidden></div>
-
-    <button data-toggle="modal" data-target="#myModal">New group</button>
-
-    <!-- should show when a group/room is clicked and should get the info by ajax-->
-    <button data-toggle="modal" data-target="#myModal2">Group info</button>
-    <a href="{{ url_for('logout') }}"><button>Logout</button></a>
-
-
-    <strong>Current User: {{ current_user.username }}</strong>
-    <h1>Friends</h1>
-    <div id="friendsPanel">
-        {% for friend, room in zipped_friends_list %}
-            <!-- onclick a function triggers ajax to get the needed -->
-            <div id="{{ room.room_id }}" onclick="getCurrentRoom(this); verify_status()">
-                {{ friend.name_surname }}
-                <!-- possible ID conflict as I use room id here too -->
-                <button name="{{ friend.name_surname }}" value="{{ friend.username }}" onclick="removeUser(this)">Remove user</button>
-            </div>
-        {% endfor %}
-    </div>
-
-    <h1>My rooms</h1>
-    <div id="roomsPanel">
-    {% for room in rooms %}
-        {% if room.private_room == False %}
-            <div id="{{ room.room_id }}" onclick="getCurrentRoom(this)">
-                {{ room.name }}
-                <button id="roomView" name="{{ room.name }}" value="{{ room.room_id }}" onclick="leaveRoom(this)">Leave room</button>
-            </div>
-        {% endif %}
-    {% endfor %}
-    </div>
-
-    <h1>All available users</h1>
-    <div id="availableUsers">
-        {% for user in all_users %}
-            {% if user != current_user %}
-                {% set my_string = current_user.id ~ user.id ~ '' %}
-                {% set my_string2 = user.id ~ current_user.id ~ '' %}
-                {% if my_string not in check_private_rooms and my_string2 not in check_private_rooms %}
-                <div>
-                    {{ user.name_surname }}
-                    <button name="{{ user.name_surname }}" value="{{ user.username }}" onclick="addUser(this)">Add user</button>
+    <div class="container-fluid app">        
+        <!-- Sidebar start -->
+        <div class="row app">
+            <div class="col-sm-4 side">
+                <div class="heading">
+                    <em id="my_status"></em><br>
+                    <em>Current User: {{ current_user.username }}</em>
+                    <a href="#" data-toggle="modal" data-target="#myModal">New group</a>
                 </div>
-                {% endif %}
-            {% endif %}
-        {% endfor %}
-    </div>
 
-    <h1>All available rooms</h1>
-    <div id="availableRooms">
-        {% for room in all_rooms %}
-            {% if room.private_room == False and room not in current_user.room_subscribed %}
-            <div>
-                {{ room.name }}
-                <button name="{{ room.name }}" value="{{ room.room_id }}" onclick="joinRoom(this)">Join room</button>
+                <div class="nav-section">
+                    <h5><em>Friends</em></h5>
+                    <div id="friendsPanel">
+                        {% for friend, room in zipped_friends_list %}
+                            <!-- onclick a function triggers ajax to get the needed -->
+                            <div id="{{ room.room_id }}" onclick="getCurrentRoom(this); verify_status()">
+                                {{ friend.name_surname }}
+                                <!-- possible ID conflict as I use room id here too -->
+                                <button name="{{ friend.name_surname }}" value="{{ friend.username }}" onclick="removeUser(this)">Remove user</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <h5><em>My rooms</em></h5>
+                    <div id="roomsPanel">
+                    {% for room in rooms %}
+                        {% if room.private_room == False %}
+                            <div id="{{ room.room_id }}" onclick="getCurrentRoom(this)">
+                                {{ room.name }}
+                                <button id="roomView" name="{{ room.name }}" value="{{ room.room_id }}" onclick="leaveRoom(this)">Leave room</button>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    </div>
+
+                    <h5><em>All available users</em></h5>
+                    <div id="availableUsers">
+                        {% for user in all_users %}
+                            {% if user != current_user %}
+                                {% set my_string = current_user.id ~ user.id ~ '' %}
+                                {% set my_string2 = user.id ~ current_user.id ~ '' %}
+                                {% if my_string not in check_private_rooms and my_string2 not in check_private_rooms %}
+                                <div>
+                                    {{ user.name_surname }}
+                                    <button name="{{ user.name_surname }}" value="{{ user.username }}" onclick="addUser(this)">Add user</button>
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <h5><em>All available rooms</em></h5>
+                    <div id="availableRooms">
+                        {% for room in all_rooms %}
+                            {% if room.private_room == False and room not in current_user.room_subscribed %}
+                            <div>
+                                {{ room.name }}
+                                <button name="{{ room.name }}" value="{{ room.room_id }}" onclick="joinRoom(this)">Join room</button>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                
+                <div>
+                    <a style="text-decoration: none;" href="{{ url_for('logout') }}"><button style="border-radius: 0;" type="button" class="btn btn-danger btn-block btn-sm">Logout</button></a>
+                </div>
             </div>
-            {% endif %}
-        {% endfor %}
+        
+            <!-- Sidebar end -->
+
+            <!-- My status -->
+            <div class="col-sm-8 chatArea">
+
+                <!-- should show when a group/room is clicked and should get the info by ajax-->
+                <div class="heading" data-toggle="modal" data-target="#myModal2">
+                    <em><div id="currentRoomName"></div></em>
+                    <em><div id="user_status"></div></em>
+                    <!-- I have this guys ID on button click assign this the button value -->
+                    <div id="get_user_status" hidden></div>
+                </div>
+
+                <!-- Navbar end -->
+                
+                <div class="messageArea">
+
+                    <div id="pre-user-select">
+                        <div style="font-size: 16px;" class="text-muted">
+                            Please select a chat to start messaging
+                        </div>
+                    </div>
+                    
+                    <ul id="messages"></ul>
+                </div>
+
+                <div id="msgInput">
+                    <div style="margin: 0; width: 100%;" class="row">
+
+                        <div class="col-sm-1 col-xs-1 zero">
+
+                        </div>
+
+                        <div class="col-sm-10 col-xs-10 zero">
+                            <input id="myMessage" style="width: 100%;" type="text" name="message">
+                        </div>
+
+                        <div class="col-sm-1 col-xs-1 zero">
+                            <input id="sendbutton" type="submit" name="submit" value="Send">
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
+    
     <form action="" method="post" novalidate>
         {{ form.hidden_tag() }}
         <div class="modal fade" id="myModal">
@@ -109,15 +159,6 @@
 
             </div>
         </div>
-    </div>
-
-    <!-- not necessary to do this with flask forms as it should be created on ajax server response -->
-    <ul id="messages"></ul>
-
-    <!-- message input and submit box to be replaced with html ones -->
-    <div id="msgInput">
-        <input id="myMessage" type="text" name="message">
-        <input id="sendbutton" type="submit" name="submit" value="Send">
     </div>
 
 {% endblock %}
