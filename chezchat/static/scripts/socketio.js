@@ -140,10 +140,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     socket.on('update_remove_users', data => {
-        const roomID = data.room_id
-        var userElement = document.getElementById(roomID).firstElementChild
-        processRemoveUser(data, userElement)
-        alert(`${data.user} removed you`)
+
+        const userRemove = data.user_to_remove;
+        var userElement = document.querySelectorAll(`button[value=${CSS.escape(userRemove)}]`)[0]
+        console.log(userElement);
+        processRemoveUser(data, userElement);
+        alert(`${userRemove} removed you`);
 
 
         if (data.user === getUser.innerHTML) {
@@ -156,16 +158,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     socket.on('update_add_users', data => {
-        const userAdd = data.user_to_add
-        var userElement = document.querySelectorAll(`button[value=${CSS.escape(userAdd)}]`)[0]
-        processAddUser(data, userElement)
-        alert(`${userAdd} added you`)
+        const userAdd = data.user_to_add;
+        var userElement = document.querySelectorAll(`button[value=${CSS.escape(userAdd)}]`)[0];
+        processAddUser(data, userElement);
+        alert(`${userAdd} added you`);
     });
 
-    if (messageInput) {
-        messageInput.addEventListener('keypress', handleKeyPress);
-        messageInput.addEventListener('keyup', handleKeyUp);
-    }
+    socket.on('update_users', data => {
+        processRemoveUser(data, data)
+    });
+
+    socket.on('update_rooms', data => {
+        processLeaveRoom(data, data)
+    });
+
+    messageInput.addEventListener('keypress', handleKeyPress);
+    messageInput.addEventListener('keyup', handleKeyUp);
     
 
     // when user is pressing down on keys, clear the timeout

@@ -27,14 +27,27 @@ function processAddUser(data, element) {
 
     var div = document.createElement('div');
     div.id = data['roomID']
-    div.innerHTML = userName;
+    div.setAttribute("class","user-list");
+
+    
+    var div2 = document.createElement('div');
+    div2.innerHTML = userName;
+    div2.setAttribute("class","name-section");
+
+
     div.setAttribute("onclick","getCurrentRoom(this); verify_status()");
     var button = document.createElement('button');
+    button.setAttribute("class","btn btn-danger btn-sm");
     button.name = userName;
     button.value = userUsername;
     button.setAttribute("onclick","removeUser(this);");
-    var buttonText = document.createTextNode("Remove user");
-    button.appendChild(buttonText);
+    var buttonIcon = document.createElement('i');
+    
+    buttonIcon.setAttribute("class","fas fa-user-minus");
+    buttonIcon.setAttribute("aria-hidden","true");
+    button.appendChild(buttonIcon);
+
+    div.appendChild(div2)
     div.appendChild(button);
     document.getElementById("friendsPanel").append(div);
 
@@ -62,18 +75,27 @@ function processRemoveUser(data, element) {
     var friendUsername = element.value;
 
     var div = document.createElement('div');
-    div.innerHTML = friendName;
+    div.setAttribute("class","user-list");
+    var div2 = document.createElement('div');
+    div2.innerHTML = friendName;
+    div2.setAttribute("class","name-section");
     var button = document.createElement('button');
     button.name = friendName;
     button.value = friendUsername;
     button.setAttribute("onclick","addUser(this);");
-    var buttonText = document.createTextNode("Add user"); 
-    button.appendChild(buttonText);
+    button.setAttribute("class","btn btn-success btn-sm");
+    var buttonIcon = document.createElement('i');
+    buttonIcon.setAttribute("class","fas fa-user-plus");
+    buttonIcon.setAttribute("aria-hidden","true");
+    button.appendChild(buttonIcon);
+    div.appendChild(div2)
     div.appendChild(button);
 
     document.getElementById("availableUsers").append(div);
 
-    element.parentNode.remove();
+    if (element.parentNode) {
+        element.parentNode.remove();
+    }
 }
 
 function joinRoom(element) {
@@ -90,16 +112,31 @@ function processJoinRoom(data, element) {
 
     var div = document.createElement('div');
     div.id = roomID;
-    div.innerHTML = roomName;
+    div.setAttribute("class","user-list");
     div.setAttribute("onclick","getCurrentRoom(this)");
+    var div2 = document.createElement('div');
+    div2.setAttribute("class","name-section");
+    div2.innerHTML = roomName;
     var button = document.createElement('button');
+    button.setAttribute("class","btn btn-danger btn-sm");
     button.id = "roomView"
     button.name = roomName;
     button.value = roomID;
     button.setAttribute("onclick","leaveRoom(this);");
-    var buttonText = document.createTextNode("Leave room"); 
-    button.appendChild(buttonText);
+    
+    // var buttonIcon = document.createElement('i');
+    // buttonIcon.setAttribute("class","fas fa-minus");
+    // buttonIcon.setAttribute("aria-hidden","true");
+    // button.appendChild(buttonIcon);
+
+    var spanText = document.createElement('span');
+    spanText.setAttribute("class","font-weight-bold");
+    spanText.innerHTML = "Exit";
+    button.appendChild(spanText);
+
+    div.appendChild(div2)
     div.appendChild(button);
+
 
     document.getElementById("roomsPanel").append(div);
 
@@ -128,23 +165,42 @@ function processLeaveRoom(data, element) {
     var roomName = element.name;
 
     var div = document.createElement('div');
-    div.innerHTML = roomName;
+    div.setAttribute("class","user-list");
+    var div2 = document.createElement('div');
+    div2.innerHTML = roomName;
+    div2.setAttribute("class","name-section");
     var button = document.createElement('button'); 
+    button.setAttribute("class","btn btn-success btn-sm");
     button.name = roomName;
     button.value = roomID;
     button.setAttribute("onclick","joinRoom(this);");
-    var buttonText = document.createTextNode("Join room"); 
-    button.appendChild(buttonText);
+
+    // var buttonIcon = document.createElement('i');
+    // buttonIcon.setAttribute("class","fas fa-plus");
+    // buttonIcon.setAttribute("aria-hidden","true");
+    // button.appendChild(buttonIcon);
+
+    var spanText = document.createElement('span');
+    spanText.setAttribute("class","font-weight-bold");
+    spanText.innerHTML = "Join";
+    button.appendChild(spanText);
+
+    div.appendChild(div2)
     div.appendChild(button);
+
 
     document.getElementById("availableRooms").append(div);
 
-    element.parentNode.remove();
+    if (element.parentNode) {
+        element.parentNode.remove();
+    }
 }
 
 function getCurrentRoom(element) {
 
     document.getElementById("pre-user-select").hidden = true;
+
+    showChatArea();
 
     friendName = element.getElementsByTagName("button")[0].name;
     friendUsername = element.getElementsByTagName("button")[0].value;
@@ -170,6 +226,8 @@ function getCurrentRoom(element) {
 function processgetCurrentRoom(data, element) {
     // clear old messaged to display fresh ones
     clearInputResources(false);
+
+    showChatArea();
 
     InfoModalBody = document.getElementById("roomInfoModal");
     messageDisplay = document.getElementById("messages")
@@ -203,6 +261,29 @@ function processgetCurrentRoom(data, element) {
         }
     }
 }
+
+function showChatArea() {
+
+    document.getElementById("appNavArea").style.zIndex = 1;
+
+    document.getElementById("appChatArea").style.backgroundColor = "white"
+    document.getElementById("appChatArea").style.zIndex = 1000;
+}
+
+function hideChatArea() {
+    document.getElementById("appChatArea").style.zIndex = 1
+    document.getElementById("appNavArea").style.zIndex = 1000;
+    window.event.stopPropagation();
+}
+
+// trying to detect back button
+document.addEventListener('backbutton', function() {
+    if(document.getElementById("appChatArea").style.zIndex == 1000) {
+        hideChatArea();
+        console.log("back button")
+    }
+});
+
 
 function clearInputResources(value) {
     

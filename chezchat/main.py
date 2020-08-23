@@ -30,6 +30,8 @@ def home():
             check_private_rooms.append(room_check.name)
 
     # use ajax to avoid redirect maybe
+    # dismiss modal if success code else show errors
+    # create new room
     if form.submit.data:
         if form.validate_on_submit():
             new_room = Room(name=form.name.data, room_created=current_user)
@@ -37,6 +39,8 @@ def home():
             new_room.subscribers.append(current_user)
             db.session.commit()
             flash(f'{new_room.name} has been created')
+            # updates the rooms list in real time for every other user
+            socketio.emit('update_rooms', {'name': new_room.name, 'value': new_room.room_id}, broadcast=True)
             return redirect(url_for('home'))
         else:
             flash('Room not created. Make sure the name field is not empty and is at least 4 characters long ')
@@ -68,6 +72,8 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
+        # updates the users list in real time for every other user
+        socketio.emit('update_users', {'name': user.name_surname, 'value': user.username}, broadcast=True)
         flash('You have been successfully registered')
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
@@ -148,7 +154,7 @@ def remove_user():
         recipients_list = handle_recipients(private_room)
         # sends an emit to the user who has been removed by the current_user and updates their friend's list automatically without refreshing
         for recipient in recipients_list:
-            socketio.emit('update_remove_users', {'room_id': private_room.room_id, 'user': current_user.username}, room=recipient)
+            socketio.emit('update_remove_users', {'room_id': private_room.room_id, 'user_to_remove': current_user.username}, room=recipient)
         for member in room_members:
             private_room.subscribers.remove(member)
         for history in room_history:

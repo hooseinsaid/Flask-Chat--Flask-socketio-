@@ -5,22 +5,25 @@
     <div class="container-fluid app">        
         <!-- Sidebar start -->
         <div class="row app">
-            <div class="col-sm-4 side">
+            <div id="appNavArea" class="col-sm-4 side forMedia">
                 <div class="heading">
                     <em id="my_status"></em><br>
                     <em>Current User: {{ current_user.username }}</em>
                     <a href="#" data-toggle="modal" data-target="#myModal">New group</a>
                 </div>
 
-                <div class="nav-section">
+                <div class="nav-section" data-simplebar>
                     <h5><em>Friends</em></h5>
                     <div id="friendsPanel">
                         {% for friend, room in zipped_friends_list %}
                             <!-- onclick a function triggers ajax to get the needed -->
-                            <div id="{{ room.room_id }}" onclick="getCurrentRoom(this); verify_status()">
-                                {{ friend.name_surname }}
+                            <div id="{{ room.room_id }}" class="user-list" onclick="getCurrentRoom(this); verify_status()">
+                                <div class="name-section">
+                                    {{ friend.name_surname }}
+                                </div>
                                 <!-- possible ID conflict as I use room id here too -->
-                                <button name="{{ friend.name_surname }}" value="{{ friend.username }}" onclick="removeUser(this)">Remove user</button>
+                                <!-- button should always be last in this div -->
+                                <button class="btn btn-danger btn-sm" name="{{ friend.name_surname }}" value="{{ friend.username }}" onclick="removeUser(this)"><i class="fas fa-user-minus"></i></button>
                             </div>
                         {% endfor %}
                     </div>
@@ -29,37 +32,43 @@
                     <div id="roomsPanel">
                     {% for room in rooms %}
                         {% if room.private_room == False %}
-                            <div id="{{ room.room_id }}" onclick="getCurrentRoom(this)">
-                                {{ room.name }}
-                                <button id="roomView" name="{{ room.name }}" value="{{ room.room_id }}" onclick="leaveRoom(this)">Leave room</button>
+                            <div id="{{ room.room_id }}" class="user-list" onclick="getCurrentRoom(this)">
+                                <div class="name-section">
+                                    {{ room.name }}
+                                </div>
+                                <button class="btn btn-danger btn-sm" id="roomView" name="{{ room.name }}" value="{{ room.room_id }}" onclick="leaveRoom(this)"><span class="font-weight-bold">Exit</span></button>
                             </div>
                         {% endif %}
                     {% endfor %}
                     </div>
 
-                    <h5><em>All available users</em></h5>
+                    <h5><em>Available users</em></h5>
                     <div id="availableUsers">
                         {% for user in all_users %}
                             {% if user != current_user %}
                                 {% set my_string = current_user.id ~ user.id ~ '' %}
                                 {% set my_string2 = user.id ~ current_user.id ~ '' %}
                                 {% if my_string not in check_private_rooms and my_string2 not in check_private_rooms %}
-                                <div>
-                                    {{ user.name_surname }}
-                                    <button name="{{ user.name_surname }}" value="{{ user.username }}" onclick="addUser(this)">Add user</button>
+                                <div class="user-list">
+                                    <div class="name-section">
+                                        {{ user.name_surname }}
+                                    </div>
+                                    <button class="btn btn-success btn-sm" name="{{ user.name_surname }}" value="{{ user.username }}" onclick="addUser(this)"><i class="fas fa-user-plus"></i></button>
                                 </div>
                                 {% endif %}
                             {% endif %}
                         {% endfor %}
                     </div>
 
-                    <h5><em>All available rooms</em></h5>
+                    <h5><em>Available rooms</em></h5>
                     <div id="availableRooms">
                         {% for room in all_rooms %}
                             {% if room.private_room == False and room not in current_user.room_subscribed %}
-                            <div>
-                                {{ room.name }}
-                                <button name="{{ room.name }}" value="{{ room.room_id }}" onclick="joinRoom(this)">Join room</button>
+                            <div class="user-list">
+                                <div class="name-section">
+                                    {{ room.name }}
+                                </div>
+                                <button class="btn btn-success btn-sm" name="{{ room.name }}" value="{{ room.room_id }}" onclick="joinRoom(this)"><span class="font-weight-bold">Join</span></button>
                             </div>
                             {% endif %}
                         {% endfor %}
@@ -75,19 +84,22 @@
             <!-- Sidebar end -->
 
             <!-- My status -->
-            <div class="col-sm-8 chatArea">
+            <div id="appChatArea" class="col-sm-8 chatArea forMedia">
 
                 <!-- should show when a group/room is clicked and should get the info by ajax-->
                 <div class="heading" data-toggle="modal" data-target="#myModal2">
-                    <em><div id="currentRoomName"></div></em>
-                    <em><div id="user_status"></div></em>
+                    <i class="fas fa-arrow-left" onclick="hideChatArea()"></i>
+                    <div style="display: block;">
+                        <div id="currentRoomName"></div>
+                        <div id="user_status"></div>
+                    </div>
                     <!-- I have this guys ID on button click assign this the button value -->
                     <div id="get_user_status" hidden></div>
                 </div>
 
                 <!-- Navbar end -->
                 
-                <div class="messageArea">
+                <div class="messageArea" data-simplebar>
 
                     <div id="pre-user-select">
                         <div style="font-size: 16px;" class="text-muted">
@@ -106,11 +118,12 @@
                         </div>
 
                         <div class="col-sm-10 col-xs-10 zero">
-                            <input id="myMessage" style="width: 100%;" type="text" name="message">
+                            <input id="myMessage" style="width: 100%; height: 100%;" type="text" name="message" autocomplete="off">
                         </div>
 
                         <div class="col-sm-1 col-xs-1 zero">
-                            <input id="sendbutton" type="submit" name="submit" value="Send">
+                            <button id="sendbutton" class="btn btn-primary" type="button" name="submit"><i class="fas fa-paper-plane fa-2x"></i></button>
+                            <!-- <input  value="Send"> -->
                         </div>
 
                     </div>
