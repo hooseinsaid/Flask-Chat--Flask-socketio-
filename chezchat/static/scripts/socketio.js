@@ -49,8 +49,9 @@ function verify_status() {
 document.addEventListener('DOMContentLoaded', () => {
     var socket = io();
 
-    
-    localStorage.removeItem("current_room_id");
+    if(!getUser.innerHTML) {
+        localStorage.removeItem("current_room_id");
+    }
 
     document.getElementById("msgInput").hidden = true;
     
@@ -67,57 +68,70 @@ document.addEventListener('DOMContentLoaded', () => {
     // triggered when the client tries to connect to the server
     // and it emits to the on_connect event on the server side
     socket.on('connect', () => {
+        console.log(`${localStorage.getItem('current_room_id')} from connect`)
         console.log('Verify Status running from connect')
 
         
-        localStorage.removeItem("current_room_id");
+        // localStorage.removeItem("current_room_id");
 
-        getUser.innerHTML = '';
-        userStatusInfo.innerHTML = '';
-        currentRoomName.innerHTML = '';
+        // getUser.innerHTML = '';
+        // userStatusInfo.innerHTML = '';
+        // currentRoomName.innerHTML = '';
         myStatus.innerHTML = 'You are online';
     });
 
     // triggered when the client pings the server and can't connect
     socket.on('disconnect', () => {
         console.log('Cannot reach the server at this moment');
+        console.log('disconnected');
 
-        localStorage.removeItem("current_room_id");
+        // localStorage.removeItem("current_room_id");
 
         userStatusInfo.innerHTML = '';
-        currentRoomName.innerHTML = '';
-        getUser.innerHTML = '';
+        // currentRoomName.innerHTML = '';
+        // getUser.innerHTML = '';
         myStatus.innerHTML = 'Cannot reach the server at this moment';
 
         // disable send button and text input until server or client is back online
-        if (messageInput || messageSendButton) {
-            clearInputResources(true);
-        }
+        // allow users to peruse current history even if offline
+        // if (messageInput || messageSendButton) {
+        //     clearInputResources(true);
+        // }
+        console.log(`${localStorage.getItem('current_room_id')} from disconnect`)
+    });
+
+    socket.on('prevent_double_session', () => {
+        // make here a persistent modal forcing the user to reload
+        socket.disconnect();
+        $('#preventMultModal').modal('show');
     });
 
 
     // emits to handle_messages event on the server side
     if (messageSendButton) {
         document.querySelector('#sendbutton').onclick = () => {
-            var data = {'msg': document.querySelector('#myMessage').value, 'username': username, 'room_id': localStorage.getItem('current_room_id') };
-            socket.emit('handle_messages', data);
-            append_msgs(data);
-            document.querySelector('#myMessage').value = '';
+            
+            // think of a mechanism to prevent from sending when offline
+            if (localStorage.getItem('current_room_id')) {
+                if (document.querySelector('#myMessage').value.trim() != "") {
+                    var data = {'messages': document.querySelector('#myMessage').value, 'author': username, 'room_id': localStorage.getItem('current_room_id') };
+                    socket.emit('handle_messages', data);
+                    const local_time = moment().format('MMM-D H:mm');
+                    append_msgs(data, local_time);
+                    document.querySelector('#myMessage').value = '';
+                }
+            }
+            else {
+                alert("There's been an error sendmsg. please reload")
+            }
         }
-    }
-    
-    
-    function append_msgs(data) {
-        const local_time = moment().format('MMM-D H:mm');
-        const li = document.createElement('li');
-        li.innerHTML = `${data.username} says ${data.msg} @ ${local_time}`;
-        document.getElementById("messages").append(li);
     }
 
     // receives message from an the handle_messages event on the server side and displays them to a client
     socket.on('handle_messages', data => { 
-        append_msgs(data);
-        alert(`${data.username} says ${data.msg}`)
+        const local_time = moment().format('MMM-D H:mm');
+        append_msgs(data, local_time);
+        // alert(`${data.username} says ${data.msg}`)
     });
 
     // receives the message emitted by broadcast event and confirms that the client is connected/disconnected to/from the server
@@ -140,58 +154,111 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     socket.on('update_remove_users', data => {
-        const roomID = data.room_id
-        var userElement = document.getElementById(roomID).firstElementChild
-        processRemoveUser(data, userElement)
-        alert(`${data.user} removed you`)
+
+        const userRemove = data.user_to_remove;
+        var userElement = document.querySelectorAll(`button[value=${CSS.escape(userRemove)}]`)[0]
+        console.log(userElement);
+        processRemoveUser(data, userElement);
+        alert(`${userRemove} removed you`);
 
 
-        if (data.user === getUser.innerHTML) {
-            
+        if (userRemove === getUser.innerHTML) {
             document.getElementById("user_status").innerHTML = "";
             document.getElementById("currentRoomName").innerHTML = "";
             document.getElementById("get_user_status").innerHTML = "";
+            localStorage.removeItem("current_room_id");
             clearInputResources(true);
         }
     });
 
     socket.on('update_add_users', data => {
-        const userAdd = data.user_to_add
-        var userElement = document.querySelectorAll(`button[value=${CSS.escape(userAdd)}]`)[0]
-        processAddUser(data, userElement)
-        alert(`${userAdd} added you`)
+        const userAdd = data.user_to_add;
+        var userElement = document.querySelectorAll(`button[value=${CSS.escape(userAdd)}]`)[0];
+        processAddUser(data, userElement);
+        alert(`${userAdd} added you`);
     });
 
+    socket.on('update_users', data => {
+        processRemoveUser(data, data)
+    });
+
+    socket.on('update_rooms', data => {
+        processLeaveRoom(data, data)
+    });
+
+
+    // maybe this does not make sense as message input always exist just hidden
     if (messageInput) {
-        messageInput.addEventListener('keypress', handleKeyPress);
+        // could have used keypress which will be easier to implement but that doesn't work on mobile browsers
+        messageInput.addEventListener('keydown', handleKeyPress);
         messageInput.addEventListener('keyup', handleKeyUp);
     }
     
 
+    var initialTextLength = 0;
+    function testTyping(newLength) {
+        var value;
+        if (newLength > initialTextLength) {
+            value = true;
+        }
+        else {
+            value = false;
+            // sorta duplicate because if I press a character key and a non character key quickly
+            // the timer will not expire and it will look like i am still typing
+            socket.emit('broadcast', {'username': username, 'info': 'verify_status', 'room_id': localStorage.getItem('current_room_id') });
+        }
+        console.log(initialTextLength)
+        console.log(newLength)
+        initialTextLength = newLength;
+        return value;
+    }
+
     // when user is pressing down on keys, clear the timeout
     function handleKeyPress(e) {
-        clearTimeout(timer);
-        socket.emit('broadcast', {'username': username, 'info': 'typing', 'room_id': localStorage.getItem('current_room_id')});
+        // since keydown registers regardless of whether a chatacter is produced or not
+        // check the input and see if there's any character
+        var newLength = document.querySelector('#myMessage').value.length;
+        console.log(newLength+' from keypress')
+        var typingCheck = testTyping(newLength);
+        console.log(typingCheck+' from keypress')
+        if (typingCheck == true) {
+            clearTimeout(timer);
+            if (localStorage.getItem('current_room_id')) {
+                socket.emit('broadcast', {'username': username, 'info': 'typing', 'room_id': localStorage.getItem('current_room_id')});
+            }
+            else {
+                alert("There's been an error handlepress. please reload to continue")
+            }
+        }
     }
 
     // when the user has stopped pressing on keys, set the timeout
     // if the user presses on keys before the timeout is reached, then this timeout is canceled
     function handleKeyUp(e) {
+
+        // make enter key to be send
+        if (event.keyCode === 13) {
+            document.getElementById("sendbutton").click();
+        }
+
+
         clearTimeout(timer); // prevent errant multiple timeouts from being generated
         timer = setTimeout(() => {
             // emit to broadcast so that the server knows that we are done typing so verify_status can be called
             // to verify the users online/offline status afresh
-            socket.emit('broadcast', {'username': username, 'info': 'verify_status', 'room_id': localStorage.getItem('current_room_id') });
+            
+            if (localStorage.getItem('current_room_id')) {
+                socket.emit('broadcast', {'username': username, 'info': 'verify_status', 'room_id': localStorage.getItem('current_room_id') });
+            }
+            else {
+                alert("There's been an error handleup. please reload to continue")
+            }
+
         }, timeoutVal);
     }
             
     socket.on('error', function() {
         console.log("error");
-    });
-
-    socket.on('reconnect', function() {
-        console.log("reconnect");
-        myStatus.innerHTML = 'Reconnected';
     });
 
     socket.on('reconnecting', function() {

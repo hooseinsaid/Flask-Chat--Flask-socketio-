@@ -27,14 +27,27 @@ function processAddUser(data, element) {
 
     var div = document.createElement('div');
     div.id = data['roomID']
-    div.innerHTML = userName;
+    div.setAttribute("class","user-list");
+
+    
+    var div2 = document.createElement('div');
+    div2.innerHTML = userName;
+    div2.setAttribute("class","name-section");
+
+
     div.setAttribute("onclick","getCurrentRoom(this); verify_status()");
     var button = document.createElement('button');
+    button.setAttribute("class","btn btn-danger btn-sm");
     button.name = userName;
     button.value = userUsername;
     button.setAttribute("onclick","removeUser(this);");
-    var buttonText = document.createTextNode("Remove user");
-    button.appendChild(buttonText);
+    var buttonIcon = document.createElement('i');
+    
+    buttonIcon.setAttribute("class","fas fa-user-minus");
+    buttonIcon.setAttribute("aria-hidden","true");
+    button.appendChild(buttonIcon);
+
+    div.appendChild(div2)
     div.appendChild(button);
     document.getElementById("friendsPanel").append(div);
 
@@ -42,11 +55,15 @@ function processAddUser(data, element) {
 }
 
 function removeUser(element) {
-    clearInputResources(true);
     
-    document.getElementById("currentRoomName").innerHTML = '';
-    document.getElementById("user_status").innerHTML = '';
-    document.getElementById("get_user_status").innerHTML = '';
+    // only so these if i am currently on the user to remove page
+    if (element.value === getUser.innerHTML) {
+        document.getElementById("user_status").innerHTML = "";
+        document.getElementById("currentRoomName").innerHTML = "";
+        document.getElementById("get_user_status").innerHTML = "";
+        localStorage.removeItem("current_room_id");
+        clearInputResources(true);
+    }
     
     var roomID = element.parentNode.id;
 
@@ -62,18 +79,29 @@ function processRemoveUser(data, element) {
     var friendUsername = element.value;
 
     var div = document.createElement('div');
-    div.innerHTML = friendName;
+    div.setAttribute("class","user-list");
+    var div2 = document.createElement('div');
+    div2.innerHTML = friendName;
+    div2.setAttribute("class","name-section");
     var button = document.createElement('button');
     button.name = friendName;
     button.value = friendUsername;
     button.setAttribute("onclick","addUser(this);");
-    var buttonText = document.createTextNode("Add user"); 
-    button.appendChild(buttonText);
+    button.setAttribute("class","btn btn-success btn-sm");
+    var buttonIcon = document.createElement('i');
+    buttonIcon.setAttribute("class","fas fa-user-plus");
+    buttonIcon.setAttribute("aria-hidden","true");
+    button.appendChild(buttonIcon);
+    div.appendChild(div2)
     div.appendChild(button);
 
     document.getElementById("availableUsers").append(div);
 
-    element.parentNode.remove();
+    // here because I use this function to also append new users whose elements are not previously on DOM
+    // only to be now appended
+    if (element.parentNode) {
+        element.parentNode.remove();
+    }
 }
 
 function joinRoom(element) {
@@ -90,16 +118,31 @@ function processJoinRoom(data, element) {
 
     var div = document.createElement('div');
     div.id = roomID;
-    div.innerHTML = roomName;
+    div.setAttribute("class","user-list");
     div.setAttribute("onclick","getCurrentRoom(this)");
+    var div2 = document.createElement('div');
+    div2.setAttribute("class","name-section");
+    div2.innerHTML = roomName;
     var button = document.createElement('button');
+    button.setAttribute("class","btn btn-danger btn-sm");
     button.id = "roomView"
     button.name = roomName;
     button.value = roomID;
     button.setAttribute("onclick","leaveRoom(this);");
-    var buttonText = document.createTextNode("Leave room"); 
-    button.appendChild(buttonText);
+    
+    // var buttonIcon = document.createElement('i');
+    // buttonIcon.setAttribute("class","fas fa-minus");
+    // buttonIcon.setAttribute("aria-hidden","true");
+    // button.appendChild(buttonIcon);
+
+    var spanText = document.createElement('span');
+    spanText.setAttribute("class","font-weight-bold");
+    spanText.innerHTML = "Exit";
+    button.appendChild(spanText);
+
+    div.appendChild(div2)
     div.appendChild(button);
+
 
     document.getElementById("roomsPanel").append(div);
 
@@ -128,33 +171,69 @@ function processLeaveRoom(data, element) {
     var roomName = element.name;
 
     var div = document.createElement('div');
-    div.innerHTML = roomName;
+    div.setAttribute("class","user-list");
+    var div2 = document.createElement('div');
+    div2.innerHTML = roomName;
+    div2.setAttribute("class","name-section");
     var button = document.createElement('button'); 
+    button.setAttribute("class","btn btn-success btn-sm");
     button.name = roomName;
     button.value = roomID;
     button.setAttribute("onclick","joinRoom(this);");
-    var buttonText = document.createTextNode("Join room"); 
-    button.appendChild(buttonText);
+
+    // var buttonIcon = document.createElement('i');
+    // buttonIcon.setAttribute("class","fas fa-plus");
+    // buttonIcon.setAttribute("aria-hidden","true");
+    // button.appendChild(buttonIcon);
+
+    var spanText = document.createElement('span');
+    spanText.setAttribute("class","font-weight-bold");
+    spanText.innerHTML = "Join";
+    button.appendChild(spanText);
+
+    div.appendChild(div2)
     div.appendChild(button);
+
 
     document.getElementById("availableRooms").append(div);
 
-    element.parentNode.remove();
+    if (element.parentNode) {
+        element.parentNode.remove();
+    }
 }
 
 function getCurrentRoom(element) {
 
-    document.getElementById("pre-user-select").hidden = true;
+    // clear old messaged to display fresh ones
+    clearInputResources(false);
+
+    // autofocus on input-box
+    document.getElementById("myMessage").focus();
+
+
+    // display messages from localstorage here if it exists and update localstorage in processgetCurrentRoom()
 
     friendName = element.getElementsByTagName("button")[0].name;
     friendUsername = element.getElementsByTagName("button")[0].value;
     roomID = element.id;
 
-    localStorage.setItem("current_room_id", roomID);
+    // hides the "please select a chat to start messages" at the beginning
+    // set an overlay here with the widget spinner
+    // hide just before the info is displayed in processgetCurrentRoom()
+    document.getElementById("pre-user-select").hidden = false;
+    document.getElementById("pre-user-msg").hidden = true;
+    document.getElementById("pre-user-spinner").hidden = false;
 
     document.getElementById("get_user_status").innerHTML = "";
     document.getElementById("user_status").innerHTML = "";
     document.getElementById("currentRoomName").innerHTML = friendName;
+
+
+    localStorage.setItem("current_room_id", roomID);
+
+
+    showChatArea();
+
     
     // set this value so that verify_status can function from socketio.js
     if (element.getElementsByTagName("button")[0].id !== "roomView") {
@@ -168,23 +247,30 @@ function getCurrentRoom(element) {
 }
 
 function processgetCurrentRoom(data, element) {
-    // clear old messaged to display fresh ones
-    clearInputResources(false);
+    
+
+    document.getElementById("pre-user-select").hidden = true;
 
     InfoModalBody = document.getElementById("roomInfoModal");
     messageDisplay = document.getElementById("messages")
 
     InfoModalBody.innerHTML = '';
 
+    // add data to localStorage 
+
     current_room = data.current_room;
     console.log(current_room);
     room_history = current_room.room_history;
     for (x in room_history) {
+        // create a function and use here and in socket append msgs
         msg = room_history[x];
         console.log(msg)
-        const li = document.createElement('li');
-        li.innerHTML = `${msg['author']} says ${msg['messages']} @ ${moment.utc(msg['timestamp']).local().format('MMM-D H:mm')}`;
-        messageDisplay.append(li);
+        const local_time = moment.utc(msg['timestamp']).local().format('MMM-D H:mm');
+        append_msgs(msg, local_time);
+
+        // const li = document.createElement('li');
+        // li.innerHTML = `${msg['author']} says ${msg['messages']} @ ${moment.utc(msg['timestamp']).local().format('MMM-D H:mm')}`;
+        // messageDisplay.append(li);
     }
 
     room_members = data.room_members;
@@ -204,6 +290,35 @@ function processgetCurrentRoom(data, element) {
     }
 }
 
+function showChatArea() {
+
+    document.getElementById("appNavArea").style.zIndex = 1;
+
+    document.getElementById("appChatArea").style.backgroundColor = "white"
+    document.getElementById("appChatArea").style.zIndex = 1000;
+}
+
+function hideChatArea() {
+    clearInputResources(true);
+    document.getElementById("appChatArea").style.zIndex = 1
+    document.getElementById("appNavArea").style.zIndex = 1000;
+
+    document.getElementById("get_user_status").innerHTML = "";
+    localStorage.removeItem("current_room_id");
+
+    window.event.stopPropagation();
+}
+
+// trying to detect back button
+// does not work for now
+document.addEventListener('backbutton', function() {
+    if(document.getElementById("appChatArea").style.zIndex == 1000) {
+        hideChatArea();
+        console.log("back button")
+    }
+});
+
+
 function clearInputResources(value) {
     
     // document.getElementById("myMessage").hidden = value;
@@ -219,6 +334,49 @@ function clearInputResources(value) {
             msgContent.removeChild(msgContent.firstChild);
         }
     }
+}
+    
+function append_msgs(data, local_time) {
+    const outerDiv = document.createElement('div');
+    outerDiv.setAttribute("class","messageItems");
+
+    const containerDiv = document.createElement('div');
+    containerDiv.setAttribute("class","messageContainer");
+
+    const wrapperDiv = document.createElement('div');
+    wrapperDiv.setAttribute("class","messageWrap");
+
+    const innerDiv = document.createElement('div');
+    innerDiv.setAttribute("class","messagePadded");
+
+    // if the current msg is from the user
+    if (data.author == username) {
+        outerDiv.setAttribute("class","messageItems userSpecificMessageItems");
+        wrapperDiv.setAttribute("class","messageWrap userSpecificmessageWrap");
+    }
+
+    // if the current room is a group
+    if (!document.getElementById("get_user_status").innerHTML) {
+        const authorSpan = document.createElement('span');
+        authorSpan.setAttribute("class","authorSpanElement");
+        authorSpan.innerHTML =  data.author;
+        innerDiv.appendChild(authorSpan);
+    }
+
+    const span = document.createElement('span');
+    span.setAttribute("class","displayMsgText");
+    span.innerHTML = data.messages;
+
+    const timeInfoSpan = document.createElement('span');
+    timeInfoSpan.setAttribute("class","timeSpanElement");
+    timeInfoSpan.innerHTML = local_time;
+
+    innerDiv.appendChild(span);
+    innerDiv.appendChild(timeInfoSpan);
+    wrapperDiv.appendChild(innerDiv);
+    containerDiv.appendChild(wrapperDiv);
+    outerDiv.appendChild(containerDiv);
+    document.getElementById("messages").append(outerDiv);
 }
 
 // set localstorage on click of a room, clear on offline or fresh online. transmit this value with each emit

@@ -30,6 +30,8 @@ def home():
             check_private_rooms.append(room_check.name)
 
     # use ajax to avoid redirect maybe
+    # dismiss modal if success code else show errors
+    # create new room
     if form.submit.data:
         if form.validate_on_submit():
             new_room = Room(name=form.name.data, room_created=current_user)
@@ -37,6 +39,8 @@ def home():
             new_room.subscribers.append(current_user)
             db.session.commit()
             flash(f'{new_room.name} has been created')
+            # updates the rooms list in real time for every other user
+            socketio.emit('update_rooms', {'name': new_room.name, 'value': new_room.room_id}, broadcast=True)
             return redirect(url_for('home'))
         else:
             flash('Room not created. Make sure the name field is not empty and is at least 4 characters long ')
@@ -68,6 +72,8 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
+        # updates the users list in real time for every other user
+        socketio.emit('update_users', {'name': user.name_surname, 'value': user.username}, broadcast=True)
         flash('You have been successfully registered')
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
@@ -148,7 +154,7 @@ def remove_user():
         recipients_list = handle_recipients(private_room)
         # sends an emit to the user who has been removed by the current_user and updates their friend's list automatically without refreshing
         for recipient in recipients_list:
-            socketio.emit('update_remove_users', {'room_id': private_room.room_id, 'user': current_user.username}, room=recipient)
+            socketio.emit('update_remove_users', {'room_id': private_room.room_id, 'user_to_remove': current_user.username}, room=recipient)
         for member in room_members:
             private_room.subscribers.remove(member)
         for history in room_history:
@@ -164,7 +170,7 @@ def handleMessage(data):
     current_room = Room.query.filter_by(room_id=session_current_room).first()
     # set room_id from here received from json data
     if current_room is not None:
-        message = History(messages=data['msg'], user_history=current_user, room_records=current_room)
+        message = History(messages=data['messages'], user_history=current_user, room_records=current_room)
         db.session.add(message)
         db.session.commit()
         recipients_list = handle_recipients(current_room)
@@ -195,6 +201,12 @@ def test_connect():
     # global sessionID
     # use session to put the sid generated when the client connects in session
     # like this session[current_user.username] = sid
+    # checks whether the user has an active connection and if so disconnects it
+    # and connects afresh
+    if current_user.username in sessionID.keys():
+        emit('prevent_double_session', room=sessionID[current_user.username])
+        print(f'\n\n\n\n{current_user.username} with old {sessionID[current_user.username]} sid')
+
     sessionID[current_user.username] = request.sid
     print(f'\n\n\n\n{current_user.username} with {request.sid} has connection re-established')
     print(f"{sessionID[current_user.username]} dictionary")
@@ -208,12 +220,16 @@ def test_connect():
 # triggered when the server pongs the client and can't connect with it
 @socketio.on('disconnect')
 def test_disconnect():
-    sessionID.pop(current_user.username, None)
+    # if the sid from connect is same as now, means we are offline, then pop
+    if sessionID[current_user.username] == request.sid:
+        sessionID.pop(current_user.username, None)
+        current_user.last_seen = datetime.utcnow()
+        current_user.last_seen_update_on_server_restart = False
+    db.session.commit()
+
+    # print(f'\n\n\n\n{sessionID[current_user.username]} and {request.sid} compare on disconnect\n\n\n\n')
     print(f'\n\n\n\n{current_user.username} with {request.sid} has connection lost\n\n\n\n')
     print(f'\n\n\n\n{sessionID} dictionary')
-    current_user.last_seen = datetime.utcnow()
-    current_user.last_seen_update_on_server_restart = False
-    db.session.commit()
     # here thing will work differently check all the rooms I belong to and emit to them
     emit('broadcast', {'username': current_user.username, 'info': 'offline'}, include_self=False, broadcast=True)
 
