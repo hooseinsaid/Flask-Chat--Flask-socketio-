@@ -99,29 +99,32 @@
 
                 <!-- Navbar end -->
                 
-                <div class="messageArea" data-simplebar>
+                <div id="chatWindow" class="messageArea" data-simplebar>
 
                     <div id="pre-user-select">
-                        <div style="font-size: 16px;" class="text-muted">
+                        <div id="pre-user-msg" style="font-size: 16px;" class="text-muted">
                             Please select a chat to start messaging
+                        </div>
+                        <div id="pre-user-spinner" class="spinner-border" role="status" hidden>
+                            <span class="sr-only">Loading...</span>
                         </div>
                     </div>
                     
-                    <ul id="messages"></ul>
+                    <div id="messages"></div>
                 </div>
 
                 <div id="msgInput">
-                    <div style="margin: 0; width: 100%;" class="row">
+                    <div style="display: flex; margin: 0; width: 100%; justify-content: center;">
 
-                        <div class="col-sm-1 col-xs-1 zero">
-
+                        <div style="width: 15%;" class="zero flex-absolute-center">
+                            <i class="far fa-laugh fa-3x"></i>
                         </div>
 
-                        <div class="col-sm-10 col-xs-10 zero">
-                            <input id="myMessage" style="width: 100%; height: 100%;" type="text" name="message" autocomplete="off">
+                        <div style="width: 70%;" class="zero flex-absolute-center">
+                            <input id="myMessage" style="width: 100%; height: 100%;" type="text" name="message" autocomplete="off" onblur="this.focus();">
                         </div>
 
-                        <div class="col-sm-1 col-xs-1 zero">
+                        <div style="width: 15%;" class="zero flex-absolute-center">
                             <button id="sendbutton" class="btn btn-primary" type="button" name="submit"><i class="fas fa-paper-plane fa-2x"></i></button>
                             <!-- <input  value="Send"> -->
                         </div>
@@ -173,6 +176,20 @@
             </div>
         </div>
     </div>
+
+<!-- Modal to assert prevent multiple sessions -->
+<div class="modal fade" id="preventMultModal" style="overflow: hidden;" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body d-flex">
+                <span>You have been disconnected because you have multiple tabs open</span>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-block" onclick="window.location.href=window.location.href">Click to reload</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 

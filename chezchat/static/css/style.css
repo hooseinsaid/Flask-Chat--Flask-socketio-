@@ -112,11 +112,7 @@ html, body {
 
     #appChatArea .heading i {
         visibility: visible !important;
-        padding: 5px 10px;
-    }
-
-    #pre-user-select {
-        display: none;
+        margin-right: 10px;
     }
 }
 
@@ -130,8 +126,53 @@ html, body {
 
 #appChatArea .heading {
     display: flex;
+    align-items: center;
 }
 
 #appChatArea .heading i {
     visibility: hidden;
+}
+
+.messageArea {
+    padding: 10px 0;
+}
+
+.messageItems {
+    padding-right: 3%;
+    padding-left: 3%;
+    margin-bottom: 10px;
+    display: flex;
+}
+
+.userSpecificMessageItems {
+    justify-content: flex-end;
+}
+
+.messageContainer {
+    font-size: 14px;
+    line-height: 19px;
+    max-width: 80%;
+}
+
+.messageWrap {
+    border-radius: 0 7.5px 7.5px 7.5px;
+    background-color: #fff;
+    box-shadow: 0 1px .5px rgba(0, 0, 0,.13);
+}
+
+.userSpecificmessageWrap {
+    border-radius: 7.5px 0 7.5px 7.5px !important;
+    background-color: #dcf8c6 !important;
+}
+
+.messagePadded {
+    padding: 6px 7px 8px 9px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+.flex-absolute-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
