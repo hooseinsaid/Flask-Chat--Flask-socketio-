@@ -114,11 +114,23 @@ document.addEventListener('DOMContentLoaded', () => {
             // think of a mechanism to prevent from sending when offline
             if (localStorage.getItem('current_room_id')) {
                 if (document.querySelector('#myMessage').value.trim() != "") {
-                    var data = {'messages': document.querySelector('#myMessage').value, 'author': username, 'room_id': localStorage.getItem('current_room_id') };
-                    socket.emit('handle_messages', data);
+
+                    const uniqueUID = createUniqueUID(); 
+
+                    var data = {
+                        'messages': document.querySelector('#myMessage').value,
+                        'author': username, 
+                        'room_id': localStorage.getItem('current_room_id'),
+                        'uuid': uniqueUID,
+                        'from_db': false
+                    };
+                    socket.emit('handle_messages', data, serverReceivedCallback);
                     const local_time = moment().format('MMM-D H:mm');
                     append_msgs(data, local_time);
                     document.querySelector('#myMessage').value = '';
+                    
+
+                    scrollDownChatWindow();
                 }
             }
             else {
@@ -127,10 +139,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // let's the sender know that the server received his message
+    function serverReceivedCallback(data, uuid) {
+        console.log(data);
+        messageStatusTimeInfoWrapper = document.getElementById(uuid);
+        addOneTick(messageStatusTimeInfoWrapper);
+        console.log(messageStatusTimeInfoWrapper);
+        // ! get the docByID of the css element and change to one tick
+        // ! by default it should be on pending
+    }
+
+    socket.on('message_delivered', () => {
+        console.log("user received message")
+        // ! get the docByID of the css element and change to one tick
+        // ! by default it should be on pending
+    });
+
     // receives message from an the handle_messages event on the server side and displays them to a client
-    socket.on('handle_messages', data => { 
+    socket.on('handle_messages', (data, userReceivedCallback) => { 
         const local_time = moment().format('MMM-D H:mm');
         append_msgs(data, local_time);
+        scrollDownChatWindow();
+
+        // let's the sender know that his msg has been received
+        userReceivedCallback();
         // alert(`${data.username} says ${data.msg}`)
     });
 

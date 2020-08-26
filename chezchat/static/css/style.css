@@ -112,7 +112,11 @@ html, body {
 
     #appChatArea .heading i {
         visibility: visible !important;
-        margin-right: 10px;
+        padding: 21px 20px 21px 20px;
+    }
+
+    #appChatArea .heading {
+        padding-left: 0;
     }
 }
 
@@ -176,7 +180,11 @@ html, body {
 .timeSpanElement {
     font-size: 10px;
     display: block;
+}
+
+.statusTimeWrapper {
     float: right;
+    display: flex;
 }
 
 .authorSpanElement {
@@ -184,6 +192,12 @@ html, body {
     color: #444444;
     margin-right: 30px;
     display: block;
+}
+
+.oneTickSpanElement {
+    font-size: 0.7em;
+    margin-left: 10px;
+    color: #444444c4;
 }
 
 .displayMsgText {

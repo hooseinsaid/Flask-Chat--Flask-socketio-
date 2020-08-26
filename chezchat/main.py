@@ -162,6 +162,10 @@ def remove_user():
         db.session.commit()
     return jsonify()
 
+def userReceivedCallback():
+    print(f'\n\n{"message delivered"}\n\n')
+    socketio.emit('message_delivered', room=sessionID[current_user.username])
+
 @socketio.on('handle_messages')
 def handleMessage(data):
     # fix session_current_room in room_id below
@@ -177,7 +181,8 @@ def handleMessage(data):
         print(f'\n\n{recipients_list}\n\n from return fxn')
         # When emitting a msg and the list is empty alert the sender that his msg has not been delivered as he has been kicked
     for recipient in recipients_list:
-        emit('handle_messages', data, room=recipient)
+        emit('handle_messages', data, room=recipient, callback=userReceivedCallback)
+    return f"Message {message.msg_id} with uuid {data['uuid']} received by server", data['uuid']
 
 def handle_recipients(current_room):
     recipients_list = []
@@ -225,7 +230,7 @@ def test_disconnect():
         sessionID.pop(current_user.username, None)
         current_user.last_seen = datetime.utcnow()
         current_user.last_seen_update_on_server_restart = False
-    db.session.commit()
+        db.session.commit()
 
     # print(f'\n\n\n\n{sessionID[current_user.username]} and {request.sid} compare on disconnect\n\n\n\n')
     print(f'\n\n\n\n{current_user.username} with {request.sid} has connection lost\n\n\n\n')

@@ -264,6 +264,7 @@ function processgetCurrentRoom(data, element) {
     for (x in room_history) {
         // create a function and use here and in socket append msgs
         msg = room_history[x];
+        msg['from_db'] = true;
         console.log(msg)
         const local_time = moment.utc(msg['timestamp']).local().format('MMM-D H:mm');
         append_msgs(msg, local_time);
@@ -288,6 +289,7 @@ function processgetCurrentRoom(data, element) {
             InfoModalBody.append(div);
         }
     }
+    scrollDownChatWindow();
 }
 
 function showChatArea() {
@@ -310,7 +312,7 @@ function hideChatArea() {
 }
 
 // trying to detect back button
-// does not work for now
+//! does not work for now
 document.addEventListener('backbutton', function() {
     if(document.getElementById("appChatArea").style.zIndex == 1000) {
         hideChatArea();
@@ -349,12 +351,6 @@ function append_msgs(data, local_time) {
     const innerDiv = document.createElement('div');
     innerDiv.setAttribute("class","messagePadded");
 
-    // if the current msg is from the user
-    if (data.author == username) {
-        outerDiv.setAttribute("class","messageItems userSpecificMessageItems");
-        wrapperDiv.setAttribute("class","messageWrap userSpecificmessageWrap");
-    }
-
     // if the current room is a group
     if (!document.getElementById("get_user_status").innerHTML) {
         const authorSpan = document.createElement('span');
@@ -366,17 +362,87 @@ function append_msgs(data, local_time) {
     const span = document.createElement('span');
     span.setAttribute("class","displayMsgText");
     span.innerHTML = data.messages;
+    innerDiv.appendChild(span);
 
     const timeInfoSpan = document.createElement('span');
     timeInfoSpan.setAttribute("class","timeSpanElement");
     timeInfoSpan.innerHTML = local_time;
 
-    innerDiv.appendChild(span);
-    innerDiv.appendChild(timeInfoSpan);
+    const messageStatusTimeInfoWrapper = document.createElement('div');
+    messageStatusTimeInfoWrapper.setAttribute("id", data.uuid);
+    messageStatusTimeInfoWrapper.setAttribute("class","statusTimeWrapper");
+    messageStatusTimeInfoWrapper.appendChild(timeInfoSpan);
+
+
+    // if the current msg is from the user
+    if (data.author == username) {
+        outerDiv.setAttribute("class","messageItems userSpecificMessageItems");
+        wrapperDiv.setAttribute("class","messageWrap userSpecificmessageWrap");
+
+        // if the message is being rendered from db add a tick
+        // else add an exclamation until it is received by server
+        if (data.from_db === true) {
+            addOneTick(messageStatusTimeInfoWrapper);
+        }
+        else if (data.from_db === false) {
+            addPending(messageStatusTimeInfoWrapper)
+        }
+    }
+
+
+    innerDiv.appendChild(messageStatusTimeInfoWrapper);
     wrapperDiv.appendChild(innerDiv);
     containerDiv.appendChild(wrapperDiv);
     outerDiv.appendChild(containerDiv);
     document.getElementById("messages").append(outerDiv);
 }
 
+// !consider moving it to a new file
+function createUniqueUID() {
+    var dt = Date.now();
+    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = (dt + Math.random()*16)%16 | 0;
+        dt = Math.floor(dt/16);
+        return (c=='x' ? r :(r&0x3|0x8)).toString(16);
+    });
+    return username + uuid;
+}
+
+function addOneTick(messageStatusTimeInfoWrapper) {
+    const messageStatusSpan = document.createElement('span');
+    messageStatusSpan.setAttribute("class","oneTickSpanElement");
+
+    const messageStatusIcon = document.createElement('i');
+    messageStatusIcon.setAttribute("class","fas fa-check");
+    messageStatusIcon.setAttribute("aria-hidden","true");
+
+    messageStatusSpan.appendChild(messageStatusIcon);
+    
+    // check if the pending icon is present and if so replace it with the one tick
+    if (messageStatusTimeInfoWrapper.childElementCount > 1) {
+        messageStatusTimeInfoWrapper.replaceChild(messageStatusSpan, messageStatusTimeInfoWrapper.childNodes[1]);
+    }
+    else {
+        messageStatusTimeInfoWrapper.appendChild(messageStatusSpan);
+    }
+}
+
+function addPending(messageStatusTimeInfoWrapper) {
+    const messageStatusSpan = document.createElement('span');
+    messageStatusSpan.setAttribute("class","oneTickSpanElement");
+
+    const messageStatusIcon = document.createElement('i');
+    messageStatusIcon.setAttribute("class","fas fa-exclamation-circle");
+    messageStatusIcon.setAttribute("aria-hidden","true");
+
+    messageStatusSpan.appendChild(messageStatusIcon);
+
+    messageStatusTimeInfoWrapper.appendChild(messageStatusSpan);
+}
+
+function scrollDownChatWindow() {
+    const scrollElement = document.querySelector('#chatWindow .simplebar-content-wrapper');
+    const scrollingHeight = document.getElementById("messages");
+    scrollElement.scrollTop = scrollingHeight.scrollHeight;
+}
 // set localstorage on click of a room, clear on offline or fresh online. transmit this value with each emit
