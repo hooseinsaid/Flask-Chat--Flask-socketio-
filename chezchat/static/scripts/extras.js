@@ -202,6 +202,8 @@ function processLeaveRoom(data, element) {
     }
 }
 
+document.getElementById("myMessage").addEventListener("focus", scrollDownChatWindow);
+
 function getCurrentRoom(element) {
 
     // clear old messaged to display fresh ones
@@ -266,12 +268,7 @@ function processgetCurrentRoom(data, element) {
         msg = room_history[x];
         msg['from_db'] = true;
         console.log(msg)
-        const local_time = moment.utc(msg['timestamp']).local().format('MMM-D H:mm');
-        append_msgs(msg, local_time);
-
-        // const li = document.createElement('li');
-        // li.innerHTML = `${msg['author']} says ${msg['messages']} @ ${moment.utc(msg['timestamp']).local().format('MMM-D H:mm')}`;
-        // messageDisplay.append(li);
+        append_msgs(msg);
     }
 
     room_members = data.room_members;
@@ -337,8 +334,8 @@ function clearInputResources(value) {
         }
     }
 }
-    
-function append_msgs(data, local_time) {
+
+function append_msgs(data) {
     const outerDiv = document.createElement('div');
     outerDiv.setAttribute("class","messageItems");
 
@@ -363,6 +360,43 @@ function append_msgs(data, local_time) {
     span.setAttribute("class","displayMsgText");
     span.innerHTML = data.messages;
     innerDiv.appendChild(span);
+
+    var local_time;
+    var recentDate;
+    var recentDateValue;
+    if (data.timestamp) {
+        recentDate = moment.utc(data['timestamp']).local().format('MMMM DD, YYYY');
+        recentDateValue = displayDate(recentDate);
+
+        local_time = moment.utc(data['timestamp']).local().format('HH:mm');
+        console.log('time from DB')
+        
+    }
+    else {
+        recentDate = moment().format('MMMM DD, YYYY');
+        recentDateValue = displayDate(recentDate);
+
+        local_time = moment().format('HH:mm');
+        console.log('normal time')
+    }
+
+    if (recentDateValue) {
+        console.log(`from recent date ${recentDateValue}`);
+
+        const outerDateDiv = document.createElement('div');
+        outerDateDiv.setAttribute("class","messageItems dateInfoItem");
+
+        const innerDateDiv = document.createElement('div');
+        innerDateDiv.setAttribute("class","messagePadded dateInfoStyle");
+
+        const dateInfoSpan = document.createElement('span');
+
+        dateInfoSpan.innerHTML = recentDateValue;
+        innerDateDiv.appendChild(dateInfoSpan);
+        outerDateDiv.appendChild(innerDateDiv);
+        document.getElementById("messages").append(outerDateDiv);
+        // todo finish
+    }
 
     const timeInfoSpan = document.createElement('span');
     timeInfoSpan.setAttribute("class","timeSpanElement");
@@ -397,7 +431,20 @@ function append_msgs(data, local_time) {
     document.getElementById("messages").append(outerDiv);
 }
 
-// !consider moving it to a new file
+function displayDate(recentDate) {
+    var dateElement = document.querySelectorAll('.dateInfoItem .dateInfoStyle span');
+    var dateToReturn;
+    if (dateElement.length == 0) {
+        dateToReturn = recentDate;
+    }
+    else {
+        if (dateElement[dateElement.length - 1].innerHTML != recentDate) {
+            dateToReturn = recentDate;
+        }
+    }
+    return dateToReturn;
+}
+
 function createUniqueUID() {
     var dt = Date.now();
     var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -417,7 +464,7 @@ function addOneTick(messageStatusTimeInfoWrapper) {
     messageStatusIcon.setAttribute("aria-hidden","true");
 
     messageStatusSpan.appendChild(messageStatusIcon);
-    
+
     // check if the pending icon is present and if so replace it with the one tick
     if (messageStatusTimeInfoWrapper.childElementCount > 1) {
         messageStatusTimeInfoWrapper.replaceChild(messageStatusSpan, messageStatusTimeInfoWrapper.childNodes[1]);

@@ -125,12 +125,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         'from_db': false
                     };
                     socket.emit('handle_messages', data, serverReceivedCallback);
-                    const local_time = moment().format('MMM-D H:mm');
-                    append_msgs(data, local_time);
+                    append_msgs(data);
                     document.querySelector('#myMessage').value = '';
                     
 
                     scrollDownChatWindow();
+                    document.getElementById("myMessage").focus();
                 }
             }
             else {
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // let's the sender know that the server received his message
+    // let's the sender know that the server received their message
     function serverReceivedCallback(data, uuid) {
         console.log(data);
         messageStatusTimeInfoWrapper = document.getElementById(uuid);
@@ -156,9 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // receives message from an the handle_messages event on the server side and displays them to a client
-    socket.on('handle_messages', (data, userReceivedCallback) => { 
-        const local_time = moment().format('MMM-D H:mm');
-        append_msgs(data, local_time);
+    socket.on('handle_messages', (data, userReceivedCallback) => {
+        append_msgs(data);
         scrollDownChatWindow();
 
         // let's the sender know that his msg has been received

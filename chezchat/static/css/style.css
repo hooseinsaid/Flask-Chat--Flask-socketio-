@@ -205,6 +205,19 @@ html, body {
     margin-right: 30px;
 }
 
+.dateInfoItem {
+    display: flex;
+    justify-content: center;
+}
+
+.dateInfoStyle {
+    max-width: 50%;
+    font-size: 12px;
+    border-radius: 7.5px 7.5px 7.5px 7.5px;
+    box-shadow: 0 1px 0.5px rgba(0, 0, 0,.13);
+    background-color: #e1f5feeb;
+}
+
 .flex-absolute-center {
     display: flex;
     justify-content: center;
