@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import render_template, flash, redirect, url_for, session, abort, request, jsonify
-from flask_socketio import send, emit, join_room, leave_room
+from flask_socketio import send, emit, join_room, leave_room, disconnect
 from chezchat import socketio, app, db
 from chezchat.models import *
 from chezchat.forms import *
@@ -12,7 +12,7 @@ sessionID = {}
 @login_required
 def home():
     form = CreateRoomForm()
-    check_private_rooms = []
+    non_friend_users = []
     friends_list = []
     all_users = Users.query.all()
     all_rooms = Room.query.all()
@@ -25,9 +25,13 @@ def home():
                     friends_list.append(Users.query.filter_by(id=friends_id).first())
                     private_friend_room.append(room)
     zipped_friends_list = zip(friends_list, private_friend_room)
-    for room_check in all_rooms:
-        if room_check.private_room == True:
-            check_private_rooms.append(room_check.name)
+
+    # find users not in current_user's friend's list
+    for user in all_users:
+        room_name_variant_one = f"{user.id}{current_user.id}"
+        room_name_variant_two = f"{current_user.id}{user.id}"
+        if not Room.query.filter_by(name=room_name_variant_one).first() and not Room.query.filter_by(name=room_name_variant_two).first():
+            non_friend_users.append(user)
 
     # use ajax to avoid redirect maybe
     # dismiss modal if success code else show errors
@@ -44,8 +48,9 @@ def home():
             return redirect(url_for('home'))
         else:
             flash('Room not created. Make sure the name field is not empty and is at least 4 characters long ')
-    return render_template('chatroom.html', form=form, rooms=rooms, current_user=current_user, all_rooms=all_rooms, 
-                            all_users=all_users, check_private_rooms=check_private_rooms, zipped_friends_list=zipped_friends_list)
+    return render_template('chatroom.html', form=form, rooms=rooms, current_user=current_user, 
+                            all_rooms=all_rooms, all_users=all_users, non_friend_users=non_friend_users, 
+                            zipped_friends_list=zipped_friends_list)
 
 @app.route('/room-details', methods=['GET', 'POST'])
 @login_required
@@ -126,7 +131,7 @@ def add_user():
     if user_to_add is not None:
         private_room_name = (f'{user_to_add.id}{current_user.id}')
         private_room_name2 = (f'{current_user.id}{user_to_add.id}')
-        if not (Room.query.filter_by(name=private_room_name).first() and Room.query.filter_by(name=private_room_name2).first()):
+        if not Room.query.filter_by(name=private_room_name).first() and not Room.query.filter_by(name=private_room_name2).first():
             private_room = Room(name=private_room_name, room_created=current_user, private_room=True)
             db.session.add(private_room)
             private_room.subscribers.append(current_user)
@@ -139,7 +144,7 @@ def add_user():
             socketio.emit('update_add_users', {'roomID': private_room.room_id, 'user_to_add': current_user.username}, room=recipient)
         return jsonify(roomID=private_room.room_id)
     else:
-        return "<h1>An error has occurred</h1>"
+        return "An error has occurred"
 
 @app.route('/remove-user', methods=['GET', 'POST'])
 @login_required
@@ -192,6 +197,7 @@ def handle_recipients(current_room):
     for member in room_members:
         room_members_username_list.append(member.username)
     
+    # find online users who are members of the current room
     for key in sessionID.keys():
         # the sorting of who to message as a funtion
         if key in room_members_username_list and key != current_user.username:
@@ -209,8 +215,12 @@ def test_connect():
     # checks whether the user has an active connection and if so disconnects it
     # and connects afresh
     if current_user.username in sessionID.keys():
+        # emits to the client to disconnect
         emit('prevent_double_session', room=sessionID[current_user.username])
         print(f'\n\n\n\n{current_user.username} with old {sessionID[current_user.username]} sid')
+
+        # diconnect from the server side for good measure
+        disconnect(sid=sessionID[current_user.username])
 
     sessionID[current_user.username] = request.sid
     print(f'\n\n\n\n{current_user.username} with {request.sid} has connection re-established')
@@ -226,7 +236,7 @@ def test_connect():
 @socketio.on('disconnect')
 def test_disconnect():
     # if the sid from connect is same as now, means we are offline, then pop
-    if sessionID[current_user.username] == request.sid:
+    if sessionID[current_user.username] == request.sid and sessionID[current_user.username] is not None:
         sessionID.pop(current_user.username, None)
         current_user.last_seen = datetime.utcnow()
         current_user.last_seen_update_on_server_restart = False

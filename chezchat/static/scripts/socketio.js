@@ -104,6 +104,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // make here a persistent modal forcing the user to reload
         socket.disconnect();
         $('#preventMultModal').modal('show');
+        if (getUser.innerHTML) {
+            getUser.innerHTML = '';
+            userStatusInfo.innerHTML = '';
+        }
     });
 
 
@@ -157,8 +161,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // receives message from an the handle_messages event on the server side and displays them to a client
     socket.on('handle_messages', (data, userReceivedCallback) => {
-        append_msgs(data);
-        scrollDownChatWindow();
+        // send the msg only to the intended room
+        if (localStorage.getItem('current_room_id') && data.room_id === localStorage.getItem('current_room_id')) {
+            append_msgs(data);
+            scrollDownChatWindow();
+        }
 
         // let's the sender know that his msg has been received
         userReceivedCallback();
@@ -236,7 +243,11 @@ document.addEventListener('DOMContentLoaded', () => {
             value = false;
             // sorta duplicate because if I press a character key and a non character key quickly
             // the timer will not expire and it will look like i am still typing
-            socket.emit('broadcast', {'username': username, 'info': 'verify_status', 'room_id': localStorage.getItem('current_room_id') });
+            socket.emit('broadcast', {
+                                        'username': username, 
+                                        'info': 'verify_status', 
+                                        'room_id': localStorage.getItem('current_room_id') 
+            });
         }
         console.log(initialTextLength)
         console.log(newLength)

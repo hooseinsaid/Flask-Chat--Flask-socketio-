@@ -23,6 +23,7 @@
                                 </div>
                                 <!-- possible ID conflict as I use room id here too -->
                                 <!-- button should always be last in this div -->
+                                <!-- create a warning modal for this. this button should trigger the modal and the modal's button should execute onclick="removeUser(this) -->
                                 <button class="btn btn-danger btn-sm" name="{{ friend.name_surname }}" value="{{ friend.username }}" onclick="removeUser(this)"><i class="fas fa-user-minus"></i></button>
                             </div>
                         {% endfor %}
@@ -44,18 +45,14 @@
 
                     <h5><em>Available users</em></h5>
                     <div id="availableUsers">
-                        {% for user in all_users %}
+                        {% for user in non_friend_users %}
                             {% if user != current_user %}
-                                {% set my_string = current_user.id ~ user.id ~ '' %}
-                                {% set my_string2 = user.id ~ current_user.id ~ '' %}
-                                {% if my_string not in check_private_rooms and my_string2 not in check_private_rooms %}
                                 <div class="user-list">
                                     <div class="name-section">
                                         {{ user.name_surname }}
                                     </div>
                                     <button class="btn btn-success btn-sm" name="{{ user.name_surname }}" value="{{ user.username }}" onclick="addUser(this)"><i class="fas fa-user-plus"></i></button>
                                 </div>
-                                {% endif %}
                             {% endif %}
                         {% endfor %}
                     </div>
@@ -110,6 +107,11 @@
                         </div>
                     </div>
                     
+                    <!-- todo on click of the div section assign id here to be room number and only display -->
+                    <!-- todo the messages when the room matches the id here -->
+                    <!-- todo for notification purposes, use the room id as key and increment it's value -->
+                    <!-- todo to match the number of times a message directed to it was received by the server-->
+                    <!-- todo when a client is offline, hold on to this value for them and emit when they are online -->
                     <div id="messages"></div>
                 </div>
 
@@ -121,12 +123,11 @@
                         </div>
 
                         <div style="width: 70%;" class="zero flex-absolute-center">
-                            <input id="myMessage" style="width: 100%; height: 100%;" type="text" name="message" autocomplete="off">
+                            <input id="myMessage" type="text" name="message" autocomplete="off" placeholder="Type a message">
                         </div>
 
                         <div style="width: 15%;" class="zero flex-absolute-center">
                             <button id="sendbutton" class="btn btn-primary" type="button" name="submit"><i class="fas fa-paper-plane fa-2x"></i></button>
-                            <!-- <input  value="Send"> -->
                         </div>
 
                     </div>
@@ -182,7 +183,7 @@
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-body d-flex">
-                <span>You have been disconnected because you have multiple tabs open</span>
+                <span>You have been disconnected because you have another tab open</span>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger btn-block" onclick="window.location.href=window.location.href">Click to reload</button>

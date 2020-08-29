@@ -73,11 +73,6 @@ html, body {
   top: 50%;
 }
 
-.messageArea {
-    overflow-y: auto;
-    height: calc(100% - 120px);
-}
-
 #pre-user-select {
     height: calc(100vh - 150px);
     min-height: 126px;
@@ -101,7 +96,7 @@ html, body {
     width: 90%;
 }
 
-@media (max-width: 576px) {
+@media (max-width: 575px) {
     .forMedia {
         position: absolute !important;
     }
@@ -118,14 +113,36 @@ html, body {
     #appChatArea .heading {
         padding-left: 0;
     }
+
+    .side .simplebar-track.simplebar-vertical {
+        margin-right: 3px;
+        background-color: #ffffff !important;
+    }
+
+    .chatArea .simplebar-track.simplebar-vertical {
+        margin-right: 2px !important;
+    }
+}
+
+.side .simplebar-track.simplebar-vertical {
+    width: 3px;
+    background-color: #1e557f14;
+    visibility: visible !important;
+}
+
+.chatArea .simplebar-track.simplebar-vertical {
+    width: 7px;
+    margin-right: 4px;
+    background-color: #1e557f14;
+    top: 6px;
+    bottom: 6px;
+    border-radius: 7px;
 }
 
 .simplebar-scrollbar::before {
-    /* change color and looks here */
-}
-
-.side .simplebar-scrollbar {
-    margin-left: 5px;
+    background-color: #89a0b3;
+    left: 0;
+    right: 0;
 }
 
 #appChatArea .heading {
@@ -139,6 +156,8 @@ html, body {
 
 .messageArea {
     padding: 10px 0;
+    overflow-y: auto;
+    height: calc(100% - 120px);
 }
 
 .messageItems {
@@ -161,7 +180,7 @@ html, body {
 .messageWrap {
     height: 100%;
     border-radius: 0 7.5px 7.5px 7.5px;
-    background-color: #fff;
+    background-color: #eeeff1;
     box-shadow: 0 1px .5px rgba(0, 0, 0,.13);
 }
 
@@ -208,6 +227,9 @@ html, body {
 .dateInfoItem {
     display: flex;
     justify-content: center;
+    /* top: 10px;
+    position: sticky;
+    position: -webkit-sticky; */
 }
 
 .dateInfoStyle {
@@ -222,4 +244,13 @@ html, body {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+#myMessage {
+    padding: 0px 20px;
+    width: 100%; 
+    height: 100%; 
+    border-radius: 100px;
+    outline: none;
+    border: none;
 }

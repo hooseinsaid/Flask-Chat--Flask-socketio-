@@ -202,7 +202,6 @@ function processLeaveRoom(data, element) {
     }
 }
 
-document.getElementById("myMessage").addEventListener("focus", scrollDownChatWindow);
 
 function getCurrentRoom(element) {
 
@@ -211,6 +210,9 @@ function getCurrentRoom(element) {
 
     // autofocus on input-box
     document.getElementById("myMessage").focus();
+
+    // set the id of the message container so message appears only in the rooms intended
+    // document.getElementById("messages")
 
 
     // display messages from localstorage here if it exists and update localstorage in processgetCurrentRoom()
@@ -310,12 +312,12 @@ function hideChatArea() {
 
 // trying to detect back button
 //! does not work for now
-document.addEventListener('backbutton', function() {
-    if(document.getElementById("appChatArea").style.zIndex == 1000) {
-        hideChatArea();
-        console.log("back button")
-    }
-});
+// document.addEventListener('backbutton', function() {
+//     if(document.getElementById("appChatArea").style.zIndex == 1000) {
+//         hideChatArea();
+//         console.log("back button")
+//     }
+// });
 
 
 function clearInputResources(value) {
@@ -380,6 +382,7 @@ function append_msgs(data) {
         console.log('normal time')
     }
 
+    // if displayDate(recentDate) returns a value
     if (recentDateValue) {
         console.log(`from recent date ${recentDateValue}`);
 
@@ -428,6 +431,8 @@ function append_msgs(data) {
     wrapperDiv.appendChild(innerDiv);
     containerDiv.appendChild(wrapperDiv);
     outerDiv.appendChild(containerDiv);
+
+    // todo before append, confirm that the id corresponds to that of the room it is directed at if not from db
     document.getElementById("messages").append(outerDiv);
 }
 
