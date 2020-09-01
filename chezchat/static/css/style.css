@@ -362,7 +362,7 @@ html, body {
 .form-wrap {
     width: 40vw;
     max-width: 340px;
-    min-width: 210px;
+    min-width: 260px;
 }
 
 .form-control, .signup-login-container .btn{
