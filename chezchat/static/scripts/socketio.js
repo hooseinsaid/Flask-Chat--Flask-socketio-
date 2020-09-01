@@ -243,10 +243,11 @@ document.addEventListener('DOMContentLoaded', () => {
             value = false;
             // sorta duplicate because if I press a character key and a non character key quickly
             // the timer will not expire and it will look like i am still typing
-            socket.emit('broadcast', {
-                                        'username': username, 
-                                        'info': 'verify_status', 
-                                        'room_id': localStorage.getItem('current_room_id') 
+            socket.emit(
+                'broadcast', {
+                'username': username, 
+                'info': 'verify_status', 
+                'room_id': localStorage.getItem('current_room_id') 
             });
         }
         console.log(initialTextLength)
@@ -266,7 +267,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typingCheck == true) {
             clearTimeout(timer);
             if (localStorage.getItem('current_room_id')) {
-                socket.emit('broadcast', {'username': username, 'info': 'typing', 'room_id': localStorage.getItem('current_room_id')});
+                socket.emit(
+                    'broadcast', {
+                    'username': username, 
+                    'info': 'typing', 
+                    'room_id': localStorage.getItem('current_room_id')
+                });
             }
             else {
                 alert("There's been an error handlepress. please reload to continue")

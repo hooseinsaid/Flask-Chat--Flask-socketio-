@@ -8,7 +8,7 @@ from flask_socketio import SocketIO
 from flask_login import LoginManager
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'Thisisasecret'
 socketio = SocketIO(app, engineio_logger=True, logger=True, cors_allowed_origins='*')
 
 manager = Manager(app)
@@ -22,5 +22,6 @@ migrate = Migrate(app, db)
 
 login = LoginManager(app)
 login.login_view = 'login'
+login.login_message = ''
 
 from chezchat import main
