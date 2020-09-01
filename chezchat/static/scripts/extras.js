@@ -31,18 +31,23 @@ function processAddUser(data, element) {
 
     
     var div2 = document.createElement('div');
-    div2.innerHTML = userName;
     div2.setAttribute("class","name-section");
+    
+    var nameSpan = document.createElement('span');
+    nameSpan.innerHTML = userName;
+    nameSpan.setAttribute("class","name-header");
+    div2.appendChild(nameSpan);
 
 
     div.setAttribute("onclick","getCurrentRoom(this); verify_status()");
+
     var button = document.createElement('button');
     button.setAttribute("class","btn btn-danger btn-sm");
     button.name = userName;
     button.value = userUsername;
     button.setAttribute("onclick","removeUser(this);");
+
     var buttonIcon = document.createElement('i');
-    
     buttonIcon.setAttribute("class","fas fa-user-minus");
     buttonIcon.setAttribute("aria-hidden","true");
     button.appendChild(buttonIcon);
@@ -80,18 +85,26 @@ function processRemoveUser(data, element) {
 
     var div = document.createElement('div');
     div.setAttribute("class","user-list");
+
     var div2 = document.createElement('div');
-    div2.innerHTML = friendName;
     div2.setAttribute("class","name-section");
+
+    var nameSpan = document.createElement('span');
+    nameSpan.innerHTML = friendName;
+    nameSpan.setAttribute("class","name-header");
+    div2.appendChild(nameSpan);
+    
     var button = document.createElement('button');
     button.name = friendName;
     button.value = friendUsername;
     button.setAttribute("onclick","addUser(this);");
     button.setAttribute("class","btn btn-success btn-sm");
+
     var buttonIcon = document.createElement('i');
     buttonIcon.setAttribute("class","fas fa-user-plus");
     buttonIcon.setAttribute("aria-hidden","true");
     button.appendChild(buttonIcon);
+
     div.appendChild(div2)
     div.appendChild(button);
 
@@ -122,7 +135,17 @@ function processJoinRoom(data, element) {
     div.setAttribute("onclick","getCurrentRoom(this)");
     var div2 = document.createElement('div');
     div2.setAttribute("class","name-section");
-    div2.innerHTML = roomName;
+
+    var nameSpan = document.createElement('span');
+    nameSpan.innerHTML = roomName;
+    nameSpan.setAttribute("class","name-header");
+    div2.appendChild(nameSpan);
+
+    var groupMarkerSpan = document.createElement('span');
+    groupMarkerSpan.innerHTML = "group";
+    groupMarkerSpan.setAttribute("class","group-marker");
+    div2.appendChild(groupMarkerSpan);
+
     var button = document.createElement('button');
     button.setAttribute("class","btn btn-danger btn-sm");
     button.id = "roomView"
@@ -173,7 +196,17 @@ function processLeaveRoom(data, element) {
     var div = document.createElement('div');
     div.setAttribute("class","user-list");
     var div2 = document.createElement('div');
-    div2.innerHTML = roomName;
+
+    var nameSpan = document.createElement('span');
+    nameSpan.innerHTML = roomName;
+    nameSpan.setAttribute("class","name-header");
+    div2.appendChild(nameSpan);
+
+    var groupMarkerSpan = document.createElement('span');
+    groupMarkerSpan.innerHTML = "group";
+    groupMarkerSpan.setAttribute("class","group-marker");
+    div2.appendChild(groupMarkerSpan);
+
     div2.setAttribute("class","name-section");
     var button = document.createElement('button'); 
     button.setAttribute("class","btn btn-success btn-sm");
@@ -278,14 +311,18 @@ function processgetCurrentRoom(data, element) {
     if (current_room.private_room !== true) {
         for (x in room_members) {
             member = room_members[x];
-            const div = document.createElement('div');
+            const divMain = document.createElement('div');
+            const span_ = document.createElement('span');
+            span_.innerHTML = member.name_surname;
+            span_.setAttribute("class","name-header");
+            divMain.appendChild(span_)
             if (member.id === current_room.created_by) {
-                div.innerHTML = `${member.name_surname} ADMIN`;
+                const adminSpan = document.createElement('span');
+                adminSpan.setAttribute("class","group-marker");
+                adminSpan.innerHTML = 'admin'
+                divMain.appendChild(adminSpan)
             }
-            else {
-                div.innerHTML = member.name_surname;
-            }
-            InfoModalBody.append(div);
+            InfoModalBody.append(divMain);
         }
     }
     scrollDownChatWindow();

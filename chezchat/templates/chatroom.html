@@ -7,49 +7,65 @@
         <div class="row app">
             <div id="appNavArea" class="col-sm-4 side forMedia">
                 <div class="heading">
-                    <em id="my_status"></em><br>
-                    <em>Current User: {{ current_user.username }}</em>
-                    <a href="#" data-toggle="modal" data-target="#myModal">New group</a>
+                    <h3>Chatrrr</h3>
                 </div>
 
                 <div class="nav-section" data-simplebar>
-                    <h5><em>Friends</em></h5>
-                    <div id="friendsPanel">
-                        {% for friend, room in zipped_friends_list %}
-                            <!-- onclick a function triggers ajax to get the needed -->
-                            <div id="{{ room.room_id }}" class="user-list" onclick="getCurrentRoom(this); verify_status()">
-                                <div class="name-section">
-                                    {{ friend.name_surname }}
-                                </div>
-                                <!-- possible ID conflict as I use room id here too -->
-                                <!-- button should always be last in this div -->
-                                <!-- create a warning modal for this. this button should trigger the modal and the modal's button should execute onclick="removeUser(this) -->
-                                <button class="btn btn-danger btn-sm" name="{{ friend.name_surname }}" value="{{ friend.username }}" onclick="removeUser(this)"><i class="fas fa-user-minus"></i></button>
-                            </div>
-                        {% endfor %}
-                    </div>
-
-                    <h5><em>My rooms</em></h5>
-                    <div id="roomsPanel">
-                    {% for room in rooms %}
-                        {% if room.private_room == False %}
-                            <div id="{{ room.room_id }}" class="user-list" onclick="getCurrentRoom(this)">
-                                <div class="name-section">
-                                    {{ room.name }}
-                                </div>
-                                <button class="btn btn-danger btn-sm" id="roomView" name="{{ room.name }}" value="{{ room.room_id }}" onclick="leaveRoom(this)"><span class="font-weight-bold">Exit</span></button>
-                            </div>
+                    
+                    <!-- Flash error messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                        <div class="flash-messages">
+                            {% for category, message in messages %}
+                            <div class="{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        </div>
                         {% endif %}
-                    {% endfor %}
-                    </div>
+                    {% endwith %}
 
-                    <h5><em>Available users</em></h5>
+                    <div class="sticky-div">
+                        <div style="padding: 5px 15px; overflow-wrap: break-word; word-wrap: break-word;">
+                            <span style="color: #092834;" class="name-header" id="my_status"></span><br>
+                            <a style="text-decoration: none !important; color: #092834 !important;" href="#" data-toggle="modal" data-target="#myModal">Create new group</a>
+                        </div>
+                    </div>
+                    <div id="chattables">
+                        <div id="friendsPanel">
+                            {% for friend, room in zipped_friends_list %}
+                                <!-- onclick a function triggers ajax to get the needed -->
+                                <div id="{{ room.room_id }}" class="user-list" onclick="getCurrentRoom(this); verify_status()">
+                                    <div class="name-section">
+                                        <span class="name-header">{{ friend.name_surname }}</span>
+                                    </div>
+                                    <!-- possible ID conflict as I use room id here too -->
+                                    <!-- button should always be last in this div -->
+                                    <!-- create a warning modal for this. this button should trigger the modal and the modal's button should execute onclick="removeUser(this) -->
+                                    <button class="btn btn-danger btn-sm" name="{{ friend.name_surname }}" value="{{ friend.username }}" onclick="removeUser(this)"><i class="fas fa-user-minus"></i></button>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div id="roomsPanel">
+                            {% for room in rooms %}
+                                {% if room.private_room == False %}
+                                    <div id="{{ room.room_id }}" class="user-list" onclick="getCurrentRoom(this)">
+                                        <div class="name-section">
+                                            <span class="name-header">{{ room.name }}</span>
+                                            <span class="group-marker">group</span>
+                                        </div>
+                                        <button class="btn btn-danger btn-sm" id="roomView" name="{{ room.name }}" value="{{ room.room_id }}" onclick="leaveRoom(this)"><span class="font-weight-bold">Exit</span></button>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
                     <div id="availableUsers">
                         {% for user in non_friend_users %}
                             {% if user != current_user %}
                                 <div class="user-list">
                                     <div class="name-section">
-                                        {{ user.name_surname }}
+                                        <span class="name-header">{{ user.name_surname }}</span>
                                     </div>
                                     <button class="btn btn-success btn-sm" name="{{ user.name_surname }}" value="{{ user.username }}" onclick="addUser(this)"><i class="fas fa-user-plus"></i></button>
                                 </div>
@@ -57,13 +73,13 @@
                         {% endfor %}
                     </div>
 
-                    <h5><em>Available rooms</em></h5>
                     <div id="availableRooms">
                         {% for room in all_rooms %}
                             {% if room.private_room == False and room not in current_user.room_subscribed %}
                             <div class="user-list">
                                 <div class="name-section">
-                                    {{ room.name }}
+                                    <span class="name-header">{{ room.name }}</span>
+                                    <span class="group-marker">group</span>
                                 </div>
                                 <button class="btn btn-success btn-sm" name="{{ room.name }}" value="{{ room.room_id }}" onclick="joinRoom(this)"><span class="font-weight-bold">Join</span></button>
                             </div>
@@ -87,7 +103,7 @@
                 <div class="heading" data-toggle="modal" data-target="#myModal2">
                     <i class="fas fa-arrow-left" onclick="hideChatArea()"></i>
                     <div style="display: block;">
-                        <div id="currentRoomName"></div>
+                        <div class="name-header" id="currentRoomName"></div>
                         <div id="user_status"></div>
                     </div>
                     <!-- I have this guys ID on button click assign this the button value -->
@@ -107,27 +123,18 @@
                         </div>
                     </div>
                     
-                    <!-- todo on click of the div section assign id here to be room number and only display -->
-                    <!-- todo the messages when the room matches the id here -->
-                    <!-- todo for notification purposes, use the room id as key and increment it's value -->
-                    <!-- todo to match the number of times a message directed to it was received by the server-->
-                    <!-- todo when a client is offline, hold on to this value for them and emit when they are online -->
                     <div id="messages"></div>
                 </div>
 
                 <div id="msgInput">
-                    <div style="display: flex; margin: 0; width: 100%; justify-content: center;">
+                    <div style="padding: 0 5%; display: flex; margin: 0; width: 100%; justify-content: space-between;">
 
-                        <div style="width: 15%;" class="zero flex-absolute-center">
-                            <i class="far fa-laugh fa-3x"></i>
-                        </div>
-
-                        <div style="width: 70%;" class="zero flex-absolute-center">
+                        <div style="width: 90%;" class="zero flex-absolute-center">
                             <input id="myMessage" type="text" name="message" autocomplete="off" placeholder="Type a message">
                         </div>
 
-                        <div style="width: 15%;" class="zero flex-absolute-center">
-                            <button id="sendbutton" class="btn btn-primary" type="button" name="submit"><i class="fas fa-paper-plane fa-2x"></i></button>
+                        <div>
+                            <button style="margin-left: 15%; border-radius: 10px;" id="sendbutton" class="btn btn-primary" type="button" name="submit"><i class="fas fa-paper-plane fa-2x"></i></button>
                         </div>
 
                     </div>
@@ -149,11 +156,11 @@
                     </div>
 
                     <div class="modal-body" style="max-height: 430px; overflow: auto;">
-                        {{ form.name }}
+                        {{ form.name(placeholder="Group name", style="width: 100%") }}
                     </div>
 
                     <div class="modal-footer">
-                        {{ form.submit() }}
+                        {{ form.submit(class="btn btn-primary") }}
                     </div>
 
                 </div>
@@ -209,6 +216,25 @@
 
     <!-- Helper scripts for functionality -->
     <script src="{{ url_for('static', filename='scripts/extras.js') }}"></script>
+
+    <!-- add active class for highlight on click with JQuery -->
+    <script>
+        $( '#chattables' ).on( 'click', '.user-list', function () {
+            $( '#chattables .user-list' ).removeClass( 'active' );
+            $( this ).addClass( 'active' );
+            $( '#chattables .user-list .group-marker' ).removeClass( 'group-marker-active' );
+            $( this).find(".group-marker").addClass( 'group-marker-active' );
+        });
+    </script>
+
+    <!-- make flash msgs disappear -->
+    <script>
+        window.setTimeout(function() {
+            $(".flash-messages").slideUp(500, function(){
+                $(this).remove(); 
+            });
+        }, 10000);
+    </script>
     
 {% endblock %}
 

@@ -42,12 +42,13 @@ def home():
             db.session.add(new_room)
             new_room.subscribers.append(current_user)
             db.session.commit()
-            flash(f'{new_room.name} has been created')
+            flash(f'{new_room.name} has been created', 'success')
             # updates the rooms list in real time for every other user
             socketio.emit('update_rooms', {'name': new_room.name, 'value': new_room.room_id}, broadcast=True)
             return redirect(url_for('home'))
         else:
-            flash('Room not created. Make sure the name field is not empty and is at least 4 characters long ')
+            flash('Room not created. Make sure the name field is not empty and is at least 4 characters long', 'danger')
+            return redirect(url_for('home'))
     return render_template('chatroom.html', form=form, rooms=rooms, current_user=current_user, 
                             all_rooms=all_rooms, all_users=all_users, non_friend_users=non_friend_users, 
                             zipped_friends_list=zipped_friends_list)
@@ -79,7 +80,7 @@ def register():
         db.session.commit()
         # updates the users list in real time for every other user
         socketio.emit('update_users', {'name': user.name_surname, 'value': user.username}, broadcast=True)
-        flash('You have been successfully registered')
+        flash('You have been successfully registered.<br> Login here', 'success')
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
 
@@ -91,7 +92,7 @@ def login():
     if form.validate_on_submit():
         user = Users.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password')
+            flash('Invalid username or password', 'danger')
             return redirect(url_for('login'))
         login_user(user)
         return redirect(url_for('home'))
@@ -100,7 +101,6 @@ def login():
 @app.route('/logout')
 def logout():
     logout_user()
-    flash('Login again from here to continue chatting')
     return redirect(url_for('login'))
 
 @app.route('/join-room', methods=['GET', 'POST'])
@@ -184,7 +184,6 @@ def handleMessage(data):
         db.session.commit()
         recipients_list = handle_recipients(current_room)
         print(f'\n\n{recipients_list}\n\n from return fxn')
-        # When emitting a msg and the list is empty alert the sender that his msg has not been delivered as he has been kicked
     for recipient in recipients_list:
         emit('handle_messages', data, room=recipient, callback=userReceivedCallback)
     return f"Message {message.msg_id} with uuid {data['uuid']} received by server", data['uuid']

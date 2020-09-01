@@ -27,7 +27,8 @@ html, body {
     margin: 0 !important;
     height: 60px;
     width: 100%;
-    background-color: #eee;
+    background-color: #1A3E4C;
+    color: #ffffff;
     z-index: 1000;
 }
 
@@ -48,7 +49,18 @@ html, body {
 .nav-section {
     height: calc(100% - 87px);
     overflow-y: auto;
-    padding: 0 15px;
+}
+
+.nav-section .sticky-div {
+    position: sticky;
+    top: 0px;
+    background-color: #ffffff;
+    padding: 15px;
+}
+
+.nav-section .sticky-div div{
+    height: 60px;
+    background-color: #f2f2f2;
 }
 
 .chatArea {
@@ -86,6 +98,13 @@ html, body {
     justify-content: center;
     align-items: center;
     height: 60px;
+    padding: 0 15px;
+    cursor: pointer;
+    color: #092834;
+}
+
+.user-list:hover {
+    background-color: #E4F1F6;
 }
 
 .user-list button {
@@ -94,6 +113,12 @@ html, body {
 
 .name-section {
     width: 90%;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.name-header {
+    font-weight: 700;
 }
 
 @media (max-width: 575px) {
@@ -116,11 +141,25 @@ html, body {
 
     .side .simplebar-track.simplebar-vertical {
         margin-right: 3px;
-        background-color: #ffffff !important;
     }
 
     .chatArea .simplebar-track.simplebar-vertical {
         margin-right: 2px !important;
+    }
+
+    .side .simplebar-track.simplebar-vertical {
+        top: 92px;
+    }
+
+    .side .simplebar-track.simplebar-vertical .simplebar-scrollbar::before {
+        top: 2px !important;
+    }
+}
+
+@media (min-width: 576px) {
+    .active {
+        background-color: #1a3e4cd4 !important;
+        color: #ffffff;
     }
 }
 
@@ -128,6 +167,11 @@ html, body {
     width: 3px;
     background-color: #1e557f14;
     visibility: visible !important;
+}
+
+.side .simplebar-track.simplebar-vertical .simplebar-scrollbar::before {
+    top: 92px;
+    bottom: 2px;
 }
 
 .chatArea .simplebar-track.simplebar-vertical {
@@ -140,7 +184,7 @@ html, body {
 }
 
 .simplebar-scrollbar::before {
-    background-color: #89a0b3;
+    background-color: #092834;
     left: 0;
     right: 0;
 }
@@ -253,4 +297,88 @@ html, body {
     border-radius: 100px;
     outline: none;
     border: none;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #1a3e4cd4 !important;
+    border: none !important;
+    border-style: none;
+    box-shadow: none !important;
+}
+
+.group-marker {
+    border: 1px solid #1A3E4C;
+    border-radius: 100px;
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 3%;
+    height: fit-content;
+}
+
+.group-marker-active {
+    border-color: #ffffff !important;
+}
+
+.flash-messages {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    color: #ffffff;
+}
+
+.flash-messages .danger {
+    padding: 5px 15px;
+    background-color: #dc3545;
+}
+
+.flash-messages .success {
+    padding: 5px 15px;
+    background-color: #28a745;
+}
+
+.flash-messages .info {
+    padding: 5px 15px;
+    background-color: #bd951dc4;
+}
+
+.signup-login {
+    background-color: #1A3E4C;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.signup-login-container {
+    height: fit-content;
+    background-color: #ffffff;
+    padding: 40px 30px;
+    width: max-content;
+}
+
+.form-wrap {
+    width: 40vw;
+    max-width: 340px;
+    min-width: 210px;
+}
+
+.form-control, .signup-login-container .btn{
+    height: calc(1.5em + .75rem + 10px) !important;
+}
+
+.form-control {
+    background-color: #ced4da52 !important;
+    box-shadow: none !important;
+    border-color: #ffffff00 !important;
+}
+
+.form-control:focus {
+    border-bottom: 2px solid #1a3e4c !important;
+}
+
+.shadow-custom {
+    box-shadow: 0 1rem 3rem rgba(0,0,0,0.6)!important;
 }

@@ -18,8 +18,8 @@ class UserRegistrationForm(FlaskForm):
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
-    submit = SubmitField('Sign In')
+    submit = SubmitField('Login')
 
 class CreateRoomForm(FlaskForm):
     name = StringField('Group name',  validators=[DataRequired(), Length(min=4, max=128)])
-    submit = SubmitField('Create room')
+    submit = SubmitField('Create group')
