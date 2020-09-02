@@ -128,6 +128,11 @@ html, body {
 
     #appNavArea {
         background-color: white;
+        min-width: 340px;
+    }
+
+    #appChatArea {
+        min-width: 340px;
     }
 
     #appChatArea .heading i {
