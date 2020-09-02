@@ -18,6 +18,5 @@ def runserver():
         update_db_after_restart()
     socketio.run(app)
 
-# app = manager.run()
 if __name__ == "__main__":
     manager.run()
