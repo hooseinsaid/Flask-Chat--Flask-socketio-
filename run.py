@@ -13,7 +13,8 @@ def update_db_after_restart():
 
 @manager.command
 def runserver():
-    db_dir = os.path.join(app.root_path, 'database.db')
+    database_name = os.path.basename(os.environ.get('DATABASE_URL'))
+    db_dir = os.path.join(app.root_path, database_name)
     if os.path.exists(db_dir):
         update_db_after_restart()
     socketio.run(app)

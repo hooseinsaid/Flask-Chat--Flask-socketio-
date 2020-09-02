@@ -7,7 +7,8 @@ from flask_login import UserMixin
 
 @app.before_request
 def before_request():
-    db_dir = os.path.join(app.root_path, 'database.db')
+    database_name = os.path.basename(os.environ.get('DATABASE_URL'))
+    db_dir = os.path.join(app.root_path, database_name)
     if not os.path.exists(db_dir):
         db.create_all()
 
