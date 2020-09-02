@@ -24,19 +24,23 @@ function verify_status() {
             
             if (data['status'] === 'offline') {
                 if (data['forced_offline'] == true) {
-                    userStatusInfo.innerHTML = `${data['username']} is offline from verify_status after server crashed`;
+                    // userStatusInfo.innerHTML = `${data['username']} is offline from verify_status after server crashed`;
+                    userStatusInfo.innerHTML = 'offline';
                 }
                 else {
                     if (hours <= (24 * 7)) {
-                        userStatusInfo.innerHTML = `${data['username']} was last seen ${moment(data['last_seen']).fromNow()} from verify_status`;
+                        // userStatusInfo.innerHTML = `${data['username']} was last seen ${moment(data['last_seen']).fromNow()} from verify_status`;
+                        userStatusInfo.innerHTML = `last seen ${moment(data['last_seen']).fromNow()}`;
                     }
                     else {
-                        userStatusInfo.innerHTML = `${data['username']} was last seen ${moment(data['last_seen']).format('LL')} from verify_status`;
+                        // userStatusInfo.innerHTML = `${data['username']} was last seen ${moment(data['last_seen']).format('LL')} from verify_status`;
+                        userStatusInfo.innerHTML = `last seen ${moment(data['last_seen']).format('LL')}`;
                     }
                 }
             }
             else {
-                userStatusInfo.innerHTML = `${data['username']} is ${data['status']} from verify_status`;
+                // userStatusInfo.innerHTML = `${data['username']} is ${data['status']} from verify_status`;
+                userStatusInfo.innerHTML = `${data['status']}`;
             }
         }
     };
@@ -154,7 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // get the html element and update it
         if (getUser.innerHTML == data.username && data.info != 'verify_status') {
-            userStatusInfo.innerHTML = `${data.username} is ${data.info} from broadcast`;
+            // userStatusInfo.innerHTML = `${data.username} is ${data.info} from broadcast`;
+            userStatusInfo.innerHTML = `${data.info}`;
         }
     });
 
@@ -196,7 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
         messageInput.addEventListener('keydown', handleKeyPress);
         messageInput.addEventListener('keyup', handleKeyUp);
     }
-    
 
     var initialTextLength = 0;
     function testTyping(newLength) {

@@ -80,6 +80,7 @@ def register():
         db.session.commit()
         # updates the users list in real time for every other user
         socketio.emit('update_users', {'name': user.name_surname, 'value': user.username}, broadcast=True)
+        logout_user()
         flash('You have been successfully registered.<br> Login here', 'success')
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
