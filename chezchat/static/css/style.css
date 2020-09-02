@@ -166,6 +166,10 @@ html, body {
         background-color: #1a3e4cd4 !important;
         color: #ffffff;
     }
+
+    .group-marker-active {
+        border-color: #ffffff !important;
+    }
 }
 
 .side .simplebar-track.simplebar-vertical {
@@ -320,10 +324,6 @@ html, body {
     font-weight: 700;
     margin-left: 3%;
     height: fit-content;
-}
-
-.group-marker-active {
-    border-color: #ffffff !important;
 }
 
 .flash-messages {
