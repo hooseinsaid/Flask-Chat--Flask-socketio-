@@ -276,6 +276,9 @@ function getCurrentRoom(element) {
     if (element.getElementsByTagName("button")[0].id !== "roomView") {
         document.getElementById("get_user_status").innerHTML = friendUsername;
     }
+    else {
+        document.getElementById("user_status").innerHTML = "click here for group info";
+    }
 
     console.log(document.getElementById("get_user_status").innerHTML)
 
@@ -312,6 +315,7 @@ function processgetCurrentRoom(data, element) {
         for (x in room_members) {
             member = room_members[x];
             const divMain = document.createElement('div');
+            divMain.setAttribute("style","padding: 7px 0");
             const span_ = document.createElement('span');
             span_.innerHTML = member.name_surname;
             span_.setAttribute("class","name-header");
