@@ -55,10 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById("msgInput").hidden = true;
     
-    // messageSendButton.hidden = true;
-    // messageInput.hidden = true;
-    
-    // update the presence status of the recipient
+    // update the present status of the recipient after 20 seconds
     setInterval(function() {
         if(getUser.innerHTML) {
             verify_status();    
@@ -68,41 +65,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // triggered when the client tries to connect to the server
     // and it emits to the on_connect event on the server side
     socket.on('connect', () => {
-        console.log(`${localStorage.getItem('current_room_id')} from connect`)
-        console.log('Verify Status running from connect')
-
-        
-        // localStorage.removeItem("current_room_id");
-
-        // getUser.innerHTML = '';
-        // userStatusInfo.innerHTML = '';
-        // currentRoomName.innerHTML = '';
         myStatus.innerHTML = 'You are online';
     });
 
     // triggered when the client pings the server and can't connect
     socket.on('disconnect', () => {
-        console.log('Cannot reach the server at this moment');
-        console.log('disconnected');
-
-        // localStorage.removeItem("current_room_id");
 
         userStatusInfo.innerHTML = '';
-        // currentRoomName.innerHTML = '';
-        // getUser.innerHTML = '';
-        myStatus.innerHTML = 'Cannot reach the server at this moment';
 
-        // disable send button and text input until server or client is back online
-        // allow users to peruse current history even if offline
-        // if (messageInput || messageSendButton) {
-        //     clearInputResources(true);
-        // }
-        console.log(`${localStorage.getItem('current_room_id')} from disconnect`)
+        myStatus.innerHTML = 'Cannot reach the server at this moment';
     });
 
     socket.on('prevent_double_session', () => {
-        // make here a persistent modal forcing the user to reload
         socket.disconnect();
+
+        // persistent modal forcing the user to reload when he return to the previous tab
+        // after connecting on a new tab
         $('#preventMultModal').modal('show');
         if (getUser.innerHTML) {
             getUser.innerHTML = '';
@@ -114,8 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // emits to handle_messages event on the server side
     if (messageSendButton) {
         document.querySelector('#sendbutton').onclick = () => {
-            
-            // think of a mechanism to prevent from sending when offline
+
             if (localStorage.getItem('current_room_id')) {
                 if (document.querySelector('#myMessage').value.trim() != "") {
 
@@ -145,18 +122,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // let's the sender know that the server received their message
     function serverReceivedCallback(data, uuid) {
-        console.log(data);
         messageStatusTimeInfoWrapper = document.getElementById(uuid);
+        // adds one tick to the element with uuid as id
         addOneTick(messageStatusTimeInfoWrapper);
-        console.log(messageStatusTimeInfoWrapper);
-        // ! get the docByID of the css element and change to one tick
-        // ! by default it should be on pending
     }
 
     socket.on('message_delivered', () => {
         console.log("user received message")
-        // ! get the docByID of the css element and change to one tick
-        // ! by default it should be on pending
+        // todo get the docByID of the css element and change to two ticks
     });
 
     // receives message from an the handle_messages event on the server side and displays them to a client
@@ -166,28 +139,22 @@ document.addEventListener('DOMContentLoaded', () => {
             append_msgs(data);
             scrollDownChatWindow();
         }
-
         // let's the sender know that his msg has been received
         userReceivedCallback();
-        // alert(`${data.username} says ${data.msg}`)
     });
 
     // receives the message emitted by broadcast event and confirms that the client is connected/disconnected to/from the server
     socket.on('broadcast', data => {
         console.log(`${data.username} is ${data.info}`);
-        // compare data.username and getUserInfo and if they're the same show the typing or online msg
-        // for notification use a callback. when the msg is delivered increase a counter or something
-        // when a user logs in elsewhere, log them out on the previous place and display an alert saying they've 
-        // been loggeg out of the previous place they were logged in
+
+        // verify user status 2 seconds after key up
         if (data.info == 'verify_status' && getUser.innerHTML == data.username) {
             verify_status();
         }
 
-
         // get the html element and update it
         if (getUser.innerHTML == data.username && data.info != 'verify_status') {
             userStatusInfo.innerHTML = `${data.username} is ${data.info} from broadcast`;
-            // alert(`${data.username} is ${data.info}`)
         }
     });
 
@@ -195,7 +162,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const userRemove = data.user_to_remove;
         var userElement = document.querySelectorAll(`button[value=${CSS.escape(userRemove)}]`)[0]
-        console.log(userElement);
         processRemoveUser(data, userElement);
         alert(`${userRemove} removed you`);
 
@@ -224,8 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
         processLeaveRoom(data, data)
     });
 
-
-    // maybe this does not make sense as message input always exist just hidden
+    // check for typing
     if (messageInput) {
         // could have used keypress which will be easier to implement but that doesn't work on mobile browsers
         messageInput.addEventListener('keydown', handleKeyPress);
@@ -241,8 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         else {
             value = false;
-            // sorta duplicate because if I press a character key and a non character key quickly
-            // the timer will not expire and it will look like i am still typing
             socket.emit(
                 'broadcast', {
                 'username': username, 
@@ -261,9 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // since keydown registers regardless of whether a chatacter is produced or not
         // check the input and see if there's any character
         var newLength = document.querySelector('#myMessage').value.length;
-        console.log(newLength+' from keypress')
         var typingCheck = testTyping(newLength);
-        console.log(typingCheck+' from keypress')
         if (typingCheck == true) {
             clearTimeout(timer);
             if (localStorage.getItem('current_room_id')) {
@@ -275,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
             else {
-                alert("There's been an error handlepress. please reload to continue")
+                alert("There's been an error. please reload to continue")
             }
         }
     }
@@ -299,15 +260,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 socket.emit('broadcast', {'username': username, 'info': 'verify_status', 'room_id': localStorage.getItem('current_room_id') });
             }
             else {
-                alert("There's been an error handleup. please reload to continue")
+                alert("There's been an error. please reload to continue")
             }
 
         }, timeoutVal);
     }
-            
-    socket.on('error', function() {
-        console.log("error");
-    });
 
     socket.on('reconnecting', function() {
         console.log("reconnecting");

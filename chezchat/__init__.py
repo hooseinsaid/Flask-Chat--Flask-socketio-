@@ -8,7 +8,7 @@ from flask_socketio import SocketIO
 from flask_login import LoginManager
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'Thisisasecret'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 socketio = SocketIO(app, engineio_logger=True, logger=True, cors_allowed_origins='*')
 
 manager = Manager(app)
