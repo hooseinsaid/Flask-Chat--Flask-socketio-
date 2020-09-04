@@ -38,6 +38,15 @@ function processAddUser(data, element) {
     nameSpan.setAttribute("class","name-header");
     div2.appendChild(nameSpan);
 
+    var div3 = document.createElement('div');
+    div3.setAttribute("class","roomDivInfo");
+    var lastMessageSpan = document.createElement('span');
+    var badgeCounterSpan = document.createElement('span')
+    lastMessageSpan.setAttribute("class","lastMessage");
+    badgeCounterSpan.setAttribute("class","badgeCounter");
+    div3.appendChild(lastMessageSpan)
+    div3.appendChild(badgeCounterSpan)
+
 
     div.setAttribute("onclick","getCurrentRoom(this); verify_status()");
 
@@ -53,6 +62,7 @@ function processAddUser(data, element) {
     button.appendChild(buttonIcon);
 
     div.appendChild(div2)
+    div.appendChild(div3)
     div.appendChild(button);
     document.getElementById("friendsPanel").append(div);
 
@@ -288,6 +298,12 @@ function getCurrentRoom(element) {
 
 function processgetCurrentRoom(data, element) {
     
+    roomID = element.id;
+
+    // clear localstorage notification counter
+    if (JSON.parse(localStorage.getItem('notifyParams'))) {
+        resetStorageNotification(roomID);
+    }
 
     document.getElementById("pre-user-select").hidden = true;
 
@@ -299,14 +315,20 @@ function processgetCurrentRoom(data, element) {
     // add data to localStorage 
 
     current_room = data.current_room;
-    console.log(current_room);
     room_history = current_room.room_history;
     for (x in room_history) {
         // create a function and use here and in socket append msgs
         msg = room_history[x];
         msg['from_db'] = true;
-        console.log(msg)
+        // console.log(msg)
         append_msgs(msg);
+
+    }
+
+    // put the last message on the badge
+    // call only if there's a message in the group already
+    if (room_history.length !== 0) {
+        handleLastMessageHelper(room_history[room_history.length - 1])
     }
 
     room_members = data.room_members;
@@ -329,8 +351,127 @@ function processgetCurrentRoom(data, element) {
             InfoModalBody.append(divMain);
         }
     }
-    scrollDownChatWindow();
+    // scrollDownChatWindow();
 }
+
+function resetStorageNotification(roomID) {
+    var resetNotificationCounter = JSON.parse(localStorage.getItem('notifyParams'));
+    if (resetNotificationCounter) {
+        resetNotificationCounter[roomID] = 0;
+        localStorage.setItem('notifyParams', JSON.stringify(resetNotificationCounter));
+    }
+
+    addNotificationBadge(roomID, JSON.parse(localStorage.getItem('notifyParams')));
+}
+
+function addNotificationBadge(room_id, data) {
+
+    const span_badgeCounter = document.querySelector(`[id=${CSS.escape(room_id)}] .roomDivInfo span.badgeCounter`);
+
+    if (data[room_id] === 0) {
+        span_badgeCounter.setAttribute("style", "visibility: hidden")
+    }
+    else {
+        span_badgeCounter.setAttribute("style", "visibility: visible")
+        span_badgeCounter.innerHTML = data[room_id];
+    }
+
+}
+
+function addLastMessageBadge(room_id, data) {
+
+    const span_lastMessage = document.querySelector(`[id=${CSS.escape(room_id)}] .roomDivInfo span.lastMessage`);
+
+    const elementGroupTest = document.querySelector(`[id=${CSS.escape(room_id)}]`).parentElement
+    
+    // if the current room is a group, add the author to the badge
+    if (elementGroupTest.id === 'roomsPanel')
+    {
+        span_lastMessage.innerHTML = `${data[room_id][1]}: ${data[room_id][0]}`;
+    }
+    else {
+        span_lastMessage.innerHTML = data[room_id][0];
+    }
+}
+
+function handleLastMessageHelper(data) {
+    var roomID = data.room_id;
+    var message = data.messages;
+    var author = data.author;
+
+    if (localStorage.getItem('lastMessageParams')) {
+        // convert the localStorage string to a dictionary
+        var existing = JSON.parse(localStorage.getItem('lastMessageParams'));
+        existing[roomID] = [message, author];
+        localStorage.setItem('lastMessageParams', JSON.stringify(existing));
+    }
+    else {
+        // If no existing data, create an dictionary
+        newParams = {};
+        newParams[roomID] = [message, author];
+        localStorage.setItem('lastMessageParams', JSON.stringify(newParams));
+    }
+    addLastMessageBadge(roomID, JSON.parse(localStorage.getItem('lastMessageParams')));
+}
+
+function handleNotificationsHelper(room_id, count) {
+
+    if (localStorage.getItem('notifyParams')) {
+        // convert the localStorage string to a dictionary
+        var existing = JSON.parse(localStorage.getItem('notifyParams'));
+        if (existing[room_id]) {
+            existing[room_id] = existing[room_id] + count;
+        }
+        else {
+            existing[room_id] = count;
+        }
+        localStorage.setItem('notifyParams', JSON.stringify(existing));
+        console.log(`${count} from if updating`);
+    }
+    else {
+        // If no existing data, create an dictionary
+        newParams = {};
+        newParams[room_id] = count;
+        localStorage.setItem('notifyParams', JSON.stringify(newParams));
+        console.log(`${count} from else creating new`);
+    }
+
+    addNotificationBadge(room_id, JSON.parse(localStorage.getItem('notifyParams')));
+}
+
+function persistentNotificationBadge() {
+    var counterObject = JSON.parse(localStorage.getItem('notifyParams'));
+    console.log(counterObject)
+    
+    if (counterObject) {
+        for (var key in counterObject) {
+            if (counterObject.hasOwnProperty(key)) {
+                addNotificationBadge(key, counterObject)
+            }
+        }
+    }
+}
+
+// so that the notifications can survive reload
+// it is reset on click if the room with the notification
+persistentNotificationBadge();
+
+function persistentlastMessageBadge() {
+    var counterObject = JSON.parse(localStorage.getItem('lastMessageParams'));
+    console.log(counterObject)
+    
+    if (counterObject) {
+        for (var key in counterObject) {
+            if (counterObject.hasOwnProperty(key)) {
+                addLastMessageBadge(key, counterObject)
+            }
+        }
+    }
+}
+
+// so that the notifications can survive reload
+// the class is changed on click of the room in question
+persistentlastMessageBadge();
 
 function showChatArea() {
 
@@ -350,16 +491,6 @@ function hideChatArea() {
 
     window.event.stopPropagation();
 }
-
-// trying to detect back button
-//! does not work for now
-// document.addEventListener('backbutton', function() {
-//     if(document.getElementById("appChatArea").style.zIndex == 1000) {
-//         hideChatArea();
-//         console.log("back button")
-//     }
-// });
-
 
 function clearInputResources(value) {
     
@@ -411,16 +542,13 @@ function append_msgs(data) {
         recentDate = moment.utc(data['timestamp']).local().format('MMMM DD, YYYY');
         recentDateValue = displayDate(recentDate);
 
-        local_time = moment.utc(data['timestamp']).local().format('HH:mm');
-        console.log('time from DB')
-        
+        local_time = moment.utc(data['timestamp']).local().format('HH:mm');        
     }
     else {
         recentDate = moment().format('MMMM DD, YYYY');
         recentDateValue = displayDate(recentDate);
 
         local_time = moment().format('HH:mm');
-        console.log('normal time')
     }
 
     // if displayDate(recentDate) returns a value
@@ -439,7 +567,6 @@ function append_msgs(data) {
         innerDateDiv.appendChild(dateInfoSpan);
         outerDateDiv.appendChild(innerDateDiv);
         document.getElementById("messages").append(outerDateDiv);
-        // todo finish
     }
 
     const timeInfoSpan = document.createElement('span');
@@ -451,8 +578,7 @@ function append_msgs(data) {
     messageStatusTimeInfoWrapper.setAttribute("class","statusTimeWrapper");
     messageStatusTimeInfoWrapper.appendChild(timeInfoSpan);
 
-
-    // if the current msg is from the user
+    // if the current msg is from the current_user
     if (data.author == username) {
         outerDiv.setAttribute("class","messageItems userSpecificMessageItems");
         wrapperDiv.setAttribute("class","messageWrap userSpecificmessageWrap");
@@ -460,21 +586,25 @@ function append_msgs(data) {
         // if the message is being rendered from db add a tick
         // else add an exclamation until it is received by server
         if (data.from_db === true) {
-            addOneTick(messageStatusTimeInfoWrapper);
+            if (data.msg_delivered == true) {
+                addTwoTicks(messageStatusTimeInfoWrapper);
+            }
+            else {
+                addOneTick(messageStatusTimeInfoWrapper);
+            }
         }
         else if (data.from_db === false) {
-            addPending(messageStatusTimeInfoWrapper)
+            addPending(messageStatusTimeInfoWrapper);
         }
     }
-
 
     innerDiv.appendChild(messageStatusTimeInfoWrapper);
     wrapperDiv.appendChild(innerDiv);
     containerDiv.appendChild(wrapperDiv);
     outerDiv.appendChild(containerDiv);
 
-    // todo before append, confirm that the id corresponds to that of the room it is directed at if not from db
     document.getElementById("messages").append(outerDiv);
+    scrollDownChatWindow();
 }
 
 function displayDate(recentDate) {
@@ -512,6 +642,25 @@ function addOneTick(messageStatusTimeInfoWrapper) {
     messageStatusSpan.appendChild(messageStatusIcon);
 
     // check if the pending icon is present and if so replace it with the one tick
+    if (messageStatusTimeInfoWrapper.childElementCount > 1) {
+        messageStatusTimeInfoWrapper.replaceChild(messageStatusSpan, messageStatusTimeInfoWrapper.childNodes[1]);
+    }
+    else {
+        messageStatusTimeInfoWrapper.appendChild(messageStatusSpan);
+    }
+}
+
+function addTwoTicks(messageStatusTimeInfoWrapper) {
+    const messageStatusSpan = document.createElement('span');
+    messageStatusSpan.setAttribute("class","oneTickSpanElement");
+
+    const messageStatusIcon = document.createElement('i');
+    messageStatusIcon.setAttribute("class","fas fa-check-double")
+    messageStatusIcon.setAttribute("aria-hidden","true");
+
+    messageStatusSpan.appendChild(messageStatusIcon);
+
+    // check if the sent icon is present and if so replace it with the double ticks
     if (messageStatusTimeInfoWrapper.childElementCount > 1) {
         messageStatusTimeInfoWrapper.replaceChild(messageStatusSpan, messageStatusTimeInfoWrapper.childNodes[1]);
     }

@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.querySelector('#myMessage').value = '';
                     
 
-                    scrollDownChatWindow();
+                    // scrollDownChatWindow();
                     document.getElementById("myMessage").focus();
                 }
             }
@@ -125,15 +125,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // let's the sender know that the server received their message
-    function serverReceivedCallback(data, uuid) {
-        messageStatusTimeInfoWrapper = document.getElementById(uuid);
+    function serverReceivedCallback(data) {
+        messageStatusTimeInfoWrapper = document.getElementById(data['uuid']);
+
         // adds one tick to the element with uuid as id
         addOneTick(messageStatusTimeInfoWrapper);
+
+        // put the last message on the badge
+        handleLastMessageHelper(data)
     }
 
-    socket.on('message_delivered', () => {
+    socket.on('message_delivered', uuid => {
         console.log("user received message")
+        messageStatusTimeInfoWrapper = document.getElementById(uuid);
+        if (messageStatusTimeInfoWrapper) {
+            addTwoTicks(messageStatusTimeInfoWrapper);
+        }
         // todo get the docByID of the css element and change to two ticks
+    });
+
+    socket.on('notification', data => {
+        handleNotificationsHelper(data['room_id'], data['count'])
     });
 
     // receives message from an the handle_messages event on the server side and displays them to a client
@@ -141,10 +153,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // send the msg only to the intended room
         if (localStorage.getItem('current_room_id') && data.room_id === localStorage.getItem('current_room_id')) {
             append_msgs(data);
-            scrollDownChatWindow();
+            // scrollDownChatWindow();
         }
-        // let's the sender know that his msg has been received
-        userReceivedCallback();
+        else {
+            // do not add to notification counter id user is in the target room already
+            var count = 1;
+            handleNotificationsHelper(data.room_id, count)
+        }
+
+
+        // put the last message on the badge
+        handleLastMessageHelper(data)
+        
+        // let's the sender know that his msg has been received by the intended recipient
+        userReceivedCallback(data);
     });
 
     // receives the message emitted by broadcast event and confirms that the client is connected/disconnected to/from the server

@@ -40,10 +40,19 @@ def load_user(id):
 
 class History(db.Model):
     msg_id = db.Column(db.Integer, primary_key=True)
+    uuid = db.Column(db.String)
     messages = db.Column(db.String)
+    msg_delivered = db.Column(db.Boolean)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     author = db.Column(db.String, db.ForeignKey('users.username'))
     room_id = db.Column(db.Integer, db.ForeignKey('room.room_id'))
+
+class Notifications(db.Model):
+    notification_id = db.Column(db.Integer, primary_key=True)
+    recipient_id = db.Column(db.Integer)
+    message_id = db.Column(db.Integer)
+    room_id = db.Column(db.Integer)
+    count = db.Column(db.Integer)
 
 class Room(db.Model):
     room_id = db.Column(db.Integer, primary_key=True)
