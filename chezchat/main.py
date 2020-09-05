@@ -20,9 +20,9 @@ def home():
     private_friend_room = []
     for room in rooms:
         if room.private_room == True:
-            for friends_id in room.name:
-                if int(friends_id) != current_user.id:
-                    friends_list.append(Users.query.filter_by(id=friends_id).first())
+            for friend in room.subscribers:
+                if friend != current_user:
+                    friends_list.append(friend)
                     private_friend_room.append(room)
     zipped_friends_list = zip(friends_list, private_friend_room)
 
@@ -179,7 +179,6 @@ def remove_user():
 def userReceivedCallback(data):
     print(f'\n\n{"message delivered"}\n\n')
     # update a boolean column in the history table called delivered for rendering from db
-    recipient_object = Users.query.filter_by(username=data['recipient']).first()
     room = Room.query.filter_by(room_id=data['room_id']).first()
     if room.private_room == True:
         delivered_msg = History.query.filter_by(msg_id=data['msg_id']).first()
@@ -188,6 +187,8 @@ def userReceivedCallback(data):
         # on emit, change to double ticks 
         socketio.emit('message_delivered', data['uuid'], room=sessionID[current_user.username])
 
+    # The recipient_objects helps us identify the recipient in the notifications table
+    recipient_object = Users.query.filter_by(username=data['recipient']).first()
     notification_to_update = Notifications.query.filter_by(recipient_id=recipient_object.id, room_id=room.room_id).first()
     if notification_to_update:
         notification_to_update.count -= 1
@@ -223,8 +224,10 @@ def handleMessage(data):
                 notification_to_update = Notifications.query.filter_by(recipient_id=member.id, room_id=current_room.room_id).first()
                 if notification_to_update:
                     notification_to_update.count += 1
+                    notification_to_update.last_message = message.messages
+                    notification_to_update.last_author = message.author
                 else:
-                    notification = Notifications(recipient_id=member.id, message_id=message.msg_id, room_id=current_room.room_id, count=1)
+                    notification = Notifications(recipient_id=member.id, last_message=message.messages, last_author=message.author, room_id=current_room.room_id, count=1)
                     db.session.add(notification)
                 db.session.commit()
             
@@ -273,10 +276,8 @@ def test_connect():
     # since they are already in the database and will be displayed to him on click of the -
     # room in question
     for room in current_user.room_subscribed:
-        room_notification_count = 0
         for msg_ in room.room_history:
             if msg_.msg_delivered != True and msg_.author != current_user.username and room.private_room == True:
-                room_notification_count += 1
                 userReceivedDBUpdate(msg_)
 
                 recipients_list = handle_recipients(room)
@@ -288,6 +289,8 @@ def test_connect():
     for notification in notifications:
         data = {}
         data['count'] = notification.count
+        data['messages'] = notification.last_message
+        data['author'] = notification.last_author
         data['room_id'] = notification.room_id
         emit('notification', data, recipient=request.sid)
         db.session.delete(notification)

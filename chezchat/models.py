@@ -50,7 +50,8 @@ class History(db.Model):
 class Notifications(db.Model):
     notification_id = db.Column(db.Integer, primary_key=True)
     recipient_id = db.Column(db.Integer)
-    message_id = db.Column(db.Integer)
+    last_message = db.Column(db.String)
+    last_author = db.Column(db.String)
     room_id = db.Column(db.Integer)
     count = db.Column(db.Integer)
 

@@ -29,6 +29,9 @@ function processAddUser(data, element) {
     div.id = data['roomID']
     div.setAttribute("class","user-list");
 
+    var divWrap = document.createElement('div');
+    divWrap.setAttribute("class","noWrapDisplay");
+
     
     var div2 = document.createElement('div');
     div2.setAttribute("class","name-section");
@@ -47,6 +50,9 @@ function processAddUser(data, element) {
     div3.appendChild(lastMessageSpan)
     div3.appendChild(badgeCounterSpan)
 
+    divWrap.appendChild(div2)
+    divWrap.appendChild(div3)
+
 
     div.setAttribute("onclick","getCurrentRoom(this); verify_status()");
 
@@ -61,8 +67,7 @@ function processAddUser(data, element) {
     buttonIcon.setAttribute("aria-hidden","true");
     button.appendChild(buttonIcon);
 
-    div.appendChild(div2)
-    div.appendChild(div3)
+    div.appendChild(divWrap)
     div.appendChild(button);
     document.getElementById("friendsPanel").append(div);
 
@@ -71,7 +76,7 @@ function processAddUser(data, element) {
 
 function removeUser(element) {
     
-    // only so these if i am currently on the user to remove page
+    // only so if the current user is currently on the user to remove page
     if (element.value === getUser.innerHTML) {
         document.getElementById("user_status").innerHTML = "";
         document.getElementById("currentRoomName").innerHTML = "";
@@ -96,6 +101,9 @@ function processRemoveUser(data, element) {
     var div = document.createElement('div');
     div.setAttribute("class","user-list");
 
+    var divWrap = document.createElement('div');
+    divWrap.setAttribute("class","noWrapDisplay");
+
     var div2 = document.createElement('div');
     div2.setAttribute("class","name-section");
 
@@ -103,6 +111,8 @@ function processRemoveUser(data, element) {
     nameSpan.innerHTML = friendName;
     nameSpan.setAttribute("class","name-header");
     div2.appendChild(nameSpan);
+
+    divWrap.appendChild(div2)
     
     var button = document.createElement('button');
     button.name = friendName;
@@ -115,7 +125,7 @@ function processRemoveUser(data, element) {
     buttonIcon.setAttribute("aria-hidden","true");
     button.appendChild(buttonIcon);
 
-    div.appendChild(div2)
+    div.appendChild(divWrap)
     div.appendChild(button);
 
     document.getElementById("availableUsers").append(div);
@@ -143,6 +153,10 @@ function processJoinRoom(data, element) {
     div.id = roomID;
     div.setAttribute("class","user-list");
     div.setAttribute("onclick","getCurrentRoom(this)");
+
+    var divWrap = document.createElement('div');
+    divWrap.setAttribute("class","noWrapDisplay");
+
     var div2 = document.createElement('div');
     div2.setAttribute("class","name-section");
 
@@ -155,6 +169,18 @@ function processJoinRoom(data, element) {
     groupMarkerSpan.innerHTML = "group";
     groupMarkerSpan.setAttribute("class","group-marker");
     div2.appendChild(groupMarkerSpan);
+
+    var div3 = document.createElement('div');
+    div3.setAttribute("class","roomDivInfo");
+    var lastMessageSpan = document.createElement('span');
+    var badgeCounterSpan = document.createElement('span')
+    lastMessageSpan.setAttribute("class","lastMessage");
+    badgeCounterSpan.setAttribute("class","badgeCounter");
+    div3.appendChild(lastMessageSpan)
+    div3.appendChild(badgeCounterSpan)
+
+    divWrap.appendChild(div2)
+    divWrap.appendChild(div3)
 
     var button = document.createElement('button');
     button.setAttribute("class","btn btn-danger btn-sm");
@@ -173,7 +199,7 @@ function processJoinRoom(data, element) {
     spanText.innerHTML = "Exit";
     button.appendChild(spanText);
 
-    div.appendChild(div2)
+    div.appendChild(divWrap)
     div.appendChild(button);
 
 
@@ -205,7 +231,12 @@ function processLeaveRoom(data, element) {
 
     var div = document.createElement('div');
     div.setAttribute("class","user-list");
+
+    var divWrap = document.createElement('div');
+    divWrap.setAttribute("class","noWrapDisplay");
+
     var div2 = document.createElement('div');
+    div2.setAttribute("class","name-section");
 
     var nameSpan = document.createElement('span');
     nameSpan.innerHTML = roomName;
@@ -217,7 +248,8 @@ function processLeaveRoom(data, element) {
     groupMarkerSpan.setAttribute("class","group-marker");
     div2.appendChild(groupMarkerSpan);
 
-    div2.setAttribute("class","name-section");
+    divWrap.appendChild(div2)
+
     var button = document.createElement('button'); 
     button.setAttribute("class","btn btn-success btn-sm");
     button.name = roomName;
@@ -234,7 +266,7 @@ function processLeaveRoom(data, element) {
     spanText.innerHTML = "Join";
     button.appendChild(spanText);
 
-    div.appendChild(div2)
+    div.appendChild(divWrap)
     div.appendChild(button);
 
 
@@ -247,7 +279,6 @@ function processLeaveRoom(data, element) {
 
 
 function getCurrentRoom(element) {
-
     // clear old messaged to display fresh ones
     clearInputResources(false);
 
@@ -264,6 +295,11 @@ function getCurrentRoom(element) {
     friendUsername = element.getElementsByTagName("button")[0].value;
     roomID = element.id;
 
+
+    localStorage.setItem("current_room_id", roomID);
+
+
+
     // hides the "please select a chat to start messages" at the beginning
     // set an overlay here with the widget spinner
     // hide just before the info is displayed in processgetCurrentRoom()
@@ -274,9 +310,6 @@ function getCurrentRoom(element) {
     document.getElementById("get_user_status").innerHTML = "";
     document.getElementById("user_status").innerHTML = "";
     document.getElementById("currentRoomName").innerHTML = friendName;
-
-
-    localStorage.setItem("current_room_id", roomID);
 
 
     showChatArea();
@@ -368,12 +401,14 @@ function addNotificationBadge(room_id, data) {
 
     const span_badgeCounter = document.querySelector(`[id=${CSS.escape(room_id)}] .roomDivInfo span.badgeCounter`);
 
-    if (data[room_id] === 0) {
-        span_badgeCounter.setAttribute("style", "visibility: hidden")
-    }
-    else {
-        span_badgeCounter.setAttribute("style", "visibility: visible")
-        span_badgeCounter.innerHTML = data[room_id];
+    if (span_badgeCounter) {
+        if (data[room_id] === 0) {
+            span_badgeCounter.setAttribute("style", "visibility: hidden; margin-right: 0; min-width: 0")
+        }
+        else {
+            span_badgeCounter.setAttribute("style", "visibility: visible; margin-right: 15px; min-width: 18px")
+            span_badgeCounter.innerHTML = data[room_id];
+        }
     }
 
 }
@@ -382,16 +417,19 @@ function addLastMessageBadge(room_id, data) {
 
     const span_lastMessage = document.querySelector(`[id=${CSS.escape(room_id)}] .roomDivInfo span.lastMessage`);
 
-    const elementGroupTest = document.querySelector(`[id=${CSS.escape(room_id)}]`).parentElement
+    if (span_lastMessage) {
+        const elementGroupTest = document.querySelector(`[id=${CSS.escape(room_id)}]`).parentElement
+
+        // if the current room is a group, add the author to the badge
+        if (elementGroupTest.id === 'roomsPanel')
+        {
+            span_lastMessage.innerHTML = `${data[room_id][1]}: ${data[room_id][0]}`;
+        }
+        else {
+            span_lastMessage.innerHTML = data[room_id][0];
+        }
+    }
     
-    // if the current room is a group, add the author to the badge
-    if (elementGroupTest.id === 'roomsPanel')
-    {
-        span_lastMessage.innerHTML = `${data[room_id][1]}: ${data[room_id][0]}`;
-    }
-    else {
-        span_lastMessage.innerHTML = data[room_id][0];
-    }
 }
 
 function handleLastMessageHelper(data) {
@@ -553,7 +591,6 @@ function append_msgs(data) {
 
     // if displayDate(recentDate) returns a value
     if (recentDateValue) {
-        console.log(`from recent date ${recentDateValue}`);
 
         const outerDateDiv = document.createElement('div');
         outerDateDiv.setAttribute("class","messageItems dateInfoItem");
@@ -661,6 +698,7 @@ function addTwoTicks(messageStatusTimeInfoWrapper) {
     messageStatusSpan.appendChild(messageStatusIcon);
 
     // check if the sent icon is present and if so replace it with the double ticks
+    // else append afresh
     if (messageStatusTimeInfoWrapper.childElementCount > 1) {
         messageStatusTimeInfoWrapper.replaceChild(messageStatusSpan, messageStatusTimeInfoWrapper.childNodes[1]);
     }

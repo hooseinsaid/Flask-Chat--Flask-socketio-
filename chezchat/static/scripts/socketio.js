@@ -44,7 +44,7 @@ function verify_status() {
             }
         }
     };
-    console.log(getUser.innerHTML)
+    // console.log(getUser.innerHTML)
     var data = JSON.stringify({'user': getUser.innerHTML});
     xhttp.send(data);
 }
@@ -53,9 +53,13 @@ function verify_status() {
 document.addEventListener('DOMContentLoaded', () => {
     var socket = io();
 
-    if(!getUser.innerHTML) {
-        localStorage.removeItem("current_room_id");
-    }
+    // if the room is a private room
+    // if(!getUser.innerHTML) {
+    //     localStorage.removeItem("current_room_id");
+    // }
+    
+    // on reload or first load, remove this from localstorage ad it helps direct message to the right place
+    localStorage.removeItem("current_room_id");
 
     document.getElementById("msgInput").hidden = true;
     
@@ -131,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // adds one tick to the element with uuid as id
         addOneTick(messageStatusTimeInfoWrapper);
 
-        // put the last message on the badge
+        // put the last message on the badge only after we are sure the server received it
         handleLastMessageHelper(data)
     }
 
@@ -141,11 +145,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (messageStatusTimeInfoWrapper) {
             addTwoTicks(messageStatusTimeInfoWrapper);
         }
-        // todo get the docByID of the css element and change to two ticks
     });
 
     socket.on('notification', data => {
         handleNotificationsHelper(data['room_id'], data['count'])
+        handleLastMessageHelper(data)
     });
 
     // receives message from an the handle_messages event on the server side and displays them to a client
@@ -261,9 +265,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     'room_id': localStorage.getItem('current_room_id')
                 });
             }
-            else {
-                alert("There's been an error. please reload to continue")
-            }
         }
     }
 
@@ -283,10 +284,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // to verify the users online/offline status afresh
             
             if (localStorage.getItem('current_room_id')) {
-                socket.emit('broadcast', {'username': username, 'info': 'verify_status', 'room_id': localStorage.getItem('current_room_id') });
-            }
-            else {
-                alert("There's been an error. please reload to continue")
+                socket.emit(
+                    'broadcast', {
+                    'username': username, 
+                    'info': 'verify_status', 
+                    'room_id': localStorage.getItem('current_room_id') 
+                });
             }
 
         }, timeoutVal);
