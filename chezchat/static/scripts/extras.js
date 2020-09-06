@@ -374,7 +374,7 @@ function processgetCurrentRoom(data, element) {
     }
 
     room_members = data.room_members;
-    console.log(room_members);
+    // console.log(room_members);
     if (current_room.private_room !== true) {
         for (x in room_members) {
             member = room_members[x];
