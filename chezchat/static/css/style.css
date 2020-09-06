@@ -116,7 +116,6 @@ html, body {
 
 .name-section {
     display: flex;
-    justify-content: flex-start;
     align-items: center;
 }
 
@@ -325,7 +324,7 @@ html, body {
     padding: 0 6px;
     font-size: 10px;
     font-weight: 700;
-    margin: 0 10% 0 2%;
+    margin: 0 2% 0 2%;
     height: fit-content;
 }
 
@@ -395,6 +394,7 @@ html, body {
     display: unset;
     white-space: nowrap;
     overflow: hidden;
+    padding-right: 15px;
     width: calc(100% - 32px);
 }
 
@@ -436,4 +436,9 @@ span.name-header {
     position: absolute;
     padding-top: 60px;
     z-index: -1;
+}
+
+.time-info {
+    font-size: 10px;
+    margin-left: auto;
 }

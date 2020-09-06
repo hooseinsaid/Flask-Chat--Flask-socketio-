@@ -30,13 +30,34 @@
                         </div>
                     </div>
                     <div id="chattables">
-                        <div id="friendsPanel">
-                            {% for friend, room in zipped_friends_list %}
-                                <!-- onclick a function triggers ajax to get the needed -->
-                                <div id="{{ room.room_id }}" class="user-list" onclick="getCurrentRoom(this); verify_status()">
+                        {% for friend, room in zipped_friends_list %}
+                            <!-- onclick a function triggers ajax to get the needed -->
+                            <div id="{{ room.room_id }}" class="user-list" onclick="getCurrentRoom(this); verify_status()">
+                                <div class="noWrapDisplay">
+                                    <div class="name-section">
+                                        <span class="name-header">{{ friend.name_surname }}</span>
+                                        <span class="time-info"></span>
+                                    </div>
+                                    
+                                    <div class="roomDivInfo">
+                                        <span class="lastMessage"></span>
+                                        <span class="badgeCounter"></span>
+                                    </div>
+                                </div>
+
+                                <!-- create a warning modal for this. this button should trigger the modal and the modal's button should execute onclick="removeUser(this) -->
+                                <button class="btn btn-danger btn-sm" name="{{ friend.name_surname }}" value="{{ friend.username }}" onclick="removeUser(this)"><i class="fas fa-user-minus"></i></button>
+                            </div>
+                        {% endfor %}
+
+                        {% for room in rooms %}
+                            {% if room.private_room == False %}
+                                <div id="{{ room.room_id }}" class="user-list" onclick="getCurrentRoom(this)">
                                     <div class="noWrapDisplay">
                                         <div class="name-section">
-                                            <span class="name-header">{{ friend.name_surname }}</span>
+                                            <span class="name-header">{{ room.name }}</span>
+                                            <span class="group-marker">group</span>
+                                            <span class="time-info"></span>
                                         </div>
                                         
                                         <div class="roomDivInfo">
@@ -45,33 +66,10 @@
                                         </div>
                                     </div>
 
-                                    <!-- create a warning modal for this. this button should trigger the modal and the modal's button should execute onclick="removeUser(this) -->
-                                    <button class="btn btn-danger btn-sm" name="{{ friend.name_surname }}" value="{{ friend.username }}" onclick="removeUser(this)"><i class="fas fa-user-minus"></i></button>
+                                    <button class="btn btn-danger btn-sm" id="roomView" name="{{ room.name }}" value="{{ room.room_id }}" onclick="leaveRoom(this)"><span class="font-weight-bold">Exit</span></button>
                                 </div>
-                            {% endfor %}
-                        </div>
-
-                        <div id="roomsPanel">
-                            {% for room in rooms %}
-                                {% if room.private_room == False %}
-                                    <div id="{{ room.room_id }}" class="user-list" onclick="getCurrentRoom(this)">
-                                        <div class="noWrapDisplay">
-                                            <div class="name-section">
-                                                <span class="name-header">{{ room.name }}</span>
-                                                <span class="group-marker">group</span>
-                                            </div>
-                                            
-                                            <div class="roomDivInfo">
-                                                <span class="lastMessage"></span>
-                                                <span class="badgeCounter"></span>
-                                            </div>
-                                        </div>
-
-                                        <button class="btn btn-danger btn-sm" id="roomView" name="{{ room.name }}" value="{{ room.room_id }}" onclick="leaveRoom(this)"><span class="font-weight-bold">Exit</span></button>
-                                    </div>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
+                            {% endif %}
+                        {% endfor %}
                     </div>
                     
                     <div id="availableUsers">
@@ -101,7 +99,7 @@
                                         <span class="name-header">{{ room.name }}</span>
                                         <span class="group-marker">group</span>
                                     </div>
-                                    
+
                                 </div>
                                 
                                 <button class="btn btn-success btn-sm" name="{{ room.name }}" value="{{ room.room_id }}" onclick="joinRoom(this)"><span class="font-weight-bold">Join</span></button>

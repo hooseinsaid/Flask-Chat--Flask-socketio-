@@ -52,6 +52,7 @@ class Notifications(db.Model):
     recipient_id = db.Column(db.Integer)
     last_message = db.Column(db.String)
     last_author = db.Column(db.String)
+    last_time = db.Column(db.DateTime)
     room_id = db.Column(db.Integer)
     count = db.Column(db.Integer)
 

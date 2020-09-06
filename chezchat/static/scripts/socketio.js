@@ -135,6 +135,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // adds one tick to the element with uuid as id
         addOneTick(messageStatusTimeInfoWrapper);
 
+        // rearranges the current room so that it's on top
+        roomOrderArrayHandler(data.room_id)
+
+        // add the utc time now to dictionary as handleLastMessageHelper(data) needs it
+        data['timestamp'] = moment.utc();
+
         // put the last message on the badge only after we are sure the server received it
         handleLastMessageHelper(data)
     }
@@ -148,7 +154,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     socket.on('notification', data => {
+
         handleNotificationsHelper(data['room_id'], data['count'])
+
+        // rearranges the latest msg so that it is on top
+        roomOrderArrayHandler(data.room_id)
+
+        // changes the time format to UTC
+        data['timestamp'] = moment.utc(data['timestamp']);
+
         handleLastMessageHelper(data)
     });
 
@@ -165,6 +179,10 @@ document.addEventListener('DOMContentLoaded', () => {
             handleNotificationsHelper(data.room_id, count)
         }
 
+        roomOrderArrayHandler(data.room_id)
+
+        // add the utc time now to dictionary as handleLastMessageHelper(data) needs it
+        data['timestamp'] = moment.utc();
 
         // put the last message on the badge
         handleLastMessageHelper(data)

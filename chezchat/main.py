@@ -53,6 +53,7 @@ def home():
                             all_rooms=all_rooms, all_users=all_users, non_friend_users=non_friend_users, 
                             zipped_friends_list=zipped_friends_list)
 
+
 @app.route('/room-details', methods=['GET', 'POST'])
 @login_required
 def room_details():
@@ -85,6 +86,7 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -99,10 +101,12 @@ def login():
         return redirect(url_for('home'))
     return render_template('login.html', form=form)
 
+
 @app.route('/logout')
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
 
 @app.route('/join-room', methods=['GET', 'POST'])
 @login_required
@@ -113,6 +117,7 @@ def join_room():
             room.subscribers.append(current_user)
             db.session.commit()
     return jsonify()
+
 
 @app.route('/leave-room', methods=['GET', 'POST'])
 @login_required
@@ -127,6 +132,7 @@ def leave_room():
             room.subscribers.remove(current_user)
             db.session.commit()
     return jsonify()
+
 
 @app.route('/add-user', methods=['GET', 'POST'])
 @login_required
@@ -150,6 +156,7 @@ def add_user():
         return jsonify(roomID=private_room.room_id)
     else:
         return "An error has occurred"
+
 
 @app.route('/remove-user', methods=['GET', 'POST'])
 @login_required
@@ -176,6 +183,7 @@ def remove_user():
         db.session.commit()
     return jsonify()
 
+
 def userReceivedCallback(data):
     print(f'\n\n{"message delivered"}\n\n')
     # update a boolean column in the history table called delivered for rendering from db
@@ -196,12 +204,14 @@ def userReceivedCallback(data):
             db.session.delete(notification_to_update)
         db.session.commit()
 
+
 def userReceivedDBUpdate(msg):
     # here update a boolean history column to true
     # call this function whenever a user connects. find messages pertaining to them and call this fxn
     # find all the messages directed to the private rooms he belongs that doesn't have the boolean field updated to true yet
     msg.msg_delivered = True
     db.session.commit()
+
 
 @socketio.on('handle_messages')
 def handleMessage(data):
@@ -226,8 +236,9 @@ def handleMessage(data):
                     notification_to_update.count += 1
                     notification_to_update.last_message = message.messages
                     notification_to_update.last_author = message.author
+                    notification_to_update.last_time = message.timestamp
                 else:
-                    notification = Notifications(recipient_id=member.id, last_message=message.messages, last_author=message.author, room_id=current_room.room_id, count=1)
+                    notification = Notifications(recipient_id=member.id, last_message=message.messages, last_author=message.author, last_time = message.timestamp, room_id=current_room.room_id, count=1)
                     db.session.add(notification)
                 db.session.commit()
             
@@ -238,6 +249,7 @@ def handleMessage(data):
         # on the frontend increment a notification count and display on badge
         emit('handle_messages', data, room=recipient, callback=userReceivedCallback)
     return data
+
 
 def handle_recipients(current_room):
     recipients_list = []
@@ -291,6 +303,7 @@ def test_connect():
         data['count'] = notification.count
         data['messages'] = notification.last_message
         data['author'] = notification.last_author
+        data['timestamp'] = notification.last_time.strftime("%Y-%m-%d %H:%M:%S.%f")
         data['room_id'] = notification.room_id
         emit('notification', data, recipient=request.sid)
         db.session.delete(notification)
@@ -305,6 +318,7 @@ def test_connect():
     db.session.commit()
     # here thing will work differently check all the rooms I belong to and emit to them
     emit('broadcast', {'username': current_user.username, 'info': 'online'}, include_self=False, broadcast=True)
+
 
 # triggered when the server pongs the client and can't connect with it
 @socketio.on('disconnect')
@@ -322,6 +336,7 @@ def test_disconnect():
     # here thing will work differently check all the rooms I belong to and emit to them
     emit('broadcast', {'username': current_user.username, 'info': 'offline'}, include_self=False, broadcast=True)
 
+
 @socketio.on('broadcast')
 def broadcast(data):
     session_current_room = data['room_id']
@@ -334,6 +349,7 @@ def broadcast(data):
         # here the members of the room I mean to address will get the msg
         for recipient in recipients_list:
             emit('broadcast', {'username': data['username'], 'info': data['info']}, room=recipient)
+
 
 @app.route('/get-user-status', methods=['GET', 'POST'])
 @login_required

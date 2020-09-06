@@ -41,6 +41,10 @@ function processAddUser(data, element) {
     nameSpan.setAttribute("class","name-header");
     div2.appendChild(nameSpan);
 
+    var timeSpan = document.createElement('span');
+    timeSpan.setAttribute("class","time-info");
+    div2.appendChild(timeSpan);
+
     var div3 = document.createElement('div');
     div3.setAttribute("class","roomDivInfo");
     var lastMessageSpan = document.createElement('span');
@@ -69,7 +73,7 @@ function processAddUser(data, element) {
 
     div.appendChild(divWrap)
     div.appendChild(button);
-    document.getElementById("friendsPanel").append(div);
+    document.getElementById("chattables").append(div);
 
     element.parentNode.remove();
 }
@@ -170,6 +174,11 @@ function processJoinRoom(data, element) {
     groupMarkerSpan.setAttribute("class","group-marker");
     div2.appendChild(groupMarkerSpan);
 
+    var timeSpan = document.createElement('span');
+    timeSpan.setAttribute("class","time-info");
+    div2.appendChild(timeSpan);
+
+
     var div3 = document.createElement('div');
     div3.setAttribute("class","roomDivInfo");
     var lastMessageSpan = document.createElement('span');
@@ -203,7 +212,7 @@ function processJoinRoom(data, element) {
     div.appendChild(button);
 
 
-    document.getElementById("roomsPanel").append(div);
+    document.getElementById("chattables").append(div);
 
     element.parentNode.remove();
 }
@@ -361,7 +370,7 @@ function processgetCurrentRoom(data, element) {
     // put the last message on the badge
     // call only if there's a message in the group already
     if (room_history.length !== 0) {
-        handleLastMessageHelper(room_history[room_history.length - 1])
+        handleLastMessageHelper(room_history[room_history.length - 1]);
     }
 
     room_members = data.room_members;
@@ -403,10 +412,10 @@ function addNotificationBadge(room_id, data) {
 
     if (span_badgeCounter) {
         if (data[room_id] === 0) {
-            span_badgeCounter.setAttribute("style", "visibility: hidden; margin-right: 0; min-width: 0")
+            span_badgeCounter.setAttribute("style", "visibility: hidden; min-width: 0")
         }
         else {
-            span_badgeCounter.setAttribute("style", "visibility: visible; margin-right: 15px; min-width: 18px")
+            span_badgeCounter.setAttribute("style", "visibility: visible; min-width: 18px")
             span_badgeCounter.innerHTML = data[room_id];
         }
     }
@@ -418,35 +427,70 @@ function addLastMessageBadge(room_id, data) {
     const span_lastMessage = document.querySelector(`[id=${CSS.escape(room_id)}] .roomDivInfo span.lastMessage`);
 
     if (span_lastMessage) {
-        const elementGroupTest = document.querySelector(`[id=${CSS.escape(room_id)}]`).parentElement
+        const elementGroupTest = document.querySelector(`[id=${CSS.escape(room_id)}] .noWrapDisplay .name-section span.group-marker`)
+
+        const lastMessageTimeSpan = document.querySelector(`[id=${CSS.escape(room_id)}] .noWrapDisplay .name-section span.time-info`)
 
         // if the current room is a group, add the author to the badge
-        if (elementGroupTest.id === 'roomsPanel')
+        if (elementGroupTest)
         {
             span_lastMessage.innerHTML = `${data[room_id][1]}: ${data[room_id][0]}`;
         }
         else {
             span_lastMessage.innerHTML = data[room_id][0];
         }
+
+        var date_ = checkDate(data[room_id][2]);
+        lastMessageTimeSpan.innerHTML = date_;
     }
     
+}
+
+function checkDate(date) {
+
+    var returnable;
+
+    var currentDate = moment.utc();
+
+    // date is already in UTC
+    var refDate = moment(date);
+
+    var currentDateinDateFormat = moment.utc(currentDate).local().format('MMMM DD, YYYY')
+    var refDateinDateFormat = moment.utc(refDate).local().format('MMMM DD, YYYY')
+
+    var currentDateinYearFormat = moment.utc(currentDate).local().format('YYYY')
+    var refDateinYearformat = moment.utc(refDate).local().format('YYYY')
+
+    if (currentDateinDateFormat == refDateinDateFormat) {
+        returnable = refDate.format("HH:mm")
+    }
+    else if (currentDateinYearFormat == refDateinYearformat){
+        returnable = refDate.format("MMM DD")
+    }
+    else {
+        returnable = refDate.format("DD/MM/YYYY")
+    }
+
+    return returnable;
 }
 
 function handleLastMessageHelper(data) {
     var roomID = data.room_id;
     var message = data.messages;
+    // last msg timestamp to UTC
+    var time = moment.utc(data.timestamp);
     var author = data.author;
 
     if (localStorage.getItem('lastMessageParams')) {
         // convert the localStorage string to a dictionary
         var existing = JSON.parse(localStorage.getItem('lastMessageParams'));
-        existing[roomID] = [message, author];
+        existing[roomID] = [message, author, time];
         localStorage.setItem('lastMessageParams', JSON.stringify(existing));
     }
     else {
         // If no existing data, create an dictionary
         newParams = {};
-        newParams[roomID] = [message, author];
+        newParams[roomID] = [message, author, time];
         localStorage.setItem('lastMessageParams', JSON.stringify(newParams));
     }
     addLastMessageBadge(roomID, JSON.parse(localStorage.getItem('lastMessageParams')));
@@ -725,4 +769,47 @@ function scrollDownChatWindow() {
     const scrollingHeight = document.getElementById("messages");
     scrollElement.scrollTop = scrollingHeight.scrollHeight;
 }
+
+function swapRoomPostionOnNewMessage(room_id) {
+    var parentElement = document.getElementById(room_id).parentNode;
+    var child1 = document.getElementById(room_id).parentNode.firstChild
+    var child2 = document.getElementById(room_id);
+    parentElement.insertBefore(child2, child1);
+}
+
+function roomOrderArrayHandler(room_id) {
+    if (localStorage.getItem('roomOrderParams')) {
+        // convert the localStorage string to an array
+        var existing = JSON.parse(localStorage.getItem('roomOrderParams'));
+        if (existing.includes(room_id)) {
+            existing.splice(existing.indexOf(room_id), 1)
+        }
+        // adds the new element to the beginning of the array
+        existing.unshift(room_id.toString())
+        localStorage.setItem('roomOrderParams', JSON.stringify(existing));
+    }
+    else {
+        // If no existing data, create an array
+        var array = [];
+        // adds the new element to the beginning of the array
+        array.unshift(room_id.toString());
+        localStorage.setItem('roomOrderParams', JSON.stringify(array));
+    }
+    swapRoomPostionOnNewMessage(JSON.parse(localStorage.getItem('roomOrderParams'))[0]);
+}
+
+function roomOrder() {
+    var counterObject = JSON.parse(localStorage.getItem('roomOrderParams'));
+    
+    if (counterObject) {
+        counterObject.reverse();
+        for (var count in counterObject) {
+            swapRoomPostionOnNewMessage(counterObject[count]);
+        }
+    }
+}
+// so that the order can survive reload
+roomOrder();
+
+
 // set localstorage on click of a room, clear on offline or fresh online. transmit this value with each emit
