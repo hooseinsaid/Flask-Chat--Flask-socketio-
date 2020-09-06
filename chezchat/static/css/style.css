@@ -372,7 +372,7 @@ html, body {
     min-width: 260px;
 }
 
-.form-control, .signup-login-container .btn{
+.form-control, .signup-login-container .btn, #myModal .modal-footer .btn{
     height: calc(1.5em + .75rem + 10px) !important;
 }
 
