@@ -46,7 +46,7 @@
                                 </div>
 
                                 <!-- create a warning modal for this. this button should trigger the modal and the modal's button should execute onclick="removeUser(this) -->
-                                <button class="btn btn-danger btn-sm" name="{{ friend.name_surname }}" value="{{ friend.username }}" onclick="removeUser(this)"><i class="fas fa-user-minus"></i></button>
+                                <button class="btn btn-danger btn-sm" name="{{ friend.name_surname }}" value="{{ friend.username }}" onclick="toModal(this)"><i class="fas fa-user-minus"></i></button>
                             </div>
                         {% endfor %}
 
@@ -108,7 +108,6 @@
                         {% endfor %}
                     </div>
                 </div>
-
                 
                 <div>
                     <a style="text-decoration: none;" href="{{ url_for('logout') }}"><button style="border-radius: 0;" type="button" class="btn btn-danger btn-block btn-sm">Logout</button></a>
@@ -220,6 +219,28 @@
     </div>
 </div>
 
+<!-- Remove user prompt modal -->
+<div class="modal fade" id="removeUserModal">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px; margin: 1.75rem auto;">
+        <div class="modal-content" style="margin: .5rem;">
+
+            <div class="modal-header">
+                <h4 class="modal-title" style="font-size: 14px; font-weight: 600;">Remove User</h4>
+            </div>
+
+            <div class="modal-body" style="max-height: 430px; overflow: auto;">
+                <span>Are you sure you want to remove this user? all your chat history will be deleted. This process is irreversable</span> 
+            </div>
+
+            <div class="modal-footer" style="display: flex; justify-content: space-between;">
+                <button type="button" class="btn shadow" data-dismiss="modal" style="width: 45%;">Cancel</button>
+                <button type="button" class="btn btn-danger shadow" style="width: 45%;" onclick="removeUser(elementToRemove); closeModal();">Confirm</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -255,6 +276,20 @@
                 $(this).remove(); 
             });
         }, 10000);
+    </script>
+
+    <!-- removeUser modal helper -->
+    <script>
+        function toModal(element) {
+            elementToRemove = element;
+            console.log(elementToRemove)
+            $('#removeUserModal').modal('show');
+            window.event.stopPropagation();
+        }
+
+        function closeModal() {
+            $("#removeUserModal").modal("hide");
+        }
     </script>
     
 {% endblock %}

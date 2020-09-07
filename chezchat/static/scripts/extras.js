@@ -64,7 +64,7 @@ function processAddUser(data, element) {
     button.setAttribute("class","btn btn-danger btn-sm");
     button.name = userName;
     button.value = userUsername;
-    button.setAttribute("onclick","removeUser(this);");
+    button.setAttribute("onclick","toModal(this);");
 
     var buttonIcon = document.createElement('i');
     buttonIcon.setAttribute("class","fas fa-user-minus");

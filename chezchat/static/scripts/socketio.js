@@ -34,7 +34,7 @@ function verify_status() {
                     }
                     else {
                         // userStatusInfo.innerHTML = `${data['username']} was last seen ${moment(data['last_seen']).format('LL')} from verify_status`;
-                        userStatusInfo.innerHTML = `last seen ${moment(data['last_seen']).format('LL')}`;
+                        userStatusInfo.innerHTML = `last seen ${moment(data['last_seen']).format('LL')} at ${moment(data['last_seen']).format('HH:mm')}`;
                     }
                 }
             }
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             else {
-                alert("There's been an error sendmsg. please reload")
+                alert("There's been an error. please reload")
             }
         }
     }
