@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 socket.emit(
                     'broadcast', {
                     'username': username, 
-                    'info': 'typing', 
+                    'info': 'typing...', 
                     'room_id': localStorage.getItem('current_room_id')
                 });
             }

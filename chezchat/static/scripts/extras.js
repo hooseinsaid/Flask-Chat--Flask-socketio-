@@ -25,30 +25,30 @@ function processAddUser(data, element) {
     var userName = element.name;
     var userUsername = element.value;
 
-    var div = document.createElement('div');
+    var div = createDiv();
     div.id = data['roomID']
     div.setAttribute("class","user-list");
 
-    var divWrap = document.createElement('div');
+    var divWrap = createDiv();
     divWrap.setAttribute("class","noWrapDisplay");
 
     
-    var div2 = document.createElement('div');
+    var div2 = createDiv();
     div2.setAttribute("class","name-section");
     
-    var nameSpan = document.createElement('span');
+    var nameSpan = createSpan();
     nameSpan.innerHTML = userName;
     nameSpan.setAttribute("class","name-header");
     div2.appendChild(nameSpan);
 
-    var timeSpan = document.createElement('span');
+    var timeSpan = createSpan();
     timeSpan.setAttribute("class","time-info");
     div2.appendChild(timeSpan);
 
-    var div3 = document.createElement('div');
+    var div3 = createDiv();
     div3.setAttribute("class","roomDivInfo");
-    var lastMessageSpan = document.createElement('span');
-    var badgeCounterSpan = document.createElement('span')
+    var lastMessageSpan = createSpan();
+    var badgeCounterSpan = createSpan()
     lastMessageSpan.setAttribute("class","lastMessage");
     badgeCounterSpan.setAttribute("class","badgeCounter");
     div3.appendChild(lastMessageSpan)
@@ -60,13 +60,13 @@ function processAddUser(data, element) {
 
     div.setAttribute("onclick","getCurrentRoom(this); verify_status()");
 
-    var button = document.createElement('button');
+    var button = createButton();
     button.setAttribute("class","btn btn-danger btn-sm");
     button.name = userName;
     button.value = userUsername;
     button.setAttribute("onclick","toModal(this);");
 
-    var buttonIcon = document.createElement('i');
+    var buttonIcon = createIcon();
     buttonIcon.setAttribute("class","fas fa-user-minus");
     buttonIcon.setAttribute("aria-hidden","true");
     button.appendChild(buttonIcon);
@@ -102,29 +102,29 @@ function processRemoveUser(data, element) {
     var friendName = element.name;
     var friendUsername = element.value;
 
-    var div = document.createElement('div');
+    var div = createDiv();
     div.setAttribute("class","user-list");
 
-    var divWrap = document.createElement('div');
+    var divWrap = createDiv();
     divWrap.setAttribute("class","noWrapDisplay");
 
-    var div2 = document.createElement('div');
+    var div2 = createDiv();
     div2.setAttribute("class","name-section");
 
-    var nameSpan = document.createElement('span');
+    var nameSpan = createSpan();
     nameSpan.innerHTML = friendName;
     nameSpan.setAttribute("class","name-header");
     div2.appendChild(nameSpan);
 
     divWrap.appendChild(div2)
     
-    var button = document.createElement('button');
+    var button = createButton();
     button.name = friendName;
     button.value = friendUsername;
     button.setAttribute("onclick","addUser(this);");
     button.setAttribute("class","btn btn-success btn-sm");
 
-    var buttonIcon = document.createElement('i');
+    var buttonIcon = createIcon();
     buttonIcon.setAttribute("class","fas fa-user-plus");
     buttonIcon.setAttribute("aria-hidden","true");
     button.appendChild(buttonIcon);
@@ -153,36 +153,36 @@ function processJoinRoom(data, element) {
     var roomID = element.value;
     var roomName = element.name;
 
-    var div = document.createElement('div');
+    var div = createDiv();
     div.id = roomID;
     div.setAttribute("class","user-list");
     div.setAttribute("onclick","getCurrentRoom(this)");
 
-    var divWrap = document.createElement('div');
+    var divWrap = createDiv();
     divWrap.setAttribute("class","noWrapDisplay");
 
-    var div2 = document.createElement('div');
+    var div2 = createDiv();
     div2.setAttribute("class","name-section");
 
-    var nameSpan = document.createElement('span');
+    var nameSpan = createSpan();
     nameSpan.innerHTML = roomName;
     nameSpan.setAttribute("class","name-header");
     div2.appendChild(nameSpan);
 
-    var groupMarkerSpan = document.createElement('span');
+    var groupMarkerSpan = createSpan();
     groupMarkerSpan.innerHTML = "group";
     groupMarkerSpan.setAttribute("class","group-marker");
     div2.appendChild(groupMarkerSpan);
 
-    var timeSpan = document.createElement('span');
+    var timeSpan = createSpan();
     timeSpan.setAttribute("class","time-info");
     div2.appendChild(timeSpan);
 
 
-    var div3 = document.createElement('div');
+    var div3 = createDiv();
     div3.setAttribute("class","roomDivInfo");
-    var lastMessageSpan = document.createElement('span');
-    var badgeCounterSpan = document.createElement('span')
+    var lastMessageSpan = createSpan();
+    var badgeCounterSpan = createSpan()
     lastMessageSpan.setAttribute("class","lastMessage");
     badgeCounterSpan.setAttribute("class","badgeCounter");
     div3.appendChild(lastMessageSpan)
@@ -191,19 +191,14 @@ function processJoinRoom(data, element) {
     divWrap.appendChild(div2)
     divWrap.appendChild(div3)
 
-    var button = document.createElement('button');
+    var button = createButton();
     button.setAttribute("class","btn btn-danger btn-sm");
     button.id = "roomView"
     button.name = roomName;
     button.value = roomID;
     button.setAttribute("onclick","leaveRoom(this);");
-    
-    // var buttonIcon = document.createElement('i');
-    // buttonIcon.setAttribute("class","fas fa-minus");
-    // buttonIcon.setAttribute("aria-hidden","true");
-    // button.appendChild(buttonIcon);
 
-    var spanText = document.createElement('span');
+    var spanText = createSpan();
     spanText.setAttribute("class","font-weight-bold");
     spanText.innerHTML = "Exit";
     button.appendChild(spanText);
@@ -238,39 +233,34 @@ function processLeaveRoom(data, element) {
     var roomID = element.value;
     var roomName = element.name;
 
-    var div = document.createElement('div');
+    var div = createDiv();
     div.setAttribute("class","user-list");
 
-    var divWrap = document.createElement('div');
+    var divWrap = createDiv();
     divWrap.setAttribute("class","noWrapDisplay");
 
-    var div2 = document.createElement('div');
+    var div2 = createDiv();
     div2.setAttribute("class","name-section");
 
-    var nameSpan = document.createElement('span');
+    var nameSpan = createSpan();
     nameSpan.innerHTML = roomName;
     nameSpan.setAttribute("class","name-header");
     div2.appendChild(nameSpan);
 
-    var groupMarkerSpan = document.createElement('span');
+    var groupMarkerSpan = createSpan();
     groupMarkerSpan.innerHTML = "group";
     groupMarkerSpan.setAttribute("class","group-marker");
     div2.appendChild(groupMarkerSpan);
 
     divWrap.appendChild(div2)
 
-    var button = document.createElement('button'); 
+    var button = createButton(); 
     button.setAttribute("class","btn btn-success btn-sm");
     button.name = roomName;
     button.value = roomID;
     button.setAttribute("onclick","joinRoom(this);");
 
-    // var buttonIcon = document.createElement('i');
-    // buttonIcon.setAttribute("class","fas fa-plus");
-    // buttonIcon.setAttribute("aria-hidden","true");
-    // button.appendChild(buttonIcon);
-
-    var spanText = document.createElement('span');
+    var spanText = createSpan();
     spanText.setAttribute("class","font-weight-bold");
     spanText.innerHTML = "Join";
     button.appendChild(spanText);
@@ -378,14 +368,14 @@ function processgetCurrentRoom(data, element) {
     if (current_room.private_room !== true) {
         for (x in room_members) {
             member = room_members[x];
-            const divMain = document.createElement('div');
+            const divMain = createDiv();
             divMain.setAttribute("style","padding: 7px 0");
-            const span_ = document.createElement('span');
+            const span_ = createSpan();
             span_.innerHTML = member.name_surname;
             span_.setAttribute("class","name-header");
             divMain.appendChild(span_)
             if (member.id === current_room.created_by) {
-                const adminSpan = document.createElement('span');
+                const adminSpan = createSpan();
                 adminSpan.setAttribute("class","group-marker");
                 adminSpan.innerHTML = 'admin'
                 divMain.appendChild(adminSpan)
@@ -393,7 +383,30 @@ function processgetCurrentRoom(data, element) {
             InfoModalBody.append(divMain);
         }
     }
-    // scrollDownChatWindow();
+}
+
+function createDiv() {
+    var newDiv = document.createElement('div');
+
+    return newDiv;
+}
+
+function createSpan() {
+    var newSpan = document.createElement('span');
+
+    return newSpan;
+}
+
+function createButton() {
+    var newButton = document.createElement('button');
+
+    return newButton;
+}
+
+function createIcon() {
+    var newIcon = document.createElement('i');
+
+    return newIcon;
 }
 
 function resetStorageNotification(roomID) {
@@ -592,27 +605,27 @@ function clearInputResources(value) {
 }
 
 function append_msgs(data) {
-    const outerDiv = document.createElement('div');
+    const outerDiv = createDiv();
     outerDiv.setAttribute("class","messageItems");
 
-    const containerDiv = document.createElement('div');
+    const containerDiv = createDiv();
     containerDiv.setAttribute("class","messageContainer");
 
-    const wrapperDiv = document.createElement('div');
+    const wrapperDiv = createDiv();
     wrapperDiv.setAttribute("class","messageWrap");
 
-    const innerDiv = document.createElement('div');
+    const innerDiv = createDiv();
     innerDiv.setAttribute("class","messagePadded");
 
     // if the current room is a group
     if (!document.getElementById("get_user_status").innerHTML) {
-        const authorSpan = document.createElement('span');
+        const authorSpan = createSpan();
         authorSpan.setAttribute("class","authorSpanElement");
         authorSpan.innerHTML =  data.author;
         innerDiv.appendChild(authorSpan);
     }
 
-    const span = document.createElement('span');
+    const span = createSpan();
     span.setAttribute("class","displayMsgText");
     span.innerHTML = data.messages;
     innerDiv.appendChild(span);
@@ -636,13 +649,13 @@ function append_msgs(data) {
     // if displayDate(recentDate) returns a value
     if (recentDateValue) {
 
-        const outerDateDiv = document.createElement('div');
+        const outerDateDiv = createDiv();
         outerDateDiv.setAttribute("class","messageItems dateInfoItem");
 
-        const innerDateDiv = document.createElement('div');
+        const innerDateDiv = createDiv();
         innerDateDiv.setAttribute("class","messagePadded dateInfoStyle");
 
-        const dateInfoSpan = document.createElement('span');
+        const dateInfoSpan = createSpan();
 
         dateInfoSpan.innerHTML = recentDateValue;
         innerDateDiv.appendChild(dateInfoSpan);
@@ -650,11 +663,11 @@ function append_msgs(data) {
         document.getElementById("messages").append(outerDateDiv);
     }
 
-    const timeInfoSpan = document.createElement('span');
+    const timeInfoSpan = createSpan();
     timeInfoSpan.setAttribute("class","timeSpanElement");
     timeInfoSpan.innerHTML = local_time;
 
-    const messageStatusTimeInfoWrapper = document.createElement('div');
+    const messageStatusTimeInfoWrapper = createDiv();
     messageStatusTimeInfoWrapper.setAttribute("id", data.uuid);
     messageStatusTimeInfoWrapper.setAttribute("class","statusTimeWrapper");
     messageStatusTimeInfoWrapper.appendChild(timeInfoSpan);
@@ -713,10 +726,10 @@ function createUniqueUID() {
 }
 
 function addOneTick(messageStatusTimeInfoWrapper) {
-    const messageStatusSpan = document.createElement('span');
+    const messageStatusSpan = createSpan();
     messageStatusSpan.setAttribute("class","oneTickSpanElement");
 
-    const messageStatusIcon = document.createElement('i');
+    const messageStatusIcon = createIcon();
     messageStatusIcon.setAttribute("class","fas fa-check");
     messageStatusIcon.setAttribute("aria-hidden","true");
 
@@ -732,10 +745,10 @@ function addOneTick(messageStatusTimeInfoWrapper) {
 }
 
 function addTwoTicks(messageStatusTimeInfoWrapper) {
-    const messageStatusSpan = document.createElement('span');
+    const messageStatusSpan = createSpan();
     messageStatusSpan.setAttribute("class","oneTickSpanElement");
 
-    const messageStatusIcon = document.createElement('i');
+    const messageStatusIcon = createIcon();
     messageStatusIcon.setAttribute("class","fas fa-check-double")
     messageStatusIcon.setAttribute("aria-hidden","true");
 
@@ -752,10 +765,10 @@ function addTwoTicks(messageStatusTimeInfoWrapper) {
 }
 
 function addPending(messageStatusTimeInfoWrapper) {
-    const messageStatusSpan = document.createElement('span');
+    const messageStatusSpan = createSpan();
     messageStatusSpan.setAttribute("class","oneTickSpanElement");
 
-    const messageStatusIcon = document.createElement('i');
+    const messageStatusIcon = createIcon();
     messageStatusIcon.setAttribute("class","fas fa-exclamation-circle");
     messageStatusIcon.setAttribute("aria-hidden","true");
 
@@ -782,6 +795,8 @@ function roomOrderArrayHandler(room_id) {
         // convert the localStorage string to an array
         var existing = JSON.parse(localStorage.getItem('roomOrderParams'));
         if (existing.includes(room_id)) {
+            /* if room_id is in the array already, delete it 
+            so that it can be added afresh at the top of the array */
             existing.splice(existing.indexOf(room_id), 1)
         }
         // adds the new element to the beginning of the array
@@ -810,6 +825,3 @@ function roomOrder() {
 }
 // so that the order can survive reload
 roomOrder();
-
-
-// set localstorage on click of a room, clear on offline or fresh online. transmit this value with each emit
