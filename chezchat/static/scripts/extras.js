@@ -1,4 +1,3 @@
-
 function ajaxCalls(params, element, callback) {
     var xhttp = new XMLHttpRequest();
     xhttp.open("POST", params.url, true);
@@ -16,7 +15,7 @@ function ajaxCalls(params, element, callback) {
 
 function addUser(element) {
     var userUsername = element.value
-    var params = {'url': '/add-user', 'payload': userUsername, 'key': 'user_username'};
+    var params = {"url": "/add-user", "payload": userUsername, "key": "user_username"};
     ajaxCalls(params, element, processAddUser);
 }
 
@@ -25,73 +24,72 @@ function processAddUser(data, element) {
     var userName = element.name;
     var userUsername = element.value;
 
-    var div = createDiv();
-    div.id = data['roomID']
-    div.setAttribute("class","user-list");
+    var div = createElement(
+        "div", {
+            "id": data["roomID"], 
+            "class": "user-list", 
+            "onclick": "getCurrentRoom(this); verify_status()"
+        }
+    );
 
-    var divWrap = createDiv();
-    divWrap.setAttribute("class","noWrapDisplay");
+    var divWrap = createElement("div", {"class": "noWrapDisplay"});
 
     
-    var div2 = createDiv();
-    div2.setAttribute("class","name-section");
+    var div2 = createElement("div", {"class": "name-section"});
     
-    var nameSpan = createSpan();
+    var nameSpan = createElement("span", {"class": "name-header"});
     nameSpan.innerHTML = userName;
-    nameSpan.setAttribute("class","name-header");
-    div2.appendChild(nameSpan);
 
-    var timeSpan = createSpan();
-    timeSpan.setAttribute("class","time-info");
-    div2.appendChild(timeSpan);
+    var timeSpan = createElement("span", {"class": "time-info"});
 
-    var div3 = createDiv();
-    div3.setAttribute("class","roomDivInfo");
-    var lastMessageSpan = createSpan();
-    var badgeCounterSpan = createSpan()
-    lastMessageSpan.setAttribute("class","lastMessage");
-    badgeCounterSpan.setAttribute("class","badgeCounter");
-    div3.appendChild(lastMessageSpan)
-    div3.appendChild(badgeCounterSpan)
+    appendChildren(div2, [nameSpan, timeSpan])
 
-    divWrap.appendChild(div2)
-    divWrap.appendChild(div3)
+    var div3 = createElement("div", {"class": "roomDivInfo"});
+    var lastMessageSpan = createElement("span", {"class": "lastMessage"});
+    var badgeCounterSpan = createElement("span", {"class": "badgeCounter"})
 
+    appendChildren(div3, [lastMessageSpan, badgeCounterSpan])
 
-    div.setAttribute("onclick","getCurrentRoom(this); verify_status()");
+    appendChildren(divWrap, [div2, div3])
 
-    var button = createButton();
-    button.setAttribute("class","btn btn-danger btn-sm");
-    button.name = userName;
-    button.value = userUsername;
-    button.setAttribute("onclick","toModal(this);");
+    var button = createElement(
+        "button", {
+            "class": "btn btn-danger btn-sm", 
+            "onclick": "toModal(this);",
+            "name" : userName,
+            "value": userUsername
+        }
+    );
 
-    var buttonIcon = createIcon();
-    buttonIcon.setAttribute("class","fas fa-user-minus");
-    buttonIcon.setAttribute("aria-hidden","true");
-    button.appendChild(buttonIcon);
+    var buttonIcon = createElement("i", {"class": "fas fa-user-minus", "aria-hidden": "true"});
+    appendChildren(button, [buttonIcon])
 
-    div.appendChild(divWrap)
-    div.appendChild(button);
+    appendChildren(div, [divWrap, button])
     document.getElementById("chattables").append(div);
 
     element.parentNode.remove();
+}
+
+function appendChildren(parent, children) {
+    for (child in children) {
+        parent.appendChild(children[child]);
+    }
 }
 
 function removeUser(element) {
     
     // only so if the current user is currently on the user to remove page
     if (element.value === getUser.innerHTML) {
-        document.getElementById("user_status").innerHTML = "";
-        document.getElementById("currentRoomName").innerHTML = "";
-        document.getElementById("get_user_status").innerHTML = "";
+        userStatusInfo.innerHTML = "";
+        currentRoomName.innerHTML = "";
+        getUser.innerHTML = "";
         localStorage.removeItem("current_room_id");
         clearInputResources(true);
     }
     
     var roomID = element.parentNode.id;
 
-    var params = {'url': '/remove-user', 'payload': roomID, 'key': 'room_id'};
+    var params = {"url": "/remove-user", "payload": roomID, "key": "room_id"};
     ajaxCalls(params, element, processRemoveUser);
 
     window.event.stopPropagation();
@@ -102,40 +100,38 @@ function processRemoveUser(data, element) {
     var friendName = element.name;
     var friendUsername = element.value;
 
-    var div = createDiv();
-    div.setAttribute("class","user-list");
+    var div = createElement("div", {"class": "user-list"});
 
-    var divWrap = createDiv();
-    divWrap.setAttribute("class","noWrapDisplay");
+    var divWrap = createElement("div", {"class": "noWrapDisplay"});
 
-    var div2 = createDiv();
-    div2.setAttribute("class","name-section");
+    var div2 = createElement("div", {"class": "name-section"});
 
-    var nameSpan = createSpan();
+    var nameSpan = createElement("span", {"class": "name-header"});
     nameSpan.innerHTML = friendName;
-    nameSpan.setAttribute("class","name-header");
-    div2.appendChild(nameSpan);
 
-    divWrap.appendChild(div2)
+    appendChildren(div2, [nameSpan])
+
+    appendChildren(divWrap, [div2])
     
-    var button = createButton();
-    button.name = friendName;
-    button.value = friendUsername;
-    button.setAttribute("onclick","addUser(this);");
-    button.setAttribute("class","btn btn-success btn-sm");
+    var button = createElement(
+        "button", {
+            "class": "btn btn-success btn-sm", 
+            "onclick": "addUser(this);",
+            "name": friendName,
+            "value": friendUsername
+        }
+    );
 
-    var buttonIcon = createIcon();
-    buttonIcon.setAttribute("class","fas fa-user-plus");
-    buttonIcon.setAttribute("aria-hidden","true");
-    button.appendChild(buttonIcon);
+    var buttonIcon = createElement("i", {"class": "fas fa-user-plus", "aria-hidden": "true"});
+    appendChildren(button, [buttonIcon])
 
-    div.appendChild(divWrap)
-    div.appendChild(button);
+    appendChildren(div, [divWrap, button])
 
     document.getElementById("availableUsers").append(div);
 
-    // here because I use this function to also append new users whose elements are not previously on DOM
-    // only to be now appended
+    /* here because I use this function to also append new users whose elements
+    are not previously on DOM only to be now appended. Hence they don't exist prior
+    so no parentnNode */
     if (element.parentNode) {
         element.parentNode.remove();
     }
@@ -144,7 +140,7 @@ function processRemoveUser(data, element) {
 function joinRoom(element) {
     var roomID = element.value;
 
-    var params = {'url': '/join-room', 'payload': roomID, 'key': 'room_id'};
+    var params = {"url": "/join-room", "payload": roomID, "key": "room_id"};
     ajaxCalls(params, element, processJoinRoom);
 }
 
@@ -153,58 +149,54 @@ function processJoinRoom(data, element) {
     var roomID = element.value;
     var roomName = element.name;
 
-    var div = createDiv();
-    div.id = roomID;
-    div.setAttribute("class","user-list");
-    div.setAttribute("onclick","getCurrentRoom(this)");
+    var div = createElement(
+        "div", {
+            "class": "user-list", 
+            "onclick": "getCurrentRoom(this)",
+            "id": roomID
+        }
+    );
 
-    var divWrap = createDiv();
-    divWrap.setAttribute("class","noWrapDisplay");
+    var divWrap = createElement("div", {"class": "noWrapDisplay"});
 
-    var div2 = createDiv();
-    div2.setAttribute("class","name-section");
+    var div2 = createElement("div", {"class": "name-section"});
 
-    var nameSpan = createSpan();
+    var nameSpan = createElement("span", {"class": "name-header"});
     nameSpan.innerHTML = roomName;
-    nameSpan.setAttribute("class","name-header");
-    div2.appendChild(nameSpan);
 
-    var groupMarkerSpan = createSpan();
+    var groupMarkerSpan = createElement("span", {"class": "group-marker"});
     groupMarkerSpan.innerHTML = "group";
-    groupMarkerSpan.setAttribute("class","group-marker");
-    div2.appendChild(groupMarkerSpan);
 
-    var timeSpan = createSpan();
-    timeSpan.setAttribute("class","time-info");
-    div2.appendChild(timeSpan);
+    var timeSpan = createElement("span", {"class": "time-info"});
+
+    appendChildren(div2, [nameSpan, groupMarkerSpan, timeSpan])
 
 
-    var div3 = createDiv();
-    div3.setAttribute("class","roomDivInfo");
-    var lastMessageSpan = createSpan();
-    var badgeCounterSpan = createSpan()
-    lastMessageSpan.setAttribute("class","lastMessage");
-    badgeCounterSpan.setAttribute("class","badgeCounter");
-    div3.appendChild(lastMessageSpan)
-    div3.appendChild(badgeCounterSpan)
+    var div3 = createElement("div", {"class": "roomDivInfo"});
+    var lastMessageSpan = createElement("span", {"class": "lastMessage"});
+    var badgeCounterSpan = createElement("span", {"class": "badgeCounter"})
 
-    divWrap.appendChild(div2)
-    divWrap.appendChild(div3)
+    appendChildren(div3, [lastMessageSpan, badgeCounterSpan])
 
-    var button = createButton();
-    button.setAttribute("class","btn btn-danger btn-sm");
-    button.id = "roomView"
-    button.name = roomName;
-    button.value = roomID;
-    button.setAttribute("onclick","leaveRoom(this);");
+    appendChildren(divWrap, [div2, div3])
 
-    var spanText = createSpan();
-    spanText.setAttribute("class","font-weight-bold");
+    var button = createElement(
+        "button", {
+            "class": "btn btn-danger btn-sm", 
+            "onclick": "leaveRoom(this);",
+            "id": "roomView",
+            "name": roomName,
+            "value": roomID
+        }
+    );
+
+    var spanText = createElement("span", {"class": "font-weight-bold"});
     spanText.innerHTML = "Exit";
-    button.appendChild(spanText);
 
-    div.appendChild(divWrap)
-    div.appendChild(button);
+    appendChildren(button, [spanText])
+
+
+    appendChildren(div, [divWrap, button])
 
 
     document.getElementById("chattables").append(div);
@@ -216,14 +208,14 @@ function leaveRoom(element) {
 
     clearInputResources(true);
 
-    document.getElementById("currentRoomName").innerHTML = '';
-    document.getElementById("user_status").innerHTML = '';
-    document.getElementById("get_user_status").innerHTML = '';
+    currentRoomName.innerHTML = "";
+    userStatusInfo.innerHTML = "";
+    getUser.innerHTML = "";
     
     var roomID = element.value;
     var roomName = element.name;
 
-    var params = {'url': '/leave-room', 'payload': roomID, 'key': 'room_id'};
+    var params = {"url": "/leave-room", "payload": roomID, "key": "room_id"};
     ajaxCalls(params, element, processLeaveRoom);
 
     window.event.stopPropagation();
@@ -233,40 +225,36 @@ function processLeaveRoom(data, element) {
     var roomID = element.value;
     var roomName = element.name;
 
-    var div = createDiv();
-    div.setAttribute("class","user-list");
+    var div = createElement("div", {"class": "user-list"});
 
-    var divWrap = createDiv();
-    divWrap.setAttribute("class","noWrapDisplay");
+    var divWrap = createElement("div", {"class": "noWrapDisplay"});
 
-    var div2 = createDiv();
-    div2.setAttribute("class","name-section");
+    var div2 = createElement("div", {"class": "name-section"});
 
-    var nameSpan = createSpan();
+    var nameSpan = createElement("span", {"class": "name-header"});
     nameSpan.innerHTML = roomName;
-    nameSpan.setAttribute("class","name-header");
-    div2.appendChild(nameSpan);
 
-    var groupMarkerSpan = createSpan();
+    var groupMarkerSpan = createElement("span", {"class": "group-marker"});
     groupMarkerSpan.innerHTML = "group";
-    groupMarkerSpan.setAttribute("class","group-marker");
-    div2.appendChild(groupMarkerSpan);
 
-    divWrap.appendChild(div2)
+    appendChildren(div2, [nameSpan, groupMarkerSpan])
 
-    var button = createButton(); 
-    button.setAttribute("class","btn btn-success btn-sm");
-    button.name = roomName;
-    button.value = roomID;
-    button.setAttribute("onclick","joinRoom(this);");
+    appendChildren(divWrap, [div2])
 
-    var spanText = createSpan();
-    spanText.setAttribute("class","font-weight-bold");
+    var button = createElement(
+        "button", {
+            "class": "btn btn-success btn-sm", 
+            "onclick": "joinRoom(this);",
+            "name": roomName,
+            "value": roomID
+        }
+    );
+
+    var spanText = createElement("span", {"class": "font-weight-bold"});
     spanText.innerHTML = "Join";
-    button.appendChild(spanText);
+    appendChildren(button, [spanText])
 
-    div.appendChild(divWrap)
-    div.appendChild(button);
+    appendChildren(div, [divWrap, button])
 
 
     document.getElementById("availableRooms").append(div);
@@ -282,13 +270,10 @@ function getCurrentRoom(element) {
     clearInputResources(false);
 
     // autofocus on input-box
-    document.getElementById("myMessage").focus();
+    messageInput.focus();
 
     // set the id of the message container so message appears only in the rooms intended
     // document.getElementById("messages")
-
-
-    // display messages from localstorage here if it exists and update localstorage in processgetCurrentRoom()
 
     friendName = element.getElementsByTagName("button")[0].name;
     friendUsername = element.getElementsByTagName("button")[0].value;
@@ -306,9 +291,9 @@ function getCurrentRoom(element) {
     document.getElementById("pre-user-msg").hidden = true;
     document.getElementById("pre-user-spinner").hidden = false;
 
-    document.getElementById("get_user_status").innerHTML = "";
-    document.getElementById("user_status").innerHTML = "";
-    document.getElementById("currentRoomName").innerHTML = friendName;
+    getUser.innerHTML = "";
+    userStatusInfo.innerHTML = "";
+    currentRoomName.innerHTML = friendName;
 
 
     showChatArea();
@@ -316,15 +301,13 @@ function getCurrentRoom(element) {
     
     // set this value so that verify_status can function from socketio.js
     if (element.getElementsByTagName("button")[0].id !== "roomView") {
-        document.getElementById("get_user_status").innerHTML = friendUsername;
+        getUser.innerHTML = friendUsername;
     }
     else {
-        document.getElementById("user_status").innerHTML = "click here for group info";
+        userStatusInfo.innerHTML = "click here for group info";
     }
 
-    console.log(document.getElementById("get_user_status").innerHTML)
-
-    var params = {'url': '/room-details', 'payload': roomID, 'key': 'room_id'};
+    var params = {"url": "/room-details", "payload": roomID, "key": "room_id"};
     ajaxCalls(params, element, processgetCurrentRoom);
 }
 
@@ -333,7 +316,7 @@ function processgetCurrentRoom(data, element) {
     roomID = element.id;
 
     // clear localstorage notification counter
-    if (JSON.parse(localStorage.getItem('notifyParams'))) {
+    if (JSON.parse(localStorage.getItem("notifyParams"))) {
         resetStorageNotification(roomID);
     }
 
@@ -342,7 +325,7 @@ function processgetCurrentRoom(data, element) {
     InfoModalBody = document.getElementById("roomInfoModal");
     messageDisplay = document.getElementById("messages")
 
-    InfoModalBody.innerHTML = '';
+    InfoModalBody.innerHTML = "";
 
     // add data to localStorage 
 
@@ -351,7 +334,7 @@ function processgetCurrentRoom(data, element) {
     for (x in room_history) {
         // create a function and use here and in socket append msgs
         msg = room_history[x];
-        msg['from_db'] = true;
+        msg["from_db"] = true;
         // console.log(msg)
         append_msgs(msg);
 
@@ -368,60 +351,43 @@ function processgetCurrentRoom(data, element) {
     if (current_room.private_room !== true) {
         for (x in room_members) {
             member = room_members[x];
-            const divMain = createDiv();
-            divMain.setAttribute("style","padding: 7px 0");
-            const span_ = createSpan();
+            var divMain = createElement("div", {"style": "padding: 7px 0"});
+            var span_ = createElement("span", {"class": "name-header"});
             span_.innerHTML = member.name_surname;
-            span_.setAttribute("class","name-header");
-            divMain.appendChild(span_)
+            appendChildren(divMain, [span_])
             if (member.id === current_room.created_by) {
-                const adminSpan = createSpan();
-                adminSpan.setAttribute("class","group-marker");
-                adminSpan.innerHTML = 'admin'
-                divMain.appendChild(adminSpan)
+                var adminSpan = createElement("span", {"class": "group-marker"});
+                adminSpan.innerHTML = "admin"
+                appendChildren(divMain, [adminSpan])
             }
             InfoModalBody.append(divMain);
         }
     }
 }
 
-function createDiv() {
-    var newDiv = document.createElement('div');
+function createElement(element, attributes) {
+    var newElement = document.createElement(element);
 
-    return newDiv;
-}
+    for (key in attributes) {
+        newElement.setAttribute(key, attributes[key])
+    }
 
-function createSpan() {
-    var newSpan = document.createElement('span');
-
-    return newSpan;
-}
-
-function createButton() {
-    var newButton = document.createElement('button');
-
-    return newButton;
-}
-
-function createIcon() {
-    var newIcon = document.createElement('i');
-
-    return newIcon;
+    return newElement;
 }
 
 function resetStorageNotification(roomID) {
-    var resetNotificationCounter = JSON.parse(localStorage.getItem('notifyParams'));
+    var resetNotificationCounter = JSON.parse(localStorage.getItem("notifyParams"));
     if (resetNotificationCounter) {
         resetNotificationCounter[roomID] = 0;
-        localStorage.setItem('notifyParams', JSON.stringify(resetNotificationCounter));
+        localStorage.setItem("notifyParams", JSON.stringify(resetNotificationCounter));
     }
 
-    addNotificationBadge(roomID, JSON.parse(localStorage.getItem('notifyParams')));
+    addNotificationBadge(roomID, JSON.parse(localStorage.getItem("notifyParams")));
 }
 
 function addNotificationBadge(room_id, data) {
 
-    const span_badgeCounter = document.querySelector(`[id=${CSS.escape(room_id)}] .roomDivInfo span.badgeCounter`);
+    var span_badgeCounter = document.querySelector(`[id=${CSS.escape(room_id)}] .roomDivInfo span.badgeCounter`);
 
     if (span_badgeCounter) {
         if (data[room_id] === 0) {
@@ -437,12 +403,12 @@ function addNotificationBadge(room_id, data) {
 
 function addLastMessageBadge(room_id, data) {
 
-    const span_lastMessage = document.querySelector(`[id=${CSS.escape(room_id)}] .roomDivInfo span.lastMessage`);
+    var span_lastMessage = document.querySelector(`[id=${CSS.escape(room_id)}] .roomDivInfo span.lastMessage`);
 
     if (span_lastMessage) {
-        const elementGroupTest = document.querySelector(`[id=${CSS.escape(room_id)}] .noWrapDisplay .name-section span.group-marker`)
+        var elementGroupTest = document.querySelector(`[id=${CSS.escape(room_id)}] .noWrapDisplay .name-section span.group-marker`)
 
-        const lastMessageTimeSpan = document.querySelector(`[id=${CSS.escape(room_id)}] .noWrapDisplay .name-section span.time-info`)
+        var lastMessageTimeSpan = document.querySelector(`[id=${CSS.escape(room_id)}] .noWrapDisplay .name-section span.time-info`)
 
         // if the current room is a group, add the author to the badge
         if (elementGroupTest)
@@ -461,30 +427,21 @@ function addLastMessageBadge(room_id, data) {
 
 function checkDate(date) {
 
-    var returnable;
-
     var currentDate = moment.utc();
 
     // date is already in UTC
     var refDate = moment(date);
 
-    var currentDateinDateFormat = moment.utc(currentDate).local().format('MMMM DD, YYYY')
-    var refDateinDateFormat = moment.utc(refDate).local().format('MMMM DD, YYYY')
+    var currentDateinDateFormat = moment.utc(currentDate).local().format("MMMM DD, YYYY");
+    var refDateinDateFormat = moment.utc(refDate).local().format("MMMM DD, YYYY");
 
-    var currentDateinYearFormat = moment.utc(currentDate).local().format('YYYY')
-    var refDateinYearformat = moment.utc(refDate).local().format('YYYY')
+    var currentDateinYearFormat = moment.utc(currentDate).local().format("YYYY");
+    var refDateinYearformat = moment.utc(refDate).local().format("YYYY");
 
-    if (currentDateinDateFormat == refDateinDateFormat) {
-        returnable = refDate.format("HH:mm")
-    }
-    else if (currentDateinYearFormat == refDateinYearformat){
-        returnable = refDate.format("MMM DD")
-    }
-    else {
-        returnable = refDate.format("DD/MM/YYYY")
-    }
+    if (currentDateinDateFormat == refDateinDateFormat) return refDate.format("HH:mm");
+    if (currentDateinYearFormat == refDateinYearformat) return refDate.format("MMM DD");
 
-    return returnable;
+    return refDate.format("DD/MM/YYYY");
 }
 
 function handleLastMessageHelper(data) {
@@ -494,48 +451,46 @@ function handleLastMessageHelper(data) {
     var time = moment.utc(data.timestamp);
     var author = data.author;
 
-    if (localStorage.getItem('lastMessageParams')) {
+    if (localStorage.getItem("lastMessageParams")) {
         // convert the localStorage string to a dictionary
-        var existing = JSON.parse(localStorage.getItem('lastMessageParams'));
+        var existing = JSON.parse(localStorage.getItem("lastMessageParams"));
         existing[roomID] = [message, author, time];
-        localStorage.setItem('lastMessageParams', JSON.stringify(existing));
+        localStorage.setItem("lastMessageParams", JSON.stringify(existing));
     }
     else {
         // If no existing data, create an dictionary
         newParams = {};
         newParams[roomID] = [message, author, time];
-        localStorage.setItem('lastMessageParams', JSON.stringify(newParams));
+        localStorage.setItem("lastMessageParams", JSON.stringify(newParams));
     }
-    addLastMessageBadge(roomID, JSON.parse(localStorage.getItem('lastMessageParams')));
+    addLastMessageBadge(roomID, JSON.parse(localStorage.getItem("lastMessageParams")));
 }
 
 function handleNotificationsHelper(room_id, count) {
 
-    if (localStorage.getItem('notifyParams')) {
+    if (localStorage.getItem("notifyParams")) {
         // convert the localStorage string to a dictionary
-        var existing = JSON.parse(localStorage.getItem('notifyParams'));
+        var existing = JSON.parse(localStorage.getItem("notifyParams"));
         if (existing[room_id]) {
             existing[room_id] = existing[room_id] + count;
         }
         else {
             existing[room_id] = count;
         }
-        localStorage.setItem('notifyParams', JSON.stringify(existing));
-        console.log(`${count} from if updating`);
+        localStorage.setItem("notifyParams", JSON.stringify(existing));
     }
     else {
         // If no existing data, create an dictionary
         newParams = {};
         newParams[room_id] = count;
-        localStorage.setItem('notifyParams', JSON.stringify(newParams));
-        console.log(`${count} from else creating new`);
+        localStorage.setItem("notifyParams", JSON.stringify(newParams));
     }
 
-    addNotificationBadge(room_id, JSON.parse(localStorage.getItem('notifyParams')));
+    addNotificationBadge(room_id, JSON.parse(localStorage.getItem("notifyParams")));
 }
 
 function persistentNotificationBadge() {
-    var counterObject = JSON.parse(localStorage.getItem('notifyParams'));
+    var counterObject = JSON.parse(localStorage.getItem("notifyParams"));
     console.log(counterObject)
     
     if (counterObject) {
@@ -552,7 +507,7 @@ function persistentNotificationBadge() {
 persistentNotificationBadge();
 
 function persistentlastMessageBadge() {
-    var counterObject = JSON.parse(localStorage.getItem('lastMessageParams'));
+    var counterObject = JSON.parse(localStorage.getItem("lastMessageParams"));
     console.log(counterObject)
     
     if (counterObject) {
@@ -581,16 +536,13 @@ function hideChatArea() {
     document.getElementById("appChatArea").style.zIndex = 1
     document.getElementById("appNavArea").style.zIndex = 1000;
 
-    document.getElementById("get_user_status").innerHTML = "";
+    getUser.innerHTML = "";
     localStorage.removeItem("current_room_id");
 
     window.event.stopPropagation();
 }
 
 function clearInputResources(value) {
-    
-    // document.getElementById("myMessage").hidden = value;
-    // document.getElementById("sendbutton").hidden = value;
 
     document.getElementById("msgInput").hidden = value;
     document.getElementById("roomInfoModal").innerHTML = "";
@@ -605,72 +557,61 @@ function clearInputResources(value) {
 }
 
 function append_msgs(data) {
-    const outerDiv = createDiv();
-    outerDiv.setAttribute("class","messageItems");
+    var outerDiv = createElement("div", {"class": "messageItems"});
 
-    const containerDiv = createDiv();
-    containerDiv.setAttribute("class","messageContainer");
+    var containerDiv = createElement("div", {"class": "messageContainer"});
 
-    const wrapperDiv = createDiv();
-    wrapperDiv.setAttribute("class","messageWrap");
+    var wrapperDiv = createElement("div", {"class": "messageWrap"});
 
-    const innerDiv = createDiv();
-    innerDiv.setAttribute("class","messagePadded");
+    var innerDiv = createElement("div", {"class": "messagePadded"});
 
     // if the current room is a group
-    if (!document.getElementById("get_user_status").innerHTML) {
-        const authorSpan = createSpan();
-        authorSpan.setAttribute("class","authorSpanElement");
+    if (!getUser.innerHTML) {
+        var authorSpan = createElement("span", {"class": "authorSpanElement"});
         authorSpan.innerHTML =  data.author;
-        innerDiv.appendChild(authorSpan);
+        appendChildren(innerDiv, [authorSpan])
     }
 
-    const span = createSpan();
-    span.setAttribute("class","displayMsgText");
+    var span = createElement("span", {"class": "displayMsgText"});
     span.innerHTML = data.messages;
-    innerDiv.appendChild(span);
+    appendChildren(innerDiv, [span])
 
     var local_time;
     var recentDate;
     var recentDateValue;
     if (data.timestamp) {
-        recentDate = moment.utc(data['timestamp']).local().format('MMMM DD, YYYY');
+        recentDate = moment.utc(data["timestamp"]).local().format("MMMM DD, YYYY");
         recentDateValue = displayDate(recentDate);
 
-        local_time = moment.utc(data['timestamp']).local().format('HH:mm');        
+        local_time = moment.utc(data["timestamp"]).local().format("HH:mm");        
     }
     else {
-        recentDate = moment().format('MMMM DD, YYYY');
+        recentDate = moment().format("MMMM DD, YYYY");
         recentDateValue = displayDate(recentDate);
 
-        local_time = moment().format('HH:mm');
+        local_time = moment().format("HH:mm");
     }
 
     // if displayDate(recentDate) returns a value
     if (recentDateValue) {
 
-        const outerDateDiv = createDiv();
-        outerDateDiv.setAttribute("class","messageItems dateInfoItem");
+        var outerDateDiv = createElement("div", {"class": "messageItems dateInfoItem"});
 
-        const innerDateDiv = createDiv();
-        innerDateDiv.setAttribute("class","messagePadded dateInfoStyle");
+        var innerDateDiv = createElement("div", {"class": "messagePadded dateInfoStyle"});
 
-        const dateInfoSpan = createSpan();
+        var dateInfoSpan = createElement("span", {});
 
         dateInfoSpan.innerHTML = recentDateValue;
-        innerDateDiv.appendChild(dateInfoSpan);
-        outerDateDiv.appendChild(innerDateDiv);
+        appendChildren(innerDateDiv, [dateInfoSpan])
+        appendChildren(outerDateDiv, [innerDateDiv])
         document.getElementById("messages").append(outerDateDiv);
     }
 
-    const timeInfoSpan = createSpan();
-    timeInfoSpan.setAttribute("class","timeSpanElement");
+    var timeInfoSpan = createElement("span", {"class": "timeSpanElement"});
     timeInfoSpan.innerHTML = local_time;
 
-    const messageStatusTimeInfoWrapper = createDiv();
-    messageStatusTimeInfoWrapper.setAttribute("id", data.uuid);
-    messageStatusTimeInfoWrapper.setAttribute("class","statusTimeWrapper");
-    messageStatusTimeInfoWrapper.appendChild(timeInfoSpan);
+    var messageStatusTimeInfoWrapper = createElement("div", {"id": data.uuid, "class": "statusTimeWrapper"});
+    appendChildren(messageStatusTimeInfoWrapper, [timeInfoSpan])
 
     // if the current msg is from the current_user
     if (data.author == username) {
@@ -692,67 +633,54 @@ function append_msgs(data) {
         }
     }
 
-    innerDiv.appendChild(messageStatusTimeInfoWrapper);
-    wrapperDiv.appendChild(innerDiv);
-    containerDiv.appendChild(wrapperDiv);
-    outerDiv.appendChild(containerDiv);
+    appendChildren(innerDiv, [messageStatusTimeInfoWrapper])
+    appendChildren(wrapperDiv, [innerDiv])
+    appendChildren(containerDiv, [wrapperDiv])
+    appendChildren(outerDiv, [containerDiv])
 
     document.getElementById("messages").append(outerDiv);
     scrollDownChatWindow();
 }
 
 function displayDate(recentDate) {
-    var dateElement = document.querySelectorAll('.dateInfoItem .dateInfoStyle span');
-    var dateToReturn;
-    if (dateElement.length == 0) {
-        dateToReturn = recentDate;
-    }
-    else {
-        if (dateElement[dateElement.length - 1].innerHTML != recentDate) {
-            dateToReturn = recentDate;
-        }
-    }
-    return dateToReturn;
+    var dateElement = document.querySelectorAll(".dateInfoItem .dateInfoStyle span");
+    if (dateElement.length == 0) return recentDate;
+    if (dateElement[dateElement.length - 1].innerHTML != recentDate) return recentDate;
+    return
 }
 
 function createUniqueUID() {
     var dt = Date.now();
-    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
         var r = (dt + Math.random()*16)%16 | 0;
         dt = Math.floor(dt/16);
-        return (c=='x' ? r :(r&0x3|0x8)).toString(16);
+        return (c=="x" ? r :(r&0x3|0x8)).toString(16);
     });
     return username + uuid;
 }
 
 function addOneTick(messageStatusTimeInfoWrapper) {
-    const messageStatusSpan = createSpan();
-    messageStatusSpan.setAttribute("class","oneTickSpanElement");
+    var messageStatusSpan = createElement("span", {"class": "oneTickSpanElement"});
 
-    const messageStatusIcon = createIcon();
-    messageStatusIcon.setAttribute("class","fas fa-check");
-    messageStatusIcon.setAttribute("aria-hidden","true");
+    var messageStatusIcon = createElement("i", {"class": "fas fa-check", "aria-hidden": "true"});
 
-    messageStatusSpan.appendChild(messageStatusIcon);
+    appendChildren(messageStatusSpan, [messageStatusIcon])
 
     // check if the pending icon is present and if so replace it with the one tick
     if (messageStatusTimeInfoWrapper.childElementCount > 1) {
         messageStatusTimeInfoWrapper.replaceChild(messageStatusSpan, messageStatusTimeInfoWrapper.childNodes[1]);
     }
     else {
-        messageStatusTimeInfoWrapper.appendChild(messageStatusSpan);
+        appendChildren(messageStatusTimeInfoWrapper, [messageStatusSpan])
     }
 }
 
 function addTwoTicks(messageStatusTimeInfoWrapper) {
-    const messageStatusSpan = createSpan();
-    messageStatusSpan.setAttribute("class","oneTickSpanElement");
+    var messageStatusSpan = createElement("span", {"class": "oneTickSpanElement"});
 
-    const messageStatusIcon = createIcon();
-    messageStatusIcon.setAttribute("class","fas fa-check-double")
-    messageStatusIcon.setAttribute("aria-hidden","true");
+    var messageStatusIcon = createElement("i", {"class": "fas fa-check-double", "aria-hidden": "true"});
 
-    messageStatusSpan.appendChild(messageStatusIcon);
+    appendChildren(messageStatusSpan, [messageStatusIcon])
 
     // check if the sent icon is present and if so replace it with the double ticks
     // else append afresh
@@ -760,40 +688,40 @@ function addTwoTicks(messageStatusTimeInfoWrapper) {
         messageStatusTimeInfoWrapper.replaceChild(messageStatusSpan, messageStatusTimeInfoWrapper.childNodes[1]);
     }
     else {
-        messageStatusTimeInfoWrapper.appendChild(messageStatusSpan);
+        appendChildren(messageStatusTimeInfoWrapper, [messageStatusSpan])
     }
 }
 
 function addPending(messageStatusTimeInfoWrapper) {
-    const messageStatusSpan = createSpan();
-    messageStatusSpan.setAttribute("class","oneTickSpanElement");
+    var messageStatusSpan = createElement("span", {"class": "oneTickSpanElement"});
 
-    const messageStatusIcon = createIcon();
-    messageStatusIcon.setAttribute("class","fas fa-exclamation-circle");
-    messageStatusIcon.setAttribute("aria-hidden","true");
+    var messageStatusIcon = createElement("i", {"class": "fas fa-exclamation-circle", "aria-hidden": "true"});
 
-    messageStatusSpan.appendChild(messageStatusIcon);
+    appendChildren(messageStatusSpan, [messageStatusIcon])
 
-    messageStatusTimeInfoWrapper.appendChild(messageStatusSpan);
+    appendChildren(messageStatusTimeInfoWrapper, [messageStatusSpan])
 }
 
 function scrollDownChatWindow() {
-    const scrollElement = document.querySelector('#chatWindow .simplebar-content-wrapper');
-    const scrollingHeight = document.getElementById("messages");
+    var scrollElement = document.querySelector("#chatWindow .simplebar-content-wrapper");
+    var scrollingHeight = document.getElementById("messages");
     scrollElement.scrollTop = scrollingHeight.scrollHeight;
 }
 
 function swapRoomPostionOnNewMessage(room_id) {
-    var parentElement = document.getElementById(room_id).parentNode;
-    var child1 = document.getElementById(room_id).parentNode.firstChild
-    var child2 = document.getElementById(room_id);
-    parentElement.insertBefore(child2, child1);
+
+    if (document.getElementById(room_id)) {
+        var parentElement = document.getElementById(room_id).parentNode;
+        var child1 = document.getElementById(room_id).parentNode.firstChild
+        var child2 = document.getElementById(room_id);
+        parentElement.insertBefore(child2, child1);
+    }
 }
 
 function roomOrderArrayHandler(room_id) {
-    if (localStorage.getItem('roomOrderParams')) {
+    if (localStorage.getItem("roomOrderParams")) {
         // convert the localStorage string to an array
-        var existing = JSON.parse(localStorage.getItem('roomOrderParams'));
+        var existing = JSON.parse(localStorage.getItem("roomOrderParams"));
         if (existing.includes(room_id)) {
             /* if room_id is in the array already, delete it 
             so that it can be added afresh at the top of the array */
@@ -801,20 +729,20 @@ function roomOrderArrayHandler(room_id) {
         }
         // adds the new element to the beginning of the array
         existing.unshift(room_id.toString())
-        localStorage.setItem('roomOrderParams', JSON.stringify(existing));
+        localStorage.setItem("roomOrderParams", JSON.stringify(existing));
     }
     else {
         // If no existing data, create an array
         var array = [];
         // adds the new element to the beginning of the array
         array.unshift(room_id.toString());
-        localStorage.setItem('roomOrderParams', JSON.stringify(array));
+        localStorage.setItem("roomOrderParams", JSON.stringify(array));
     }
-    swapRoomPostionOnNewMessage(JSON.parse(localStorage.getItem('roomOrderParams'))[0]);
+    swapRoomPostionOnNewMessage(JSON.parse(localStorage.getItem("roomOrderParams"))[0]);
 }
 
 function roomOrder() {
-    var counterObject = JSON.parse(localStorage.getItem('roomOrderParams'));
+    var counterObject = JSON.parse(localStorage.getItem("roomOrderParams"));
     
     if (counterObject) {
         counterObject.reverse();
