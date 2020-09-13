@@ -3,6 +3,4 @@
 /.vscode
 /__pycache__
 chezchat/__pycache__
-chezchat/__init__.pyc
 /chezchat/database.db
-/run.pyc
