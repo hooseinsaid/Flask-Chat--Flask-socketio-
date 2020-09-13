@@ -442,3 +442,7 @@ span.name-header {
     font-size: 10px;
     margin-left: auto;
 }
+
+.modal-open .modal {
+    overflow-y: hidden !important;
+}
