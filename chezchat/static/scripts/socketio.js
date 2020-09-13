@@ -20,31 +20,25 @@ function verify_status() {
 
             var data = JSON.parse(this.responseText);
             var hours = (moment() - moment(data["last_seen"])) / (1000 * 3600)
-            console.log(hours)
             
             if (data["status"] === "offline") {
                 if (data["forced_offline"] == true) {
-                    // userStatusInfo.innerHTML = `${data["username"]} is offline from verify_status after server crashed`;
                     userStatusInfo.innerHTML = "offline";
                 }
                 else {
                     if (hours <= (24 * 7)) {
-                        // userStatusInfo.innerHTML = `${data["username"]} was last seen ${moment(data["last_seen"]).fromNow()} from verify_status`;
                         userStatusInfo.innerHTML = `last seen ${moment(data["last_seen"]).fromNow()}`;
                     }
                     else {
-                        // userStatusInfo.innerHTML = `${data["username"]} was last seen ${moment(data["last_seen"]).format("LL")} from verify_status`;
                         userStatusInfo.innerHTML = `last seen ${moment(data["last_seen"]).format("LL")} at ${moment(data["last_seen"]).format("HH:mm")}`;
                     }
                 }
             }
             else {
-                // userStatusInfo.innerHTML = `${data["username"]} is ${data["status"]} from verify_status`;
                 userStatusInfo.innerHTML = `${data["status"]}`;
             }
         }
     };
-    // console.log(getUser.innerHTML)
     var data = JSON.stringify({"user": getUser.innerHTML});
     xhttp.send(data);
 }
@@ -312,7 +306,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     socket.on("reconnecting", function() {
-        console.log("reconnecting");
         myStatus.innerHTML = "Reconnecting...";
     });
 });

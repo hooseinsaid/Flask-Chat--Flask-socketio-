@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import render_template, flash, redirect, url_for, session, abort, request, jsonify
-from flask_socketio import send, emit, join_room, leave_room, disconnect
+from flask_socketio import send, emit, disconnect
 from chezchat import socketio, app, db
 from chezchat.models import *
 from chezchat.forms import *
@@ -33,8 +33,6 @@ def home():
         if not Room.query.filter_by(name=room_name_variant_one).first() and not Room.query.filter_by(name=room_name_variant_two).first():
             non_friend_users.append(user)
 
-    # use ajax to avoid redirect maybe
-    # dismiss modal if success code else show errors
     # create new room
     if form.submit.data:
         if form.validate_on_submit():
@@ -185,8 +183,6 @@ def remove_user():
 
 
 def userReceivedCallback(data):
-    print(f'\n\n{"message delivered"}\n\n')
-    # update a boolean column in the history table called delivered for rendering from db
     room = Room.query.filter_by(room_id=data['room_id']).first()
     if room.private_room == True:
         delivered_msg = History.query.filter_by(msg_id=data['msg_id']).first()
@@ -208,26 +204,20 @@ def userReceivedCallback(data):
 def userReceivedDBUpdate(msg):
     # here update a boolean history column to true
     # call this function whenever a user connects. find messages pertaining to them and call this fxn
-    # find all the messages directed to the private rooms he belongs that doesn't have the boolean field updated to true yet
     msg.msg_delivered = True
     db.session.commit()
 
 
 @socketio.on('handle_messages')
 def handleMessage(data):
-    # fix session_current_room in room_id below
     session_current_room = data['room_id']
-    print(f'\n\n{session_current_room} handle msgs\n\n')
     current_room = Room.query.filter_by(room_id=session_current_room).first()
-    # set room_id from here received from json data
     if current_room is not None:
         message = History(messages=data['messages'], uuid=data['uuid'], user_history=current_user, room_records=current_room)
         db.session.add(message)
         db.session.commit()
         data['msg_id'] = message.msg_id
         recipients_list = handle_recipients(current_room)
-
-        print(f'\n\n{recipients_list}\n\n from return fxn')
 
         for member in current_room.subscribers:
             if member != current_user:
@@ -261,25 +251,18 @@ def handle_recipients(current_room):
     
     # find online users who are members of the current room
     for key in sessionID.keys():
-        # the sorting of who to message as a funtion
         if key in room_members_username_list and key != current_user.username:
             recipients_list.append(sessionID[key])
-            print(f"{key} appended")
-        print(recipients_list)
     return recipients_list
 
 
 @socketio.on('connect')
 def test_connect():
-    # global sessionID
-    # use session to put the sid generated when the client connects in session
-    # like this session[current_user.username] = sid
-    # checks whether the user has an active connection and if so disconnects it
-    # and connects afresh
+    # checks whether the user has another sid to his username and if so disconnects it
+    # before connecting afresh
     if current_user.username in sessionID.keys():
-        # emits to the client to disconnect
+        # emits to the old sid to disconnect
         emit('prevent_double_session', room=sessionID[current_user.username])
-        print(f'\n\n\n\n{current_user.username} with old {sessionID[current_user.username]} sid')
 
         # diconnect from the server side for good measure
         disconnect(sid=sessionID[current_user.username])
@@ -310,17 +293,11 @@ def test_connect():
     db.session.commit()
 
     sessionID[current_user.username] = request.sid
-    print(f'\n\n\n\n{current_user.username} with {request.sid} has connection re-established')
-    print(f"{sessionID[current_user.username]} dictionary")
-    print(sessionID)
-    print(f'\n\n\n\n')
     current_user.online_at = datetime.utcnow()
     db.session.commit()
-    # here thing will work differently check all the rooms I belong to and emit to them
     emit('broadcast', {'username': current_user.username, 'info': 'online'}, include_self=False, broadcast=True)
 
 
-# triggered when the server pongs the client and can't connect with it
 @socketio.on('disconnect')
 def test_disconnect():
     # if the sid from connect is same as now, means we are offline, then pop
@@ -329,24 +306,15 @@ def test_disconnect():
         current_user.last_seen = datetime.utcnow()
         current_user.last_seen_update_on_server_restart = False
         db.session.commit()
-
-    # print(f'\n\n\n\n{sessionID[current_user.username]} and {request.sid} compare on disconnect\n\n\n\n')
-    print(f'\n\n\n\n{current_user.username} with {request.sid} has connection lost\n\n\n\n')
-    print(f'\n\n\n\n{sessionID} dictionary')
-    # here thing will work differently check all the rooms I belong to and emit to them
     emit('broadcast', {'username': current_user.username, 'info': 'offline'}, include_self=False, broadcast=True)
 
 
 @socketio.on('broadcast')
 def broadcast(data):
     session_current_room = data['room_id']
-    print(f'\n\n{session_current_room} from broadcast\n\n')
-    # fix session_current_room in room_id below get value from emiited events. will be stored in local storage
     current_room = Room.query.filter_by(room_id=session_current_room).first()
     if current_room:
         recipients_list = handle_recipients(current_room)
-        print(f'\n\n{recipients_list}from return fxn broadcast\n\n')
-        # here the members of the room I mean to address will get the msg
         for recipient in recipients_list:
             emit('broadcast', {'username': data['username'], 'info': data['info']}, room=recipient)
 
