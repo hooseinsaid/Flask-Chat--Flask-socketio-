@@ -62,7 +62,7 @@ class Room(db.Model):
     private_room = db.Column(db.Boolean, default=False)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    room_history = db.relationship('History', backref='room_records', lazy='dynamic')
+    room_history = db.relationship('History', order_by='asc(History.timestamp)', backref='room_records', lazy='dynamic')
 
 class HistorySchema(ma.SQLAlchemyAutoSchema):
     class Meta:
