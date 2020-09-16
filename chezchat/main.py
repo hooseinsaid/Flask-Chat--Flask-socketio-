@@ -15,16 +15,12 @@ def home():
     non_friend_users = []
     friends_list = []
     all_users = Users.query.all()
-    all_rooms = Room.query.all()
-    rooms = current_user.room_subscribed
-    private_friend_room = []
-    for room in rooms:
-        if room.private_room == True:
-            for friend in room.subscribers:
-                if friend != current_user:
-                    friends_list.append(friend)
-                    private_friend_room.append(room)
-    zipped_friends_list = zip(friends_list, private_friend_room)
+    all_rooms = Room.query.join(History, Room.room_history).order_by(History.timestamp.desc())
+    current_user_rooms = current_user.room_subscribed
+    rooms = [] #ordered
+    for room in all_rooms:
+        if room in current_user_rooms:
+            rooms.append(room)
 
     # find users not in current_user's friend's list
     for user in all_users:
@@ -48,8 +44,7 @@ def home():
             flash('Room not created. Make sure the name field is not empty and is at least 4 characters long', 'danger')
             return redirect(url_for('home'))
     return render_template('chatroom.html', form=form, rooms=rooms, current_user=current_user, 
-                            all_rooms=all_rooms, all_users=all_users, non_friend_users=non_friend_users, 
-                            zipped_friends_list=zipped_friends_list)
+                            all_rooms=all_rooms, non_friend_users=non_friend_users)
 
 
 @app.route('/room-details', methods=['GET', 'POST'])

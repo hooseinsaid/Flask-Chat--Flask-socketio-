@@ -176,9 +176,8 @@ function processJoinRoom(data, element) {
 
     var button = createElement(
         "button", {
-            "class": "btn btn-danger btn-sm", 
+            "class": "btn btn-danger btn-sm roomView", 
             "onclick": "leaveRoom(this);",
-            "id": "roomView",
             "name": roomName,
             "value": roomID
         }

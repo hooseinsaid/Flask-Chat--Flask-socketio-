@@ -25,7 +25,7 @@ function getCurrentRoom(element) {
     showChatArea();
     
     // set this value so that verify_status can function from socketio.js
-    if (element.getElementsByTagName("button")[0].id !== "roomView") {
+    if (!element.getElementsByTagName("button")[0].classList.contains("roomView")) {
         getUser.innerHTML = friendUsername;
     }
     else {
