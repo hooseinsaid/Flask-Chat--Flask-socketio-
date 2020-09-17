@@ -130,13 +130,10 @@ document.addEventListener("DOMContentLoaded", () => {
         addOneTick(messageStatusTimeInfoWrapper);
 
         // rearranges the current room so that it"s on top
-        roomOrderArrayHandler(data.room_id)
-
-        // add the utc time now to dictionary as handleLastMessageHelper(data) needs it
-        data["timestamp"] = moment.utc();
+        swapRoomPostionOnNewMessage(data.room_id)
 
         // put the last message on the badge only after we are sure the server received it
-        handleLastMessageHelper(data)
+        addLastMessageBadge(data)
     }
 
     socket.on("message_delivered", uuid => {
@@ -152,12 +149,9 @@ document.addEventListener("DOMContentLoaded", () => {
         handleNotificationsHelper(data["room_id"], data["count"])
 
         // rearranges the latest msg so that it is on top
-        roomOrderArrayHandler(data.room_id)
+        swapRoomPostionOnNewMessage(data.room_id)
 
-        // changes the time format to UTC
-        data["timestamp"] = moment.utc(data["timestamp"]);
-
-        handleLastMessageHelper(data)
+        addLastMessageBadge(data)
     });
 
     // receives message from an the handle_messages event on the server side and displays them to a client
@@ -173,13 +167,10 @@ document.addEventListener("DOMContentLoaded", () => {
             handleNotificationsHelper(data.room_id, count)
         }
 
-        roomOrderArrayHandler(data.room_id)
-
-        // add the utc time now to dictionary as handleLastMessageHelper(data) needs it
-        data["timestamp"] = moment.utc();
+        swapRoomPostionOnNewMessage(data.room_id)
 
         // put the last message on the badge
-        handleLastMessageHelper(data)
+        addLastMessageBadge(data)
         
         // let"s the sender know that his msg has been received by the intended recipient
         userReceivedCallback(data);

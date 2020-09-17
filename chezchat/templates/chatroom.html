@@ -30,7 +30,7 @@
                         </div>
                     </div>
                     <div id="chattables">
-                        {% for room in rooms %}
+                        {% for room, room_params in rooms %}
                             {% if room.private_room == True %}
                                 {% for friend in room.subscribers %}
                                     {% if friend != current_user %}
@@ -39,11 +39,23 @@
                                             <div class="noWrapDisplay">
                                                 <div class="name-section">
                                                     <span class="name-header">{{ friend.name_surname }}</span>
-                                                    <span class="time-info"></span>
+                                                    {% if room_params %}
+                                                        <span class="time-info">
+                                                            <script>
+                                                                document.write(checkDate('{{ room_params.timestamp }}'));
+                                                            </script>
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="time-info"></span>
+                                                    {% endif %}
                                                 </div>
                                                 
                                                 <div class="roomDivInfo">
-                                                    <span class="lastMessage"></span>
+                                                    {% if room_params %}
+                                                        <span class="lastMessage">{{ room_params.messages }}</span>
+                                                    {% else %}
+                                                        <span class="lastMessage"></span>
+                                                    {% endif %}
                                                     <span class="badgeCounter"></span>
                                                 </div>
                                             </div>
@@ -59,11 +71,23 @@
                                         <div class="name-section">
                                             <span class="name-header">{{ room.name }}</span>
                                             <span class="group-marker">group</span>
-                                            <span class="time-info"></span>
+                                            {% if room_params %}
+                                                <span class="time-info">
+                                                    <script>
+                                                        document.write(checkDate('{{ room_params.timestamp }}'));
+                                                    </script>
+                                                </span>
+                                            {% else %}
+                                                <span class="time-info"></span>
+                                            {% endif %}
                                         </div>
                                         
                                         <div class="roomDivInfo">
-                                            <span class="lastMessage"></span>
+                                            {% if room_params %}
+                                                <span class="lastMessage">{{ room_params.author }}: {{ room_params.messages }}</span>
+                                            {% else %}
+                                                <span class="lastMessage"></span>
+                                            {% endif %}
                                             <span class="badgeCounter"></span>
                                         </div>
                                     </div>
@@ -245,6 +269,16 @@
 
 {% endblock %}
 
+
+{% block suplementaryScripts %}
+
+    <!-- Helper scripts for functionality -->
+    <script src="{{ url_for('static', filename='scripts/extras.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/extras-2.js') }}"></script>
+
+{% endblock %}
+
+
 {% block scripts %}
 
     <!-- Get current_user.username -->
@@ -257,10 +291,6 @@
 
     <!-- Custom SocketIO JS -->
     <script src="{{ url_for('static', filename='scripts/socketio.js') }}"></script>
-
-    <!-- Helper scripts for functionality -->
-    <script src="{{ url_for('static', filename='scripts/extras.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/extras-2.js') }}"></script>
 
     <!-- add active class for highlight on click with JQuery -->
     <script>

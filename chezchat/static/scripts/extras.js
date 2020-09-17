@@ -1,3 +1,5 @@
+localStorage.clear();
+
 function ajaxCalls(params, element, callback) {
     var xhttp = new XMLHttpRequest();
     xhttp.open("POST", params.url, true);

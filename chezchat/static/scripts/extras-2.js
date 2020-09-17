@@ -65,12 +65,6 @@ function processgetCurrentRoom(data, element) {
 
     }
 
-    // put the last message on the badge
-    // call only if there's a message in the group already
-    if (room_history.length !== 0) {
-        handleLastMessageHelper(room_history[room_history.length - 1]);
-    }
-
     room_members = data.room_members;
     if (current_room.private_room !== true) {
         for (x in room_members) {
@@ -115,69 +109,47 @@ function addNotificationBadge(room_id, data) {
 
 }
 
-function addLastMessageBadge(room_id, data) {
+function addLastMessageBadge(data) {
 
-    var span_lastMessage = document.querySelector(`[id=${CSS.escape(room_id)}] .roomDivInfo span.lastMessage`);
+    var span_lastMessage = document.querySelector(`[id=${CSS.escape(data.room_id)}] .roomDivInfo span.lastMessage`);
 
     if (span_lastMessage) {
-        var elementGroupTest = document.querySelector(`[id=${CSS.escape(room_id)}] .noWrapDisplay .name-section span.group-marker`)
+        var elementGroupTest = document.querySelector(`[id=${CSS.escape(data.room_id)}] .noWrapDisplay .name-section span.group-marker`)
 
-        var lastMessageTimeSpan = document.querySelector(`[id=${CSS.escape(room_id)}] .noWrapDisplay .name-section span.time-info`)
+        var lastMessageTimeSpan = document.querySelector(`[id=${CSS.escape(data.room_id)}] .noWrapDisplay .name-section span.time-info`)
 
         // if the current room is a group, add the author to the badge
-        if (elementGroupTest)
-        {
-            span_lastMessage.innerHTML = `${data[room_id][1]}: ${data[room_id][0]}`;
+        if (elementGroupTest) {
+            span_lastMessage.innerHTML = `${data.author}: ${data.messages}`;
         }
         else {
-            span_lastMessage.innerHTML = data[room_id][0];
+            span_lastMessage.innerHTML = data.messages;
         }
-
-        var date_ = checkDate(data[room_id][2]);
-        lastMessageTimeSpan.innerHTML = date_;
+        addLastMessageTime(lastMessageTimeSpan, data.timestamp);
     }
-    
+}
+
+function addLastMessageTime(element, timestamp) {
+    var date_ = checkDate(timestamp);
+    element.innerHTML = date_;
 }
 
 function checkDate(date) {
 
     var currentDate = moment.utc();
 
-    // date is already in UTC
-    var refDate = moment(date);
+    var refDate = moment.utc(date);
 
-    var currentDateinDateFormat = moment.utc(currentDate).local().format("MMMM DD, YYYY");
-    var refDateinDateFormat = moment.utc(refDate).local().format("MMMM DD, YYYY");
+    var currentDateinDateFormat = currentDate.local().format("MMMM DD, YYYY");
+    var refDateinDateFormat = refDate.local().format("MMMM DD, YYYY");
 
-    var currentDateinYearFormat = moment.utc(currentDate).local().format("YYYY");
-    var refDateinYearformat = moment.utc(refDate).local().format("YYYY");
+    var currentDateinYearFormat = currentDate.local().format("YYYY");
+    var refDateinYearformat = refDate.local().format("YYYY");
 
-    if (currentDateinDateFormat == refDateinDateFormat) return refDate.format("HH:mm");
-    if (currentDateinYearFormat == refDateinYearformat) return refDate.format("MMM DD");
+    if (currentDateinDateFormat == refDateinDateFormat) return refDate.local().format("HH:mm");
+    if (currentDateinYearFormat == refDateinYearformat) return refDate.local().format("MMM DD");
 
-    return refDate.format("DD/MM/YYYY");
-}
-
-function handleLastMessageHelper(data) {
-    var roomID = data.room_id;
-    var message = data.messages;
-    // last msg timestamp to UTC
-    var time = moment.utc(data.timestamp);
-    var author = data.author;
-
-    if (localStorage.getItem("lastMessageParams")) {
-        // convert the localStorage string to a dictionary
-        var existing = JSON.parse(localStorage.getItem("lastMessageParams"));
-        existing[roomID] = [message, author, time];
-        localStorage.setItem("lastMessageParams", JSON.stringify(existing));
-    }
-    else {
-        // If no existing data, create an dictionary
-        newParams = {};
-        newParams[roomID] = [message, author, time];
-        localStorage.setItem("lastMessageParams", JSON.stringify(newParams));
-    }
-    addLastMessageBadge(roomID, JSON.parse(localStorage.getItem("lastMessageParams")));
+    return refDate.local().format("DD/MM/YYYY");
 }
 
 function handleNotificationsHelper(room_id, count) {
@@ -218,21 +190,6 @@ function persistentNotificationBadge() {
 
 // so that the notifications can survive reload
 persistentNotificationBadge();
-
-function persistentlastMessageBadge() {
-    var counterObject = JSON.parse(localStorage.getItem("lastMessageParams"));
-    console.log(counterObject)
-    
-    if (counterObject) {
-        for (var key in counterObject) {
-            if (counterObject.hasOwnProperty(key)) {
-                addLastMessageBadge(key, counterObject)
-            }
-        }
-    }
-}
-
-persistentlastMessageBadge();
 
 function showChatArea() {
 
@@ -428,39 +385,3 @@ function swapRoomPostionOnNewMessage(room_id) {
         parentElement.insertBefore(child2, child1);
     }
 }
-
-function roomOrderArrayHandler(room_id) {
-    if (localStorage.getItem("roomOrderParams")) {
-        // convert the localStorage string to an array
-        var existing = JSON.parse(localStorage.getItem("roomOrderParams"));
-        if (existing.includes(room_id)) {
-            /* if room_id is in the array already, delete it 
-            so that it can be added afresh at the top of the array */
-            existing.splice(existing.indexOf(room_id), 1)
-        }
-        // adds the new element to the beginning of the array
-        existing.unshift(room_id.toString())
-        localStorage.setItem("roomOrderParams", JSON.stringify(existing));
-    }
-    else {
-        // If no existing data, create an array
-        var array = [];
-        // adds the new element to the beginning of the array
-        array.unshift(room_id.toString());
-        localStorage.setItem("roomOrderParams", JSON.stringify(array));
-    }
-    swapRoomPostionOnNewMessage(JSON.parse(localStorage.getItem("roomOrderParams"))[0]);
-}
-
-function roomOrder() {
-    var counterObject = JSON.parse(localStorage.getItem("roomOrderParams"));
-    
-    if (counterObject) {
-        counterObject.reverse();
-        for (var count in counterObject) {
-            swapRoomPostionOnNewMessage(counterObject[count]);
-        }
-    }
-}
-// so that the order can survive reload
-roomOrder();

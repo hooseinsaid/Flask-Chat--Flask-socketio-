@@ -15,12 +15,16 @@ def home():
     non_friend_users = []
     friends_list = []
     all_users = Users.query.all()
-    all_rooms = Room.query.join(History, Room.room_history).order_by(History.timestamp.desc())
+    all_rooms = Room.query.outerjoin(History, Room.room_history).order_by(History.timestamp.desc()).all()
     current_user_rooms = current_user.room_subscribed
-    rooms = [] #ordered
+    rooms_ordered = []
+    room_params = []
     for room in all_rooms:
         if room in current_user_rooms:
-            rooms.append(room)
+            last_message_params = room.room_history.order_by(None).order_by(History.msg_id.desc()).first()
+            rooms_ordered.append(room)
+            room_params.append(last_message_params)
+    rooms = zip(rooms_ordered, room_params)
 
     # find users not in current_user's friend's list
     for user in all_users:
