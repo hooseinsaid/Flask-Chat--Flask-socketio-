@@ -1,4 +1,4 @@
-localStorage.clear();
+// localStorage.clear();
 
 function ajaxCalls(params, element, callback) {
     var xhttp = new XMLHttpRequest();
@@ -141,7 +141,7 @@ function joinRoom(element) {
 }
 
 function processJoinRoom(data, element) {
-    
+
     var roomID = element.value;
     var roomName = element.name;
 
@@ -164,12 +164,16 @@ function processJoinRoom(data, element) {
     groupMarkerSpan.innerHTML = "group";
 
     var timeSpan = createElement("span", {"class": "time-info"});
+    timeSpan.innerHTML = checkDate(data.room_last_message.timestamp);
 
     appendChildren(div2, [nameSpan, groupMarkerSpan, timeSpan])
 
 
     var div3 = createElement("div", {"class": "roomDivInfo"});
+
     var lastMessageSpan = createElement("span", {"class": "lastMessage"});
+    lastMessageSpan.innerHTML = `${data.room_last_message.author}: ${data.room_last_message.messages}`;
+
     var badgeCounterSpan = createElement("span", {"class": "badgeCounter"})
 
     appendChildren(div3, [lastMessageSpan, badgeCounterSpan])

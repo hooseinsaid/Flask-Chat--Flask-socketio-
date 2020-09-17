@@ -21,7 +21,7 @@ def home():
     room_params = []
     for room in all_rooms:
         if room in current_user_rooms:
-            last_message_params = room.room_history.order_by(None).order_by(History.msg_id.desc()).first()
+            last_message_params = room.room_history.order_by(None).order_by(History.timestamp.desc()).first()
             rooms_ordered.append(room)
             room_params.append(last_message_params)
     rooms = zip(rooms_ordered, room_params)
@@ -49,6 +49,19 @@ def home():
             return redirect(url_for('home'))
     return render_template('chatroom.html', form=form, rooms=rooms, current_user=current_user, 
                             all_rooms=all_rooms, non_friend_users=non_friend_users)
+
+
+@app.route('/time-refresh', methods=['GET', 'POST'])
+@login_required
+def time_refresh():
+    current_user_rooms = current_user.room_subscribed
+    if current_user_rooms:
+        timestamps = {}
+        for room in current_user_rooms:
+            last_message = room.room_history.order_by(None).order_by(History.timestamp.desc()).first()
+            if last_message:
+                timestamps[last_message.room_id] = last_message.timestamp
+    return jsonify({'timestamps' : timestamps})
 
 
 @app.route('/room-details', methods=['GET', 'POST'])
@@ -109,11 +122,14 @@ def logout():
 @login_required
 def join_room():
     room = Room.query.filter_by(room_id=request.json['room_id']).first()
+    room_history = room.room_history.order_by(None).order_by(History.timestamp.desc()).first()
+    history_schema = HistorySchema()
+    room_last_message = history_schema.dump(room_history)
     if room is not None:
         if room not in current_user.room_subscribed:
             room.subscribers.append(current_user)
             db.session.commit()
-    return jsonify()
+    return jsonify({'room_last_message' : room_last_message})
 
 
 @app.route('/leave-room', methods=['GET', 'POST'])

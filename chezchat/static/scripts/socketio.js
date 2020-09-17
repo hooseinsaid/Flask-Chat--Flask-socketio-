@@ -10,39 +10,24 @@ function verify_status() {
     // query the db on connect of current_user using ajax to 
     // know the current recipient"s status and update id #user_status below
     // grab current user variable on the page and query with it
-    var xhttp = new XMLHttpRequest();
-    xhttp.open("POST", "/get-user-status", true);
-    xhttp.setRequestHeader("Content-Type", "application/json"); 
-
-    xhttp.onreadystatechange = function() {
-
-        if (this.readyState === 4 && this.status === 200) {
-
-            var data = JSON.parse(this.responseText);
-            var hours = (moment() - moment(data["last_seen"])) / (1000 * 3600)
-            
-            if (data["status"] === "offline") {
-                if (data["forced_offline"] == true) {
-                    userStatusInfo.innerHTML = "offline";
-                }
-                else {
-                    if (hours <= (24 * 7)) {
-                        userStatusInfo.innerHTML = `last seen ${moment(data["last_seen"]).fromNow()}`;
-                    }
-                    else {
-                        userStatusInfo.innerHTML = `last seen ${moment(data["last_seen"]).format("LL")} at ${moment(data["last_seen"]).format("HH:mm")}`;
-                    }
-                }
-            }
-            else {
-                userStatusInfo.innerHTML = `${data["status"]}`;
-            }
-        }
-    };
-    var data = JSON.stringify({"user": getUser.innerHTML});
-    xhttp.send(data);
+    var params = {"url": "/get-user-status", "payload": getUser.innerHTML, "key": "user"};
+    ajaxCalls(params, null, processVerifyStatus);
 }
 
+function processVerifyStatus(data) {
+            
+    if (data["status"] === "offline") {
+        if (data["forced_offline"] == true) {
+            userStatusInfo.innerHTML = "offline";
+        }
+        else {
+            userStatusInfo.innerHTML = checkDate(data["last_seen"], true);
+        }
+    }
+    else {
+        userStatusInfo.innerHTML = `${data["status"]}`;
+    }
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     var socket = io();

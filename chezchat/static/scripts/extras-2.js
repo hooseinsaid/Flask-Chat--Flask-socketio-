@@ -116,8 +116,6 @@ function addLastMessageBadge(data) {
     if (span_lastMessage) {
         var elementGroupTest = document.querySelector(`[id=${CSS.escape(data.room_id)}] .noWrapDisplay .name-section span.group-marker`)
 
-        var lastMessageTimeSpan = document.querySelector(`[id=${CSS.escape(data.room_id)}] .noWrapDisplay .name-section span.time-info`)
-
         // if the current room is a group, add the author to the badge
         if (elementGroupTest) {
             span_lastMessage.innerHTML = `${data.author}: ${data.messages}`;
@@ -125,8 +123,14 @@ function addLastMessageBadge(data) {
         else {
             span_lastMessage.innerHTML = data.messages;
         }
-        addLastMessageTime(lastMessageTimeSpan, data.timestamp);
+
+        processLastMessageTimeSpan(data.room_id, data.timestamp)
     }
+}
+
+function processLastMessageTimeSpan(room_id, timestamp) {
+    var lastMessageTimeSpan =  document.querySelector(`[id=${CSS.escape(room_id)}] .noWrapDisplay .name-section span.time-info`);
+    addLastMessageTime(lastMessageTimeSpan, timestamp);
 }
 
 function addLastMessageTime(element, timestamp) {
@@ -134,7 +138,7 @@ function addLastMessageTime(element, timestamp) {
     element.innerHTML = date_;
 }
 
-function checkDate(date) {
+function checkDate(date, lastSeenCheck) {
 
     var currentDate = moment.utc();
 
@@ -146,10 +150,19 @@ function checkDate(date) {
     var currentDateinYearFormat = currentDate.local().format("YYYY");
     var refDateinYearformat = refDate.local().format("YYYY");
 
-    if (currentDateinDateFormat == refDateinDateFormat) return refDate.local().format("HH:mm");
-    if (currentDateinYearFormat == refDateinYearformat) return refDate.local().format("MMM DD");
+    if (lastSeenCheck == true) {
 
-    return refDate.local().format("DD/MM/YYYY");
+        if ((currentDate - refDate) < 604800000) return `last seen ${refDate.local().fromNow()}`;
+        return `last seen ${refDate.local().format("LL")} at ${refDate.local().format("HH:mm")}` 
+    }
+    else {
+
+        if (currentDateinDateFormat == refDateinDateFormat) return refDate.local().format("HH:mm");
+        if ((currentDate - refDate) < 604800000) return refDate.local().format("ddd");
+        if (currentDateinYearFormat == refDateinYearformat) return refDate.local().format("MMM DD");
+
+        return refDate.local().format("DD/MM/YYYY");
+    }
 }
 
 function handleNotificationsHelper(room_id, count) {
@@ -385,3 +398,21 @@ function swapRoomPostionOnNewMessage(room_id) {
         parentElement.insertBefore(child2, child1);
     }
 }
+
+function timeRefresh() {
+    var params = {"url": "/time-refresh"};
+    ajaxCalls(params, null, showResult);
+}
+
+function showResult(data) {
+    objValues = data.timestamps
+    if (objValues) {
+        for (var key in objValues) {
+            if (objValues.hasOwnProperty(key)) {
+                processLastMessageTimeSpan(key, objValues[key])
+            }
+        }
+    }
+}
+
+setInterval(function() { timeRefresh(); }, 60000);
