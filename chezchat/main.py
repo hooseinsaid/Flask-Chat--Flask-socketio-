@@ -15,7 +15,7 @@ def home():
     non_friend_users = []
     friends_list = []
     all_users = Users.query.all()
-    all_rooms = Room.query.outerjoin(History, Room.room_history).order_by(History.timestamp.desc()).all()
+    all_rooms = Room.query.outerjoin(History, Room.room_history).order_by(History.timestamp.desc())
     current_user_rooms = current_user.room_subscribed
     rooms_ordered = []
     room_params = []
