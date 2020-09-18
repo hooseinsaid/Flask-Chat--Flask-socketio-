@@ -40,31 +40,25 @@ function processgetCurrentRoom(data, element) {
     
     roomID = element.id;
 
-    // clear localstorage notification counter
-    if (JSON.parse(localStorage.getItem("notifyParams"))) {
-        resetStorageNotification(roomID);
+    var span_badgeCounter = getNotificationBadgeElement(roomID);
+    if (span_badgeCounter.innerHTML != "") {
+        resetNotificationBadgeCounter(roomID);
     }
 
     document.getElementById("pre-user-select").hidden = true;
-
-    InfoModalBody = document.getElementById("roomInfoModal");
     messageDisplay = document.getElementById("messages")
-
-    InfoModalBody.innerHTML = "";
-
-    // add data to localStorage 
 
     current_room = data.current_room;
     room_history = current_room.room_history;
     for (x in room_history) {
-        // create a function and use here and in socket append msgs
         msg = room_history[x];
         msg["from_db"] = true;
-        // console.log(msg)
         append_msgs(msg);
 
     }
 
+    InfoModalBody = document.getElementById("roomInfoModal");
+    InfoModalBody.innerHTML = "";
     room_members = data.room_members;
     if (current_room.private_room !== true) {
         for (x in room_members) {
@@ -83,35 +77,43 @@ function processgetCurrentRoom(data, element) {
     }
 }
 
-function resetStorageNotification(roomID) {
-    var resetNotificationCounter = JSON.parse(localStorage.getItem("notifyParams"));
-    if (resetNotificationCounter) {
-        resetNotificationCounter[roomID] = 0;
-        localStorage.setItem("notifyParams", JSON.stringify(resetNotificationCounter));
-    }
+function resetNotificationBadgeCounter(room_id) {
+    // onclick send an ajax to clear db
 
-    addNotificationBadge(roomID, JSON.parse(localStorage.getItem("notifyParams")));
-}
+    var params = {"url": "/clear-notifications", "payload": room_id, "key": "room_id"};
+    ajaxCalls(params, null, null);
 
-function addNotificationBadge(room_id, data) {
-
-    var span_badgeCounter = document.querySelector(`[id=${CSS.escape(room_id)}] .roomDivInfo span.badgeCounter`);
+    var span_badgeCounter = getNotificationBadgeElement(room_id);
 
     if (span_badgeCounter) {
-        if (data[room_id] === 0) {
-            span_badgeCounter.setAttribute("style", "visibility: hidden; min-width: 0")
-        }
-        else {
-            span_badgeCounter.setAttribute("style", "visibility: visible; min-width: 18px")
-            span_badgeCounter.innerHTML = data[room_id];
-        }
+        span_badgeCounter.innerHTML = '';
+        span_badgeCounter.setAttribute("style", "visibility: hidden; min-width: 0")
     }
+}
 
+function addNotificationBadge(room_id, count) {
+
+    var span_badgeCounter = getNotificationBadgeElement(room_id);
+    if (span_badgeCounter) {
+        span_badgeCounter.setAttribute("style", "visibility: visible; min-width: 18px")
+        former_count = span_badgeCounter.innerHTML;
+
+        span_badgeCounter.innerHTML = returnBadgeCount(former_count, count);
+    }
+}
+
+function returnBadgeCount(former_count, count) {
+    if (former_count != "") return parseInt(former_count) + parseInt(count);
+    return parseInt(count);
+}
+
+function getNotificationBadgeElement(room_id) {
+    return document.querySelector(`[id=${CSS.escape(room_id)}] .roomDivInfo span.badgeCounter`);
 }
 
 function addLastMessageBadge(data) {
 
-    var span_lastMessage = document.querySelector(`[id=${CSS.escape(data.room_id)}] .roomDivInfo span.lastMessage`);
+    var span_lastMessage = lastMessageBadgeElement(data);
 
     if (span_lastMessage) {
         var elementGroupTest = document.querySelector(`[id=${CSS.escape(data.room_id)}] .noWrapDisplay .name-section span.group-marker`)
@@ -128,6 +130,10 @@ function addLastMessageBadge(data) {
     }
 }
 
+function lastMessageBadgeElement(data) {
+    return document.querySelector(`[id=${CSS.escape(data.room_id)}] .roomDivInfo span.lastMessage`);
+}
+
 function processLastMessageTimeSpan(room_id, timestamp) {
     var lastMessageTimeSpan =  document.querySelector(`[id=${CSS.escape(room_id)}] .noWrapDisplay .name-section span.time-info`);
     addLastMessageTime(lastMessageTimeSpan, timestamp);
@@ -136,6 +142,30 @@ function processLastMessageTimeSpan(room_id, timestamp) {
 function addLastMessageTime(element, timestamp) {
     var date_ = checkDate(timestamp);
     element.innerHTML = date_;
+}
+
+function typingBadgeElement(data) {
+    return document.querySelector(`[id=${CSS.escape(data.room_id)}] .roomDivInfo span.lastMessage.typing`);
+}
+
+function hideUnhideTypingBadge(data) {
+        
+    var lastMessageBadge = lastMessageBadgeElement(data);
+    var typingBadge = typingBadgeElement(data);
+
+    if (lastMessageBadge && typingBadge) {
+            
+        if (data.info == "typing...") {
+            lastMessageBadge.setAttribute("hidden", true);
+            typingBadge.removeAttribute("hidden");
+            typingBadge.innerHTML = 'typing...';
+        }
+        else {
+            lastMessageBadge.removeAttribute("hidden");
+            typingBadge.setAttribute("hidden", true);
+            typingBadge.innerHTML = '';
+        }
+    }
 }
 
 function checkDate(date, lastSeenCheck) {
@@ -153,7 +183,9 @@ function checkDate(date, lastSeenCheck) {
     if (lastSeenCheck == true) {
 
         if ((currentDate - refDate) < 604800000) return `last seen ${refDate.local().fromNow()}`;
-        return `last seen ${refDate.local().format("LL")} at ${refDate.local().format("HH:mm")}` 
+        if (currentDateinYearFormat == refDateinYearformat) return `last seen ${refDate.local().format("MMMM DD")} at ${refDate.local().format("HH:mm")}`;
+        
+        return `last seen ${refDate.local().format("DD/MM/YYYY")} at ${refDate.local().format("HH:mm")}`;
     }
     else {
 
@@ -164,45 +196,6 @@ function checkDate(date, lastSeenCheck) {
         return refDate.local().format("DD/MM/YYYY");
     }
 }
-
-function handleNotificationsHelper(room_id, count) {
-
-    if (localStorage.getItem("notifyParams")) {
-        // convert the localStorage string to a dictionary
-        var existing = JSON.parse(localStorage.getItem("notifyParams"));
-        if (existing[room_id]) {
-            existing[room_id] = existing[room_id] + count;
-        }
-        else {
-            existing[room_id] = count;
-        }
-        localStorage.setItem("notifyParams", JSON.stringify(existing));
-    }
-    else {
-        // If no existing data, create an dictionary
-        newParams = {};
-        newParams[room_id] = count;
-        localStorage.setItem("notifyParams", JSON.stringify(newParams));
-    }
-
-    addNotificationBadge(room_id, JSON.parse(localStorage.getItem("notifyParams")));
-}
-
-function persistentNotificationBadge() {
-    var counterObject = JSON.parse(localStorage.getItem("notifyParams"));
-    console.log(counterObject)
-    
-    if (counterObject) {
-        for (var key in counterObject) {
-            if (counterObject.hasOwnProperty(key)) {
-                addNotificationBadge(key, counterObject)
-            }
-        }
-    }
-}
-
-// so that the notifications can survive reload
-persistentNotificationBadge();
 
 function showChatArea() {
 
@@ -401,10 +394,10 @@ function swapRoomPostionOnNewMessage(room_id) {
 
 function timeRefresh() {
     var params = {"url": "/time-refresh"};
-    ajaxCalls(params, null, showResult);
+    ajaxCalls(params, null, appendRefreshedTimes);
 }
 
-function showResult(data) {
+function appendRefreshedTimes(data) {
     objValues = data.timestamps
     if (objValues) {
         for (var key in objValues) {

@@ -8,7 +8,9 @@ function ajaxCalls(params, element, callback) {
     xhttp.onreadystatechange = function() {
         if (this.readyState === 4 && this.status === 200) {
             var response = JSON.parse(this.responseText);
-            callback(response, element);
+            if (callback != null) {
+                callback(response, element);
+            }
         }
     };
     var data = JSON.stringify({[params.key]: params.payload});
@@ -48,9 +50,10 @@ function processAddUser(data, element) {
 
     var div3 = createElement("div", {"class": "roomDivInfo"});
     var lastMessageSpan = createElement("span", {"class": "lastMessage"});
+    var lastMessageTypingSpan = createElement("span", {"class": "lastMessage typing", "hidden": true});
     var badgeCounterSpan = createElement("span", {"class": "badgeCounter"})
 
-    appendChildren(div3, [lastMessageSpan, badgeCounterSpan])
+    appendChildren(div3, [lastMessageSpan, lastMessageTypingSpan, badgeCounterSpan])
 
     appendChildren(divWrap, [div2, div3])
 

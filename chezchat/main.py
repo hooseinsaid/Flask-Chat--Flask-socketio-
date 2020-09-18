@@ -19,12 +19,16 @@ def home():
     current_user_rooms = current_user.room_subscribed
     rooms_ordered = []
     room_params = []
+    notification_counts = []
     for room in all_rooms:
         if room in current_user_rooms:
             last_message_params = room.room_history.order_by(None).order_by(History.timestamp.desc()).first()
+            room_notification_count = persistentNotifications(room.room_id)
             rooms_ordered.append(room)
             room_params.append(last_message_params)
-    rooms = zip(rooms_ordered, room_params)
+            notification_counts.append(room_notification_count)
+            print(room_notification_count)
+    rooms = zip(rooms_ordered, room_params, notification_counts)
 
     # find users not in current_user's friend's list
     for user in all_users:
@@ -49,6 +53,34 @@ def home():
             return redirect(url_for('home'))
     return render_template('chatroom.html', form=form, rooms=rooms, current_user=current_user, 
                             all_rooms=all_rooms, non_friend_users=non_friend_users)
+
+
+
+def persistentNotifications(room_id):
+    notification = Notifications.query.filter_by(recipient_id=current_user.id, room_id=room_id).first()
+    data = {}
+    if notification:
+        data['count'] = notification.count
+        data['messages'] = notification.last_message
+        data['author'] = notification.last_author
+        data['timestamp'] = notification.last_time.strftime("%Y-%m-%d %H:%M:%S.%f")
+        data['room_id'] = notification.room_id
+
+    return data
+
+
+@app.route('/clear-notifications', methods=['GET', 'POST'])
+@login_required
+def clear_notifications():
+    delete_notification(request.json['room_id'])
+    return jsonify()
+
+
+def delete_notification(room_id):
+    notification = Notifications.query.filter_by(recipient_id=current_user.id, room_id=room_id).first()
+    if notification:
+        db.session.delete(notification)
+    db.session.commit()
 
 
 @app.route('/time-refresh', methods=['GET', 'POST'])
@@ -136,14 +168,11 @@ def join_room():
 @login_required
 def leave_room():
     room = Room.query.filter_by(room_id=request.json['room_id']).first()
-    notifications = Notifications.query.filter_by(recipient_id=current_user.id, room_id=room.room_id).first()
-    if notifications:
-        db.session.delete(notifications)
-        db.session.commit()
+    delete_notification(room.room_id)
     if room is not None:
         if room in current_user.room_subscribed:
             room.subscribers.remove(current_user)
-            db.session.commit()
+        db.session.commit()
     return jsonify()
 
 
@@ -175,10 +204,9 @@ def add_user():
 @login_required
 def remove_user():
     private_room = Room.query.filter_by(room_id=request.json['room_id']).first()
-    notifications = Notifications.query.filter_by(recipient_id=current_user.id, room_id=private_room.room_id).first()
-    if notifications:
-        db.session.delete(notifications)
-        db.session.commit()
+
+    delete_notification(private_room.room_id)
+
     if private_room is not None:
         # name is changed so it doesn't conflict when we want to add the user again
         # room is not deleted so we don't have a primary key mess
@@ -205,15 +233,6 @@ def userReceivedCallback(data):
 
         # on emit, change to double ticks 
         socketio.emit('message_delivered', data['uuid'], room=sessionID[current_user.username])
-
-    # The recipient_objects helps us identify the recipient in the notifications table
-    recipient_object = Users.query.filter_by(username=data['recipient']).first()
-    notification_to_update = Notifications.query.filter_by(recipient_id=recipient_object.id, room_id=room.room_id).first()
-    if notification_to_update:
-        notification_to_update.count -= 1
-        if notification_to_update.count == 0:
-            db.session.delete(notification_to_update)
-        db.session.commit()
 
 
 def userReceivedDBUpdate(msg):
@@ -248,9 +267,6 @@ def handleMessage(data):
                 db.session.commit()
             
     for recipient in recipients_list:
-        recipient_username = list(sessionID.keys())[list(sessionID.values()).index(recipient)]
-        data['recipient'] = recipient_username
-
         # on the frontend increment a notification count and display on badge
         emit('handle_messages', data, room=recipient, callback=userReceivedCallback)
     return data
@@ -294,19 +310,6 @@ def test_connect():
                 for recipient in recipients_list:
                     emit('message_delivered', msg_.uuid, room=recipient)
 
-    # deals with notifications when user connects
-    notifications = Notifications.query.filter_by(recipient_id=current_user.id).all()
-    for notification in notifications:
-        data = {}
-        data['count'] = notification.count
-        data['messages'] = notification.last_message
-        data['author'] = notification.last_author
-        data['timestamp'] = notification.last_time.strftime("%Y-%m-%d %H:%M:%S.%f")
-        data['room_id'] = notification.room_id
-        emit('notification', data, recipient=request.sid)
-        db.session.delete(notification)
-    db.session.commit()
-
     sessionID[current_user.username] = request.sid
     current_user.online_at = datetime.utcnow()
     db.session.commit()
@@ -331,7 +334,7 @@ def broadcast(data):
     if current_room:
         recipients_list = handle_recipients(current_room)
         for recipient in recipients_list:
-            emit('broadcast', {'username': data['username'], 'info': data['info']}, room=recipient)
+            emit('broadcast', data, room=recipient)
 
 
 @app.route('/get-user-status', methods=['GET', 'POST'])

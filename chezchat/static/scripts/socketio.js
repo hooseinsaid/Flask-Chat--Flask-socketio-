@@ -129,27 +129,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    socket.on("notification", data => {
-
-        handleNotificationsHelper(data["room_id"], data["count"])
-
-        // rearranges the latest msg so that it is on top
-        swapRoomPostionOnNewMessage(data.room_id)
-
-        addLastMessageBadge(data)
-    });
-
     // receives message from an the handle_messages event on the server side and displays them to a client
     socket.on("handle_messages", (data, userReceivedCallback) => {
         // send the msg only to the intended room
         if (localStorage.getItem("current_room_id") && data.room_id === localStorage.getItem("current_room_id")) {
             append_msgs(data);
-            // scrollDownChatWindow();
+
+            resetNotificationBadgeCounter(data.room_id)
         }
         else {
             // do not add to notification counter id user is in the target room already
             var count = 1;
-            handleNotificationsHelper(data.room_id, count)
+            addNotificationBadge(data.room_id, count)
         }
 
         swapRoomPostionOnNewMessage(data.room_id)
@@ -166,15 +157,16 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log(`${data.username} is ${data.info}`);
 
         // verify user status 2 seconds after key up
-        if (data.info == "verify_status" && getUser.innerHTML == data.username) {
-            verify_status();
+        if (getUser.innerHTML == data.username) {
+            if (data.info == "verify_status") {
+                verify_status();
+            }
+            else {
+                userStatusInfo.innerHTML = `${data.info}`;
+            }
         }
 
-        // get the html element and update it
-        if (getUser.innerHTML == data.username && data.info != "verify_status") {
-            // userStatusInfo.innerHTML = `${data.username} is ${data.info} from broadcast`;
-            userStatusInfo.innerHTML = `${data.info}`;
-        }
+        hideUnhideTypingBadge(data);
     });
 
     socket.on("update_remove_users", data => {
@@ -224,12 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         else {
             value = false;
-            socket.emit(
-                "broadcast", {
-                "username": username, 
-                "info": "verify_status", 
-                "room_id": localStorage.getItem("current_room_id") 
-            });
+            emitToBroadcast("verify_status");
         }
         initialTextLength = newLength;
         return value;
@@ -239,19 +226,27 @@ document.addEventListener("DOMContentLoaded", () => {
     function handleKeyPress(e) {
         // since keydown registers regardless of whether a chatacter is produced or not
         // check the input and see if there"s any character
-        var newLength = document.querySelector("#myMessage").value.length;
-        var typingCheck = testTyping(newLength);
-        if (typingCheck == true) {
-            clearTimeout(timer);
-            if (localStorage.getItem("current_room_id")) {
-                socket.emit(
-                    "broadcast", {
-                    "username": username, 
-                    "info": "typing...", 
-                    "room_id": localStorage.getItem("current_room_id")
-                });
+
+        // if not enter key
+        if (event.keyCode !== 13) {
+            var newLength = document.querySelector("#myMessage").value.length;
+            var typingCheck = testTyping(newLength);
+            if (typingCheck == true) {
+                clearTimeout(timer);
+                if (localStorage.getItem("current_room_id")) {
+                    emitToBroadcast("typing...");
+                }
             }
         }
+    }
+
+    function emitToBroadcast(value) {
+        socket.emit(
+            "broadcast", {
+            "username": username, 
+            "info": value, 
+            "room_id": localStorage.getItem("current_room_id")
+        });
     }
 
     // when the user has stopped pressing on keys, set the timeout
@@ -270,12 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // to verify the users online/offline status afresh
             
             if (localStorage.getItem("current_room_id")) {
-                socket.emit(
-                    "broadcast", {
-                    "username": username, 
-                    "info": "verify_status", 
-                    "room_id": localStorage.getItem("current_room_id") 
-                });
+                emitToBroadcast("verify_status");
             }
 
         }, timeoutVal);
