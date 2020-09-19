@@ -120,13 +120,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // let"s the sender know that the server received their message
     function serverReceivedCallback(data) {
-        messageStatusTimeInfoWrapper = document.getElementById(data["uuid"]);
-
-        // adds one tick to the element with uuid as id
-        addOneTick(messageStatusTimeInfoWrapper);
+        messageStatusTimeInfoWrapper = receiveStatusElement(data["uuid"]);
 
         // rearranges the current room so that it"s on top
         swapRoomPostionOnNewMessage(data.room_id)
+
+        if (messageStatusTimeInfoWrapper) {
+            addOneTick(messageStatusTimeInfoWrapper);
+        }
 
         // put the last message on the badge only after we are sure the server received it
         addLastMessageBadge(data)
@@ -134,11 +135,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.on("message_delivered", uuid => {
         console.log("user received message")
-        messageStatusTimeInfoWrapper = document.getElementById(uuid);
+        messageStatusTimeInfoWrapper = receiveStatusElement(uuid);
         if (messageStatusTimeInfoWrapper) {
             addTwoTicks(messageStatusTimeInfoWrapper);
         }
     });
+
+    function receiveStatusElement(uuid) {
+        return document.getElementById(uuid);
+    }
 
     // receives message from an the handle_messages event on the server side and displays them to a client
     socket.on("handle_messages", (data, userReceivedCallback) => {
@@ -167,19 +172,29 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("broadcast", data => {
         console.log(`${data.username} is ${data.info}`);
 
-        // verify user status 2 seconds after key up
-        if (getUser.innerHTML == data.username) {
-            if (data.info == "verify_status") {
-                verify_status();
-            }
+        if (data.room_id === localStorage.getItem("current_room_id")) {
+            if (getUser.innerHTML == data.username) {
+                if (data.info == "verify_status") {
+                    verify_status();
+                }
+                else {
+                    userStatusInfo.innerHTML = `${data.info}`;
+                }
+            } 
             else {
-                userStatusInfo.innerHTML = `${data.info}`;
+                if (data.info == "typing...") {
+                    userStatusInfo.innerHTML = `${data.username} is ${data.info}`;
+                }
+                else {
+                    userStatusInfo.innerHTML = "click here for group info";
+                }
             }
         }
             
         if (data.info == "typing...") {
             unhideTypingBadge(data);
-        } else if (data.info == "verify_status") {
+        } 
+        else if (data.info == "verify_status") {
             hideTypingBadge(data);
         }
 
@@ -192,14 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
         processRemoveUser(data, userElement);
 
         if (userRemove === getUser.innerHTML) {
-            userStatusInfo.innerHTML = "";
-            currentRoomName.innerHTML = "";
-            getUser.innerHTML = "";
-            document.getElementById("pre-user-select").hidden = false;
-            document.getElementById("pre-user-msg").hidden = false;
-            document.getElementById("pre-user-spinner").hidden = true;
-            localStorage.removeItem("current_room_id");
-            clearInputResources(true);
+            resetChatArea(false, false, true, true);
         }
         alert(`${userRemove} removed you`);
     });

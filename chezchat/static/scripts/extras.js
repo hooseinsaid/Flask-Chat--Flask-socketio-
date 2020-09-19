@@ -92,14 +92,7 @@ function processRemoveUser(data, element) {
 
     // only so if the current user is currently on the user to remove page
     if (element.value === getUser.innerHTML) {
-        userStatusInfo.innerHTML = "";
-        currentRoomName.innerHTML = "";
-        getUser.innerHTML = "";
-        document.getElementById("pre-user-select").hidden = false;
-        document.getElementById("pre-user-msg").hidden = false;
-        document.getElementById("pre-user-spinner").hidden = true;
-        localStorage.removeItem("current_room_id");
-        clearInputResources(true);
+        resetChatArea(false, false, true, true);
     }
 
     var div = createElement("div", {"class": "user-list"});
@@ -180,9 +173,11 @@ function processJoinRoom(data, element) {
     var lastMessageSpan = createElement("span", {"class": "lastMessage msg"});
     lastMessageSpan.innerHTML = `${data.room_last_message.author}: ${data.room_last_message.messages}`;
 
+    var lastMessageTypingSpan = createElement("span", {"class": "lastMessage typing group", "hidden": true});
+
     var badgeCounterSpan = createElement("span", {"class": "badgeCounter"})
 
-    appendChildren(div3, [lastMessageSpan, badgeCounterSpan])
+    appendChildren(div3, [lastMessageSpan, lastMessageTypingSpan, badgeCounterSpan])
 
     appendChildren(divWrap, [div2, div3])
 
@@ -210,12 +205,6 @@ function processJoinRoom(data, element) {
 }
 
 function leaveRoom(element) {
-
-    clearInputResources(true);
-
-    currentRoomName.innerHTML = "";
-    userStatusInfo.innerHTML = "";
-    getUser.innerHTML = "";
     
     var roomID = element.value;
     var roomName = element.name;
@@ -226,9 +215,31 @@ function leaveRoom(element) {
     window.event.stopPropagation();
 }
 
+function resetChatArea(val1, val2, val3, val4) {
+    userStatusInfo.innerHTML = "";
+    currentRoomName.innerHTML = "";
+    getUser.innerHTML = "";
+    document.getElementById("pre-user-select").hidden = val1;
+    document.getElementById("pre-user-msg").hidden = val2;
+    document.getElementById("pre-user-spinner").hidden = val3;
+    localStorage.removeItem("current_room_id");
+    clearInputResources(val4);
+}
+
+    userStatusInfo.innerHTML = "";
+    getUser.innerHTML = "";
+    document.getElementById("pre-user-select").hidden = false;
+    document.getElementById("pre-user-msg").hidden = true;
+    document.getElementById("pre-user-spinner").hidden = false;
+    clearInputResources(false);
+
 function processLeaveRoom(data, element) {
     var roomID = element.value;
     var roomName = element.name;
+
+    if (roomID === localStorage.getItem("current_room_id")) {
+        resetChatArea(false, false, true, true);
+    }
 
     var div = createElement("div", {"class": "user-list"});
 

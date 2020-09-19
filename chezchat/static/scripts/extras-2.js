@@ -170,13 +170,18 @@ function unhideTypingBadge(data) {
         setLastMessageBadgeToHidden(lastMessageBadge);
     }
     if (typingBadge) {
-        unsetTypingBadgeFromHidden(typingBadge);
+        unsetTypingBadgeFromHidden(typingBadge, data);
     }
 }
 
-function unsetTypingBadgeFromHidden(typingElement) {
+function unsetTypingBadgeFromHidden(typingElement, data) {
     typingElement.removeAttribute("hidden");
-    typingElement.innerHTML = 'typing...';
+    if (typingElement.classList.contains("group")) {
+        typingElement.innerHTML = `${data.username} is typing...`;
+    }
+    else {
+        typingElement.innerHTML = 'typing...';
+    }
 }
 
 function unsetLastMessageBadgeFromHidden(lastMessageElement) {
