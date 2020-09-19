@@ -190,16 +190,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const userRemove = data.user_to_remove;
         var userElement = document.querySelectorAll(`button[value=${CSS.escape(userRemove)}]`)[0]
         processRemoveUser(data, userElement);
-        alert(`${userRemove} removed you`);
-
 
         if (userRemove === getUser.innerHTML) {
             userStatusInfo.innerHTML = "";
             currentRoomName.innerHTML = "";
             getUser.innerHTML = "";
+            document.getElementById("pre-user-select").hidden = false;
+            document.getElementById("pre-user-msg").hidden = false;
+            document.getElementById("pre-user-spinner").hidden = true;
             localStorage.removeItem("current_room_id");
             clearInputResources(true);
         }
+        alert(`${userRemove} removed you`);
     });
 
     socket.on("update_add_users", data => {

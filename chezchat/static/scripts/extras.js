@@ -77,15 +77,6 @@ function processAddUser(data, element) {
 
 function removeUser(element) {
     
-    // only so if the current user is currently on the user to remove page
-    if (element.value === getUser.innerHTML) {
-        userStatusInfo.innerHTML = "";
-        currentRoomName.innerHTML = "";
-        getUser.innerHTML = "";
-        localStorage.removeItem("current_room_id");
-        clearInputResources(true);
-    }
-    
     var roomID = element.parentNode.id;
 
     var params = {"url": "/remove-user", "payload": roomID, "key": "room_id"};
@@ -98,6 +89,18 @@ function processRemoveUser(data, element) {
 
     var friendName = element.name;
     var friendUsername = element.value;
+
+    // only so if the current user is currently on the user to remove page
+    if (element.value === getUser.innerHTML) {
+        userStatusInfo.innerHTML = "";
+        currentRoomName.innerHTML = "";
+        getUser.innerHTML = "";
+        document.getElementById("pre-user-select").hidden = false;
+        document.getElementById("pre-user-msg").hidden = false;
+        document.getElementById("pre-user-spinner").hidden = true;
+        localStorage.removeItem("current_room_id");
+        clearInputResources(true);
+    }
 
     var div = createElement("div", {"class": "user-list"});
 

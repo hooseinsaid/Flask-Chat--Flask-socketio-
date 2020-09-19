@@ -13,7 +13,6 @@ sessionID = {}
 def home():
     form = CreateRoomForm()
     non_friend_users = []
-    friends_list = []
     all_users = Users.query.all()
     all_rooms = Room.query.outerjoin(History).order_by(History.timestamp.desc().nullslast())
     current_user_rooms = current_user.room_subscribed
@@ -36,25 +35,26 @@ def home():
         room_name_variant_two = f"{current_user.id}{user.id}"
         if not Room.query.filter_by(name=room_name_variant_one).first() and not Room.query.filter_by(name=room_name_variant_two).first():
             non_friend_users.append(user)
-
-    # create new room
+    
     if form.submit.data:
         if form.validate_on_submit():
-            new_room = Room(name=form.name.data, room_created=current_user)
-            db.session.add(new_room)
-            new_room.subscribers.append(current_user)
-            db.session.commit()
-            flash(f'{new_room.name} has been created', 'success')
-            # updates the rooms list in real time for every other user
-            socketio.emit('update_rooms', {'name': new_room.name, 'value': new_room.room_id}, broadcast=True)
+            create_rooms(form)
             return redirect(url_for('home'))
-        else:
-            flash('Room not created. Make sure the name field is not empty and is at least 4 characters long', 'danger')
-            return redirect(url_for('home'))
-    return render_template('chatroom.html', form=form, rooms=rooms, current_user=current_user, 
-                            all_rooms=all_rooms, non_friend_users=non_friend_users)
+        flash('Room not created. Make sure the name field is not empty and is at least 4 characters long', 'danger')
+        return redirect(url_for('home'))
+
+    return render_template('chatroom.html', form=form, rooms=rooms, current_user=current_user, all_rooms=all_rooms, non_friend_users=non_friend_users)
 
 
+def create_rooms(form):
+    # create new room
+    new_room = Room(name=form.name.data, room_created=current_user)
+    db.session.add(new_room)
+    new_room.subscribers.append(current_user)
+    db.session.commit()
+    flash(f'{new_room.name} has been created', 'success')
+    # updates the rooms list in real time for every other user
+    socketio.emit('update_rooms', {'name': new_room.name, 'value': new_room.room_id}, broadcast=True)
 
 def persistentNotifications(room_id):
     notification = Notifications.query.filter_by(recipient_id=current_user.id, room_id=room_id).first()
