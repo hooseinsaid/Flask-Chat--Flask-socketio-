@@ -1,4 +1,4 @@
-// localStorage.clear();
+localStorage.clear();
 
 function ajaxCalls(params, element, callback) {
     var xhttp = new XMLHttpRequest();
@@ -49,7 +49,7 @@ function processAddUser(data, element) {
     appendChildren(div2, [nameSpan, timeSpan])
 
     var div3 = createElement("div", {"class": "roomDivInfo"});
-    var lastMessageSpan = createElement("span", {"class": "lastMessage"});
+    var lastMessageSpan = createElement("span", {"class": "lastMessage msg"});
     var lastMessageTypingSpan = createElement("span", {"class": "lastMessage typing", "hidden": true});
     var badgeCounterSpan = createElement("span", {"class": "badgeCounter"})
 
@@ -174,7 +174,7 @@ function processJoinRoom(data, element) {
 
     var div3 = createElement("div", {"class": "roomDivInfo"});
 
-    var lastMessageSpan = createElement("span", {"class": "lastMessage"});
+    var lastMessageSpan = createElement("span", {"class": "lastMessage msg"});
     lastMessageSpan.innerHTML = `${data.room_last_message.author}: ${data.room_last_message.messages}`;
 
     var badgeCounterSpan = createElement("span", {"class": "badgeCounter"})

@@ -32,14 +32,6 @@ function processVerifyStatus(data) {
 document.addEventListener("DOMContentLoaded", () => {
     var socket = io();
 
-    // if the room is a private room
-    // if(!getUser.innerHTML) {
-    //     localStorage.removeItem("current_room_id");
-    // }
-    
-    // on reload or first load, remove this from localstorage ad it helps direct message to the right place
-    localStorage.removeItem("current_room_id");
-
     document.getElementById("msgInput").hidden = true;
     
     // update the present status of the recipient after 20 seconds
@@ -61,7 +53,26 @@ document.addEventListener("DOMContentLoaded", () => {
         userStatusInfo.innerHTML = "";
 
         myStatus.innerHTML = "Cannot reach the server at this moment";
+
+        var allTypingElements = document.querySelectorAll(".roomDivInfo span.lastMessage.typing");
+        var allLastMessageElements = document.querySelectorAll(".roomDivInfo span.lastMessage.msg");
+
+        removeTypingOnOffline(allTypingElements, allLastMessageElements);
+
     });
+
+    function removeTypingOnOffline(allTypingElements, allLastMessageElements) {
+        for (y in allLastMessageElements) {
+            if (allLastMessageElements[y].tagName) {
+                unsetLastMessageBadgeFromHidden(allLastMessageElements[y]);
+            }
+        }
+        for (x in allTypingElements) {
+            if (allTypingElements[x].tagName) {
+                setTypingBadgeToHidden(allTypingElements[x]);
+            }
+        }
+    }
 
     socket.on("prevent_double_session", () => {
         socket.disconnect();
@@ -165,8 +176,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 userStatusInfo.innerHTML = `${data.info}`;
             }
         }
+            
+        if (data.info == "typing...") {
+            unhideTypingBadge(data);
+        } else if (data.info == "verify_status") {
+            hideTypingBadge(data);
+        }
 
-        hideUnhideTypingBadge(data);
     });
 
     socket.on("update_remove_users", data => {
@@ -223,12 +239,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // when user is pressing down on keys, clear the timeout
-    function handleKeyPress(e) {
+    function handleKeyPress(event) {
         // since keydown registers regardless of whether a chatacter is produced or not
         // check the input and see if there"s any character
 
         // if not enter key
-        if (event.keyCode !== 13) {
+        if (event.keyCode !== 13 && event.keyCode !== 8) {
             var newLength = document.querySelector("#myMessage").value.length;
             var typingCheck = testTyping(newLength);
             if (typingCheck == true) {
@@ -251,7 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // when the user has stopped pressing on keys, set the timeout
     // if the user presses on keys before the timeout is reached, then this timeout is canceled
-    function handleKeyUp(e) {
+    function handleKeyUp(event) {
 
         // make enter key to be send
         if (event.keyCode === 13) {

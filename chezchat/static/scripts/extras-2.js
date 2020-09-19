@@ -148,24 +148,48 @@ function typingBadgeElement(data) {
     return document.querySelector(`[id=${CSS.escape(data.room_id)}] .roomDivInfo span.lastMessage.typing`);
 }
 
-function hideUnhideTypingBadge(data) {
+function hideTypingBadge(data) {
         
     var lastMessageBadge = lastMessageBadgeElement(data);
     var typingBadge = typingBadgeElement(data);
 
-    if (lastMessageBadge && typingBadge) {
-            
-        if (data.info == "typing...") {
-            lastMessageBadge.setAttribute("hidden", true);
-            typingBadge.removeAttribute("hidden");
-            typingBadge.innerHTML = 'typing...';
-        }
-        else {
-            lastMessageBadge.removeAttribute("hidden");
-            typingBadge.setAttribute("hidden", true);
-            typingBadge.innerHTML = '';
-        }
+    if (typingBadge) {
+        setTypingBadgeToHidden(typingBadge)
     }
+    if (lastMessageBadge) {
+        unsetLastMessageBadgeFromHidden(lastMessageBadge);
+    }
+}
+
+function unhideTypingBadge(data) {
+        
+    var lastMessageBadge = lastMessageBadgeElement(data);
+    var typingBadge = typingBadgeElement(data);
+
+    if (lastMessageBadge) {
+        setLastMessageBadgeToHidden(lastMessageBadge);
+    }
+    if (typingBadge) {
+        unsetTypingBadgeFromHidden(typingBadge);
+    }
+}
+
+function unsetTypingBadgeFromHidden(typingElement) {
+    typingElement.removeAttribute("hidden");
+    typingElement.innerHTML = 'typing...';
+}
+
+function unsetLastMessageBadgeFromHidden(lastMessageElement) {
+    lastMessageElement.removeAttribute("hidden");
+}
+
+function setTypingBadgeToHidden(typingElement) {
+    typingElement.setAttribute("hidden", true);
+    typingElement.innerHTML = '';
+}
+
+function setLastMessageBadgeToHidden(lastMessageElement) {
+    lastMessageElement.setAttribute("hidden", true);
 }
 
 function checkDate(date, lastSeenCheck) {

@@ -52,9 +52,9 @@
                                                 
                                                 <div class="roomDivInfo">
                                                     {% if room_params %}
-                                                        <span class="lastMessage">{{ room_params.messages }}</span>
+                                                        <span class="lastMessage msg">{{ room_params.messages }}</span>
                                                     {% else %}
-                                                        <span class="lastMessage"></span>
+                                                        <span class="lastMessage msg"></span>
                                                     {% endif %}
                                                     <span class="lastMessage typing" hidden></span>
                                                     
@@ -90,9 +90,9 @@
                                         
                                         <div class="roomDivInfo">
                                             {% if room_params %}
-                                                <span class="lastMessage">{{ room_params.author }}: {{ room_params.messages }}</span>
+                                                <span class="lastMessage msg">{{ room_params.author }}: {{ room_params.messages }}</span>
                                             {% else %}
-                                                <span class="lastMessage"></span>
+                                                <span class="lastMessage msg"></span>
                                             {% endif %}
 
                                             {% if notification %}
