@@ -11,12 +11,6 @@ sessionID = {}
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
-    all_rooms = Room.query.all()
-    for room in all_rooms:
-        if "Deleted" in room.name:
-            print(f'deleted {room.name}')
-            db.session.delete(room)
-            print(f'finished')
     form = CreateRoomForm()
     non_friend_users = []
     all_users = Users.query.all()
@@ -83,9 +77,18 @@ def clear_notifications():
 
 
 def delete_notification(room_id):
-    notification = Notifications.query.filter_by(recipient_id=current_user.id, room_id=room_id).first()
-    if notification:
-        db.session.delete(notification)
+    room = Room.query.filter_by(room_id=room_id).first()
+    if room:
+        if room.private_room == True:
+            notifications = Notifications.query.filter_by(room_id=room_id).all()
+            if notifications:
+                for notification in notifications:
+                    db.session.delete(notification)
+        else:
+            notification = Notifications.query.filter_by(recipient_id=current_user.id, room_id=room_id).first()    
+            if notification:
+                db.session.delete(notification)
+
     db.session.commit()
 
 
@@ -113,8 +116,7 @@ def room_details():
         users_schema = UsersSchema(many=True, exclude=("password_hash",))
         room_members_schema = users_schema.dump(room_members)
     else:
-        flash('An error has occured. refresh to reload', 'warning')
-        abort(403)
+        socketio.emit('reload', room=sessionID[current_user.username])
     return jsonify({'current_room' : current_room_schema, 'room_members' : room_members_schema})
     
 
@@ -215,7 +217,7 @@ def remove_user():
     if private_room is not None:
         delete_notification(private_room.room_id)
 
-        for history in room_history:
+        for history in private_room.room_history:
             db.session.delete(history)
 
         recipients_list = handle_recipients(private_room)
@@ -224,16 +226,7 @@ def remove_user():
             socketio.emit('update_remove_users', {'room_id': private_room.room_id, 'user_to_remove': current_user.username}, room=recipient)
 
         db.session.delete(private_room)
-        # name is changed so it doesn't conflict when we want to add the user again
-        # room is not deleted so we don't have a primary key mess
-        # private_room.name = f'Deletedby{current_user.username}'
-        # room_history = private_room.room_history
-        # room_members = private_room.subscribers
-        # for member in room_members:
-        #     private_room.subscribers.remove(member)
         db.session.commit()
-    else:
-        flash('An error has occured. refresh to reload', 'warning')
     return jsonify()
 
 
@@ -275,7 +268,8 @@ def handleMessage(data):
                     db.session.add(notification)
                 db.session.commit()
     else:
-        flash('An error has occured. refresh to reload', 'warning')
+        emit('reload', room=sessionID[current_user.username])
+        
     for recipient in recipients_list:
         # on the frontend increment a notification count and display on badge
         emit('handle_messages', data, room=recipient, callback=userReceivedCallback)

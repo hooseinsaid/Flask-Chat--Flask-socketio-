@@ -83,6 +83,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    socket.on("reload", () => {
+        alert("There's been an error. please reload")
+    });
 
     // emits to handle_messages event on the server side
     if (messageSendButton) {
