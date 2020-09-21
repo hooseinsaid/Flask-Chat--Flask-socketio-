@@ -7,9 +7,6 @@ var myStatus = document.getElementById("my_status");
 var currentRoomName = document.getElementById("currentRoomName");
 
 function verify_status() {
-    // query the db on connect of current_user using ajax to 
-    // know the current recipient"s status and update id #user_status below
-    // grab current user variable on the page and query with it
     var params = {"url": "/get-user-status", "payload": getUser.innerHTML, "key": "user"};
     ajaxCalls(params, null, processVerifyStatus);
 }

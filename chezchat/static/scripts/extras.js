@@ -124,9 +124,9 @@ function processRemoveUser(data, element) {
 
     document.getElementById("availableUsers").append(div);
 
-    /* here because I use this function to also append new users whose elements
+    /* here because this function is also used to append new users whose elements
     are not previously on DOM only to be now appended. Hence they don't exist prior
-    so no parentnNode */
+    so no parentNode to remove */
     if (element.parentNode) {
         element.parentNode.remove();
     }
@@ -225,13 +225,6 @@ function resetChatArea(val1, val2, val3, val4) {
     localStorage.removeItem("current_room_id");
     clearInputResources(val4);
 }
-
-    userStatusInfo.innerHTML = "";
-    getUser.innerHTML = "";
-    document.getElementById("pre-user-select").hidden = false;
-    document.getElementById("pre-user-msg").hidden = true;
-    document.getElementById("pre-user-spinner").hidden = false;
-    clearInputResources(false);
 
 function processLeaveRoom(data, element) {
     var roomID = element.value;
