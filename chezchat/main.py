@@ -11,6 +11,12 @@ sessionID = {}
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
+    all_rooms = Room.query.all()
+    for room in all_rooms:
+        if "Deleted" in room.name:
+            print(f'deleted {room.name}')
+            db.session.delete(room)
+            print(f'finished')
     form = CreateRoomForm()
     non_friend_users = []
     all_users = Users.query.all()

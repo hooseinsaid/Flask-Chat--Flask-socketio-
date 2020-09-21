@@ -1,15 +1,10 @@
 import os
 from datetime import datetime
 from chezchat import app, socketio, manager, db
-from chezchat.models import Users, Room
+from chezchat.models import Users
 
 def update_db_after_restart():
     users = Users.query.all()
-    all_rooms = Room.query.all()
-    for room in all_rooms:
-        if "Deleted" in room.name:
-            db.session.delete(room)
-            print(f'deleted {room.name}')
     for user in users:
         if user.online_at > user.last_seen:
             user.last_seen = datetime.utcnow()
