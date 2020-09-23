@@ -1,6 +1,6 @@
 /venv
-/migrations
 /.vscode
 /__pycache__
 chezchat/__pycache__
 /chezchat/database.db
+migrations/__pycache__/env.cpython-38.pyc
