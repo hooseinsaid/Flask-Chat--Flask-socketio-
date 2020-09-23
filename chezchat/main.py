@@ -73,8 +73,23 @@ def persistentNotifications(room_id):
 @login_required
 def clear_notifications():
     delete_notification(request.json['room_id'])
+    recipientsReadMessage(request.json['room_id'])
     return jsonify()
 
+
+def recipientsReadMessage(room_id):
+    room = Room.query.filter_by(room_id=room_id).first()
+    if room and room.private_room == True:
+        room_history = History.query.filter_by(room_id=room_id, msg_read=None).all()
+        for history in room_history:
+            if history.author != current_user.username:
+                history.msg_read = True
+                db.session.commit()
+
+                recipients = handle_recipients(room)
+                for recipient in recipients:
+                    uuid = history.uuid
+                    socketio.emit('read_receipt', uuid, room=recipient)
 
 def delete_notification(room_id):
     room = Room.query.filter_by(room_id=room_id).first()

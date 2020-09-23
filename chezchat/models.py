@@ -43,6 +43,7 @@ class History(db.Model):
     uuid = db.Column(db.String)
     messages = db.Column(db.String)
     msg_delivered = db.Column(db.Boolean)
+    msg_read = db.Column(db.Boolean)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     author = db.Column(db.String, db.ForeignKey('users.username'))
     room_id = db.Column(db.Integer, db.ForeignKey('room.room_id'))

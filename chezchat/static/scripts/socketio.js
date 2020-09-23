@@ -107,8 +107,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     append_msgs(data);
                     document.querySelector("#myMessage").value = "";
                     
-
-                    // scrollDownChatWindow();
                     messageInput.focus();
                 }
             }
@@ -141,20 +139,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    socket.on("read_receipt", uuid => {
+        console.log("message read", uuid)
+        messageStatusTimeInfoWrapper = receiveStatusElement(uuid);
+        if (messageStatusTimeInfoWrapper) {
+            addBlueTick(messageStatusTimeInfoWrapper);
+        }
+    });
+
     function receiveStatusElement(uuid) {
         return document.getElementById(uuid);
     }
 
     // receives message from an the handle_messages event on the server side and displays them to a client
     socket.on("handle_messages", (data, userReceivedCallback) => {
+        
+        // let"s the sender know that his msg has been received by the intended recipient
+        userReceivedCallback(data);
+
         // send the msg only to the intended room
         if (localStorage.getItem("current_room_id") && data.room_id === localStorage.getItem("current_room_id")) {
             append_msgs(data);
 
+            // do not add to notification counter if user is in the target room already
             resetNotificationBadgeCounter(data.room_id)
         }
         else {
-            // do not add to notification counter id user is in the target room already
             var count = 1;
             addNotificationBadge(data.room_id, count)
         }
@@ -163,9 +173,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // put the last message on the badge
         addLastMessageBadge(data)
-        
-        // let"s the sender know that his msg has been received by the intended recipient
-        userReceivedCallback(data);
     });
 
     // receives the message emitted by broadcast event and confirms that the client is connected/disconnected to/from the server

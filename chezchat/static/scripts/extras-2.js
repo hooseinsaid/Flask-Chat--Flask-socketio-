@@ -324,7 +324,11 @@ function append_msgs(data) {
         // if the message is being rendered from db add a tick
         // else add an exclamation until it is received by server
         if (data.from_db === true) {
-            if (data.msg_delivered == true) {
+            if (data.msg_read == true) {
+                addBlueTick(messageStatusTimeInfoWrapper);
+            }
+            else if (data.msg_delivered == true) {
+                
                 addTwoTicks(messageStatusTimeInfoWrapper);
             }
             else {
@@ -382,6 +386,23 @@ function addTwoTicks(messageStatusTimeInfoWrapper) {
     var messageStatusSpan = createElement("span", {"class": "oneTickSpanElement"});
 
     var messageStatusIcon = createElement("i", {"class": "fas fa-check-double", "aria-hidden": "true"});
+
+    appendChildren(messageStatusSpan, [messageStatusIcon])
+
+    // check if the sent icon is present and if so replace it with the double ticks
+    // else append afresh
+    if (messageStatusTimeInfoWrapper.childElementCount > 1) {
+        messageStatusTimeInfoWrapper.replaceChild(messageStatusSpan, messageStatusTimeInfoWrapper.childNodes[1]);
+    }
+    else {
+        appendChildren(messageStatusTimeInfoWrapper, [messageStatusSpan])
+    }
+}
+
+function addBlueTick(messageStatusTimeInfoWrapper) {
+    var messageStatusSpan = createElement("span", {"class": "oneTickSpanElement"});
+
+    var messageStatusIcon = createElement("i", {"class": "fas fa-check-double", "aria-hidden": "true", "style": "color: #2ab5eb"});
 
     appendChildren(messageStatusSpan, [messageStatusIcon])
 
