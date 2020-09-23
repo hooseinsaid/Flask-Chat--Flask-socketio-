@@ -1,7 +1,5 @@
 /venv
 /.vscode
-/__pycache__
-chezchat/__pycache__
 /chezchat/database.db
-migrations/__pycache__
-migrations/versions/__pycache__
+*.pyc
+__pycache__/
