@@ -4,3 +4,4 @@
 chezchat/__pycache__
 /chezchat/database.db
 migrations/__pycache__/env.cpython-38.pyc
+migrations/versions/__pycache__/79ec557bc4d8_added_history_msg_read.cpython-38.pyc
