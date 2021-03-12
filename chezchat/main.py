@@ -117,7 +117,7 @@ def time_refresh():
             last_message = room.room_history.order_by(None).order_by(History.timestamp.desc()).first()
             if last_message:
                 timestamps[last_message.room_id] = last_message.timestamp
-    return jsonify({'timestamps' : timestamps})
+        return jsonify({'timestamps' : timestamps})
 
 
 @app.route('/room-details', methods=['GET', 'POST'])
@@ -130,10 +130,9 @@ def room_details():
         current_room_schema = room_schema.dump(current_room)
         users_schema = UsersSchema(many=True, exclude=("password_hash",))
         room_members_schema = users_schema.dump(room_members)
+        return jsonify({'current_room' : current_room_schema, 'room_members' : room_members_schema})
     else:
         socketio.emit('reload', room=sessionID[current_user.username])
-    return jsonify({'current_room' : current_room_schema, 'room_members' : room_members_schema})
-    
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -269,6 +268,10 @@ def handleMessage(data):
         db.session.commit()
         data['msg_id'] = message.msg_id
         recipients_list = handle_recipients(current_room)
+        
+        for recipient in recipients_list:
+            # on the frontend increment a notification count and display on badge
+            emit('handle_messages', data, room=recipient, callback=userReceivedCallback)
 
         for member in current_room.subscribers:
             if member != current_user:
@@ -285,9 +288,6 @@ def handleMessage(data):
     else:
         emit('reload', room=sessionID[current_user.username])
         
-    for recipient in recipients_list:
-        # on the frontend increment a notification count and display on badge
-        emit('handle_messages', data, room=recipient, callback=userReceivedCallback)
     return data
 
 

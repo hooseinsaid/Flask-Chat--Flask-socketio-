@@ -6,7 +6,7 @@ from chezchat.models import Users, History
 class UserRegistrationForm(FlaskForm):
     name_surname = StringField('Name and Surname', validators=[DataRequired(), Length(min=2, max=128)])
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=64)], render_kw={"placeholder": "username"})
-    password = PasswordField('Password', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
     confirm_password = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password', message='passwords must match')])
     submit = SubmitField('Register')
 
