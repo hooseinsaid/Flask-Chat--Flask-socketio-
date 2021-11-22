@@ -3,3 +3,5 @@
 /chezchat/database.db
 *.pyc
 __pycache__/
+.DS_Store
+.env

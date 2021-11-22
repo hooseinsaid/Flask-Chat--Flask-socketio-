@@ -1,339 +1,380 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block content %}
 
-{% block content %}
+<div class="container-fluid app">
+  <!-- Sidebar start -->
+  <div class="row app">
+    <div id="appNavArea" class="col-sm-4 side forMedia">
+      <div class="heading">
+        <h3>Chatrrr</h3>
+      </div>
 
-    <div class="container-fluid app">        
-        <!-- Sidebar start -->
-        <div class="row app">
-            <div id="appNavArea" class="col-sm-4 side forMedia">
-                <div class="heading">
-                    <h3>Chatrrr</h3>
-                </div>
-
-                <div class="nav-section" data-simplebar>
-                    
-                    <!-- Flash error messages -->
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                        <div class="flash-messages">
-                            {% for category, message in messages %}
-                            <div class="{{ category }}">{{ message }}</div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    {% endwith %}
-
-                    <div class="sticky-div">
-                        <div style="padding: 5px 15px; overflow-wrap: break-word; word-wrap: break-word;">
-                            <span style="color: #092834;" class="name-header" id="my_status"></span><br>
-                            <a style="text-decoration: none !important; color: #092834 !important; outline: none !important" href="#" data-toggle="modal" data-target="#myModal">Create new group</a>
-                        </div>
-                    </div>
-                    <div id="chattables">
-                        {% for room, room_params, notification in rooms %}
-                            {% if room.private_room == True %}
-                                {% for friend in room.subscribers %}
-                                    {% if friend != current_user %}
-                                        <!-- onclick a function triggers ajax to get the needed -->
-                                        <div id="{{ room.room_id }}" class="user-list" onclick="getCurrentRoom(this); verify_status()">
-                                            <div class="noWrapDisplay">
-                                                <div class="name-section">
-                                                    <span class="name-header">{{ friend.name_surname }}</span>
-                                                    {% if room_params %}
-                                                        <span class="time-info">
-                                                            <script>
-                                                                document.write(checkDate('{{ room_params.timestamp }}'));
-                                                            </script>
-                                                        </span>
-                                                    {% else %}
-                                                        <span class="time-info"></span>
-                                                    {% endif %}
-                                                </div>
-                                                
-                                                <div class="roomDivInfo">
-                                                    {% if room_params %}
-                                                        <span class="lastMessage msg">{{ room_params.messages }}</span>
-                                                    {% else %}
-                                                        <span class="lastMessage msg"></span>
-                                                    {% endif %}
-                                                    <span class="lastMessage typing" hidden></span>
-                                                    
-                                                    {% if notification %}
-                                                        <span class="badgeCounter" style="visibility: visible; min-width: 18px">{{notification.count}}</span>
-                                                    {% else %}
-                                                        <span class="badgeCounter"></span>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-
-                                            <!-- create a warning modal for this. this button should trigger the modal and the modal's button should execute onclick="removeUser(this) -->
-                                            <button class="btn btn-danger btn-sm" name="{{ friend.name_surname }}" value="{{ friend.username }}" onclick="toModal(this)"><i class="fas fa-user-minus"></i></button>
-                                        </div>
-                                    {% endif %}
-                                {% endfor %}
-                            {% else %}
-                                <div id="{{ room.room_id }}" class="user-list" onclick="getCurrentRoom(this)">
-                                    <div class="noWrapDisplay">
-                                        <div class="name-section">
-                                            <span class="name-header">{{ room.name }}</span>
-                                            <span class="group-marker">group</span>
-                                            {% if room_params %}
-                                                <span class="time-info">
-                                                    <script>
-                                                        document.write(checkDate('{{ room_params.timestamp }}'));
-                                                    </script>
-                                                </span>
-                                            {% else %}
-                                                <span class="time-info"></span>
-                                            {% endif %}
-                                        </div>
-                                        
-                                        <div class="roomDivInfo">
-                                            {% if room_params %}
-                                                <span class="lastMessage msg">{{ room_params.author }}: {{ room_params.messages }}</span>
-                                            {% else %}
-                                                <span class="lastMessage msg"></span>
-                                            {% endif %}
-                                            <span class="lastMessage typing group" hidden></span>
-
-                                            {% if notification %}
-                                                <span class="badgeCounter" style="visibility: visible; min-width: 18px">{{notification.count}}</span>
-                                            {% else %}
-                                                <span class="badgeCounter"></span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-
-                                    <button class="btn btn-danger btn-sm roomView" name="{{ room.name }}" value="{{ room.room_id }}" onclick="leaveRoom(this)"><span class="font-weight-bold">Exit</span></button>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                    
-                    <div id="availableUsers">
-                        {% for user in non_friend_users %}
-                            {% if user != current_user %}
-                                <div class="user-list">
-                                    <div class="noWrapDisplay">
-
-                                        <div class="name-section">
-                                            <span class="name-header">{{ user.name_surname }}</span>
-                                        </div>
-
-                                    </div>
-                                    <button class="btn btn-success btn-sm" name="{{ user.name_surname }}" value="{{ user.username }}" onclick="addUser(this)"><i class="fas fa-user-plus"></i></button>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-
-                    <div id="availableRooms">
-                        {% for room in all_rooms %}
-                            {% if room.private_room == False and room not in current_user.room_subscribed %}
-                            <div class="user-list">
-                                <div class="noWrapDisplay">
-
-                                    <div class="name-section">
-                                        <span class="name-header">{{ room.name }}</span>
-                                        <span class="group-marker">group</span>
-                                    </div>
-
-                                </div>
-                                
-                                <button class="btn btn-success btn-sm" name="{{ room.name }}" value="{{ room.room_id }}" onclick="joinRoom(this)"><span class="font-weight-bold">Join</span></button>
-                            </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                </div>
-                
-                <div>
-                    <a style="text-decoration: none;" href="{{ url_for('logout') }}"><button style="border-radius: 0;" type="button" class="btn btn-danger btn-block btn-sm">Logout</button></a>
-                </div>
-            </div>
-        
-            <!-- Sidebar end -->
-
-            <!-- My status -->
-            <div id="appChatArea" class="col-sm-8 chatArea forMedia">
-
-                <!-- should show when a group/room is clicked and should get the info by ajax-->
-                <div class="heading" data-toggle="modal" data-target="#myModal2">
-                    <i class="fas fa-arrow-left" onclick="hideChatArea()"></i>
-                    <div style="display: block;">
-                        <div class="name-header" id="currentRoomName"></div>
-                        <div id="user_status"></div>
-                    </div>
-                    <!-- I have this guys ID on button click assign this the button value -->
-                    <div id="get_user_status" hidden></div>
-                </div>
-
-                <!-- Navbar end -->
-                
-                <div id="chatWindow" class="messageArea" data-simplebar>
-
-                    <div id="pre-user-select">
-                        <div id="pre-user-msg" style="font-size: 16px;" class="text-muted">
-                            Please select a chat to start messaging
-                        </div>
-                        <div id="pre-user-spinner" class="spinner-border text-muted" role="status" hidden>
-                            <span class="sr-only">Loading...</span>
-                        </div>
-                    </div>
-                    
-                    <div id="messages"></div>
-                </div>
-
-                <div id="msgInput">
-                    <div style="padding: 0 5%; display: flex; margin: 0; width: 100%; justify-content: space-between;">
-
-                        <div style="width: 90%;" class="zero flex-absolute-center">
-                            <input id="myMessage" type="text" name="message" autocomplete="off" placeholder="Type a message">
-                        </div>
-
-                        <div>
-                            <button style="margin-left: 15%; border-radius: 10px;" id="sendbutton" class="btn btn-primary" type="button" name="submit"><i class="fas fa-paper-plane fa-2x"></i></button>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
+      <div class="nav-section" data-simplebar>
+        <!-- Flash error messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+          <div class="{{ category }}">{{ message }}</div>
+          {% endfor %}
         </div>
+        {% endif %} {% endwith %}
+
+        <div class="sticky-div">
+          <div style="padding: 5px 15px; overflow-wrap: break-word; word-wrap: break-word">
+            <span style="color: #092834" class="name-header" id="my_status"></span><br />
+            <a
+              style="text-decoration: none !important; color: #092834 !important; outline: none !important"
+              href="#"
+              data-toggle="modal"
+              data-target="#myModal"
+              >Create new group</a
+            >
+          </div>
+        </div>
+        <div id="chattables">
+          {% for room, room_params, notification in rooms %} {% if room.private_room == True %} {% for friend in
+          room.subscribers %} {% if friend != current_user %}
+          <!-- onclick a function triggers ajax to get the needed -->
+          <div id="{{ room.room_id }}" class="user-list" onclick="getCurrentRoom(this); verify_status()">
+            <div class="noWrapDisplay">
+              <div class="name-section">
+                <span class="name-header">{{ friend.name_surname }}</span>
+                {% if room_params %}
+                <span class="time-info">
+                  <script>
+                    document.write(checkDate("{{ room_params.timestamp }}"));
+                  </script>
+                </span>
+                {% else %}
+                <span class="time-info"></span>
+                {% endif %}
+              </div>
+
+              <div class="roomDivInfo">
+                {% if room_params %}
+                <span class="lastMessage msg">{{ room_params.messages }}</span>
+                {% else %}
+                <span class="lastMessage msg"></span>
+                {% endif %}
+                <span class="lastMessage typing" hidden></span>
+
+                {% if notification %}
+                <span class="badgeCounter" style="visibility: visible; min-width: 18px">{{notification.count}}</span>
+                {% else %}
+                <span class="badgeCounter"></span>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- create a warning modal for this. this button should trigger the modal and the modal's button should execute onclick="removeUser(this) -->
+            <button
+              class="btn btn-danger btn-sm"
+              name="{{ friend.name_surname }}"
+              value="{{ friend.username }}"
+              onclick="toModal(this)"
+            >
+              <i class="fas fa-user-minus"></i>
+            </button>
+          </div>
+          {% endif %} {% endfor %} {% else %}
+          <div id="{{ room.room_id }}" class="user-list" onclick="getCurrentRoom(this)">
+            <div class="noWrapDisplay">
+              <div class="name-section">
+                <span class="name-header">{{ room.name }}</span>
+                <span class="group-marker">group</span>
+                {% if room_params %}
+                <span class="time-info">
+                  <script>
+                    document.write(checkDate("{{ room_params.timestamp }}"));
+                  </script>
+                </span>
+                {% else %}
+                <span class="time-info"></span>
+                {% endif %}
+              </div>
+
+              <div class="roomDivInfo">
+                {% if room_params %}
+                <span class="lastMessage msg">{{ room_params.author }}: {{ room_params.messages }}</span>
+                {% else %}
+                <span class="lastMessage msg"></span>
+                {% endif %}
+                <span class="lastMessage typing group" hidden></span>
+
+                {% if notification %}
+                <span class="badgeCounter" style="visibility: visible; min-width: 18px">{{notification.count}}</span>
+                {% else %}
+                <span class="badgeCounter"></span>
+                {% endif %}
+              </div>
+            </div>
+
+            <button
+              class="btn btn-danger btn-sm roomView"
+              name="{{ room.name }}"
+              value="{{ room.room_id }}"
+              onclick="leaveRoom(this)"
+            >
+              <span class="font-weight-bold">Exit</span>
+            </button>
+          </div>
+          {% endif %} {% endfor %}
+        </div>
+
+        <div id="availableUsers">
+          {% for user in non_friend_users %} {% if user != current_user %}
+          <div class="user-list">
+            <div class="noWrapDisplay">
+              <div class="name-section">
+                <span class="name-header">{{ user.name_surname }}</span>
+              </div>
+            </div>
+            <button
+              class="btn btn-success btn-sm"
+              name="{{ user.name_surname }}"
+              value="{{ user.username }}"
+              onclick="addUser(this)"
+            >
+              <i class="fas fa-user-plus"></i>
+            </button>
+          </div>
+          {% endif %} {% endfor %}
+        </div>
+
+        <div id="availableRooms">
+          {% for room in all_rooms %} {% if room.private_room == False and room not in current_user.room_subscribed %}
+          <div class="user-list">
+            <div class="noWrapDisplay">
+              <div class="name-section">
+                <span class="name-header">{{ room.name }}</span>
+                <span class="group-marker">group</span>
+              </div>
+            </div>
+
+            <button
+              class="btn btn-success btn-sm"
+              name="{{ room.name }}"
+              value="{{ room.room_id }}"
+              onclick="joinRoom(this)"
+            >
+              <span class="font-weight-bold">Join</span>
+            </button>
+          </div>
+          {% endif %} {% endfor %}
+        </div>
+      </div>
+
+      <div>
+        <a style="text-decoration: none" href="{{ url_for('logout') }}"
+          ><button style="border-radius: 0" type="button" class="btn btn-danger btn-block btn-sm">Logout</button></a
+        >
+      </div>
     </div>
 
-    
-    <form action="" method="post" novalidate>
-        {{ form.hidden_tag() }}
-        <div class="modal fade" id="myModal">
-            <div class="modal-dialog modal-dialog-centered" style="max-width: 400px; margin: 1.75rem auto;">
-                <div class="modal-content" style="margin: .5rem;">
+    <!-- Sidebar end -->
 
-                    <div class="modal-header">
-                        <h4 class="modal-title" style="font-size: 14px; font-weight: 600;">New group</h4>
-                        <button type="button" class="close close-button" data-dismiss="modal" style="outline: none; font-weight: 500; font-size: 17px;">close</button>
-                    </div>
-
-                    <div class="modal-body" style="max-height: 430px; overflow: auto;">
-                        {{ form.name(class="form-control rounded-0", placeholder="Group name", style="width: 100%") }}
-                    </div>
-
-                    <div class="modal-footer">
-                        {{ form.submit(class="btn btn-block btn-primary rounded-0") }}
-                    </div>
-
-                </div>
-            </div>
+    <!-- My status -->
+    <div id="appChatArea" class="col-sm-8 chatArea forMedia">
+      <!-- should show when a group/room is clicked and should get the info by ajax-->
+      <div class="heading" data-toggle="modal" data-target="#myModal2">
+        <i class="fas fa-arrow-left" onclick="hideChatArea()"></i>
+        <div style="display: block">
+          <div class="name-header" id="currentRoomName"></div>
+          <div id="user_status"></div>
         </div>
-    </form>
+        <!-- I have this guys ID on button click assign this the button value -->
+        <div id="get_user_status" hidden></div>
+      </div>
 
-    <div class="modal fade" id="myModal2">
-        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px; margin: 1.75rem auto;">
-            <div class="modal-content" style="margin: .5rem;">
+      <!-- Navbar end -->
 
-                <div class="modal-header">
-                    <h4 class="modal-title" style="font-size: 14px; font-weight: 600;">Group info</h4>
-                    <button type="button" class="close close-button" data-dismiss="modal" style="outline: none; font-weight: 500; font-size: 17px;">close</button>
-                </div>
-
-                <div id="roomInfoModal" class="modal-body" style="max-height: 430px; overflow: auto;">
-
-                </div>
-
-            </div>
+      <div id="chatWindow" class="messageArea" data-simplebar>
+        <div id="pre-user-select">
+          <div id="pre-user-msg" style="font-size: 16px" class="text-muted">
+            Please select a chat to start messaging
+          </div>
+          <div id="pre-user-spinner" class="spinner-border text-muted" role="status" hidden>
+            <span class="sr-only">Loading...</span>
+          </div>
         </div>
+
+        <div id="messages"></div>
+      </div>
+
+      <div id="msgInput">
+        <div style="padding: 0 5%; display: flex; margin: 0; width: 100%; justify-content: space-between">
+          <div style="width: 90%" class="zero flex-absolute-center">
+            <input id="myMessage" type="text" name="message" autocomplete="off" placeholder="Type a message" />
+          </div>
+
+          <div>
+            <button
+              style="margin-left: 15%; border-radius: 10px"
+              id="sendbutton"
+              class="btn btn-primary"
+              type="button"
+              name="submit"
+            >
+              <i class="fas fa-paper-plane fa-2x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+</div>
+
+<form action="" method="post" novalidate>
+  {{ form.hidden_tag() }}
+  <div class="modal fade" id="myModal">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px; margin: 1.75rem auto">
+      <div class="modal-content" style="margin: 0.5rem">
+        <div class="modal-header">
+          <h4 class="modal-title" style="font-size: 14px; font-weight: 600">New group</h4>
+          <button
+            type="button"
+            class="close close-button"
+            data-dismiss="modal"
+            style="outline: none; font-weight: 500; font-size: 17px"
+          >
+            close
+          </button>
+        </div>
+
+        <div class="modal-body" style="max-height: 430px; overflow: auto">
+          {{ form.name(class="form-control rounded-0", placeholder="Group name", style="width: 100%") }}
+        </div>
+
+        <div class="modal-footer">{{ form.submit(class="btn btn-block btn-primary rounded-0") }}</div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="modal fade" id="myModal2">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 400px; margin: 1.75rem auto">
+    <div class="modal-content" style="margin: 0.5rem">
+      <div class="modal-header">
+        <h4 class="modal-title" style="font-size: 14px; font-weight: 600">Group info</h4>
+        <button
+          type="button"
+          class="close close-button"
+          data-dismiss="modal"
+          style="outline: none; font-weight: 500; font-size: 17px"
+        >
+          close
+        </button>
+      </div>
+
+      <div id="roomInfoModal" class="modal-body" style="max-height: 430px; overflow: auto"></div>
+    </div>
+  </div>
+</div>
 
 <!-- Modal to assert prevent multiple sessions -->
-<div class="modal fade" id="preventMultModal" style="overflow: hidden;" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-body d-flex">
-                <span>You have been disconnected because you have another tab open</span>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger btn-block" onclick="window.location.href=window.location.href">Click to reload</button>
-            </div>
-        </div>
+<div
+  class="modal fade"
+  id="preventMultModal"
+  style="overflow: hidden"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="exampleModalCenterTitle"
+  aria-hidden="true"
+  data-backdrop="static"
+  data-keyboard="false"
+>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-body d-flex">
+        <span>You have been disconnected because you have another tab open</span>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger btn-block" onclick="window.location.href=window.location.href">
+          Click to reload
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- Remove user prompt modal -->
 <div class="modal fade" id="removeUserModal">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px; margin: 1.75rem auto;">
-        <div class="modal-content" style="margin: .5rem;">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 400px; margin: 1.75rem auto">
+    <div class="modal-content" style="margin: 0.5rem">
+      <div class="modal-header">
+        <h4 class="modal-title" style="font-size: 14px; font-weight: 600">Remove User</h4>
+      </div>
 
-            <div class="modal-header">
-                <h4 class="modal-title" style="font-size: 14px; font-weight: 600;">Remove User</h4>
-            </div>
+      <div class="modal-body" style="max-height: 430px; overflow: auto">
+        <span
+          >Are you sure you want to remove this user? all your chat history will be deleted. This process is
+          irreversible</span
+        >
+      </div>
 
-            <div class="modal-body" style="max-height: 430px; overflow: auto;">
-                <span>Are you sure you want to remove this user? all your chat history will be deleted. This process is irreversible</span> 
-            </div>
-
-            <div class="modal-footer" style="display: flex; justify-content: space-between;">
-                <button type="button" class="btn shadow" data-dismiss="modal" style="width: 45%;">Cancel</button>
-                <button type="button" class="btn btn-danger shadow" style="width: 45%;" onclick="removeUser(elementToRemove); closeModal();">Confirm</button>
-            </div>
-
-        </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between">
+        <button type="button" class="btn shadow" data-dismiss="modal" style="width: 45%">Cancel</button>
+        <button
+          type="button"
+          class="btn btn-danger shadow"
+          style="width: 45%"
+          onclick="removeUser(elementToRemove); closeModal();"
+        >
+          Confirm
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 
-{% endblock %}
+{% endblock %} {% block suplementaryScripts %}
 
+<!-- Helper scripts for functionality -->
+<script src="{{ url_for('static', filename='scripts/extras.js') }}"></script>
+<script src="{{ url_for('static', filename='scripts/extras-2.js') }}"></script>
 
-{% block suplementaryScripts %}
+{% endblock %} {% block scripts %}
 
-    <!-- Helper scripts for functionality -->
-    <script src="{{ url_for('static', filename='scripts/extras.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/extras-2.js') }}"></script>
+<!-- Get current_user.username -->
+<script type="text/javascript">
+  const username = "{{ current_user.username }}";
+</script>
 
-{% endblock %}
+<!-- SocketIO JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
 
+<!-- Custom SocketIO JS -->
+<script src="{{ url_for('static', filename='scripts/socketio.js') }}"></script>
 
-{% block scripts %}
+<!-- add active class for highlight on click with JQuery -->
+<script>
+  $("#chattables").on("click", ".user-list", function () {
+    $("#chattables .user-list").removeClass("active");
+    $(this).addClass("active");
+    $("#chattables .user-list .group-marker").removeClass("group-marker-active");
+    $(this).find(".group-marker").addClass("group-marker-active");
+  });
+</script>
 
-    <!-- Get current_user.username -->
-    <script type="text/javascript">
-        const username = '{{ current_user.username }}';
-    </script>
+<!-- make flash msgs disappear -->
+<script>
+  window.setTimeout(function () {
+    $(".flash-messages").slideUp(500, function () {
+      $(this).remove();
+    });
+  }, 10000);
+</script>
 
-    <!-- SocketIO JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+<!-- removeUser modal helper -->
+<script>
+  function toModal(element) {
+    elementToRemove = element;
+    $("#removeUserModal").modal("show");
+    window.event.stopPropagation();
+  }
 
-    <!-- Custom SocketIO JS -->
-    <script src="{{ url_for('static', filename='scripts/socketio.js') }}"></script>
+  function closeModal() {
+    $("#removeUserModal").modal("hide");
+  }
+</script>
 
-    <!-- add active class for highlight on click with JQuery -->
-    <script>
-        $( '#chattables' ).on( 'click', '.user-list', function () {
-            $( '#chattables .user-list' ).removeClass( 'active' );
-            $( this ).addClass( 'active' );
-            $( '#chattables .user-list .group-marker' ).removeClass( 'group-marker-active' );
-            $( this).find(".group-marker").addClass( 'group-marker-active' );
-        });
-    </script>
-
-    <!-- make flash msgs disappear -->
-    <script>
-        window.setTimeout(function() {
-            $(".flash-messages").slideUp(500, function(){
-                $(this).remove(); 
-            });
-        }, 10000);
-    </script>
-
-    <!-- removeUser modal helper -->
-    <script>
-        function toModal(element) {
-            elementToRemove = element;
-            $('#removeUserModal').modal('show');
-            window.event.stopPropagation();
-        }
-
-        function closeModal() {
-            $("#removeUserModal").modal("hide");
-        }
-    </script>
-    
 {% endblock %}

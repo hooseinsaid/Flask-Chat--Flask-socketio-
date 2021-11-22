@@ -1,42 +1,37 @@
-{% extends "base.html" %}
-
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <div class="signup-login">
-    <h3 style="color: #ffffff;">Chatrrr.</h3>
-    <div class="signup-login-container shadow-custom">
-        <form action="" method="post" novalidate>
-            {{ form.hidden_tag() }}
-            <div class="form-wrap">
+  <h3 style="color: #ffffff">Chatrrr.</h3>
+  <div class="signup-login-container shadow-custom">
+    <form action="" method="post" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="form-wrap">
+        {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %}
+        <div class="flash-messages form-group">
+          {% for category, message in messages %}
+          <div class="{{ category }}">{{ message|safe }}</div>
+          {% endfor %}
+        </div>
+        {% endif %} {% endwith %}
 
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                        <div class="flash-messages form-group">
-                            {% for category, message in messages %}
-                            <div class="{{ category }}">{{ message|safe }}</div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                {% endwith %}
-    
-                <div class="form-group">
-                    {{ form.username(class="form-control rounded-0", placeholder="Username") }}
-                    {% for error in form.username.errors %}
-                        <span style="color: #dc3545;">{{ error }}</span>
-                    {% endfor %}
-                </div>
-                <div class="form-group">
-                    {{ form.password(class="form-control rounded-0", placeholder="Password") }}
-                    {% for error in form.password.errors %}
-                        <span style="color: #dc3545;">{{ error }}</span>
-                    {% endfor %}
-                </div>
-                <div>{{ form.submit(class="btn btn-block btn-primary rounded-0") }}</div>
-                <div style="margin-top: 15px; display: flex; justify-content: center;">
-                    <span style="margin-right: 4px;">Not Registered?</span>
-                    <a href="{{ url_for('register') }}">Create an account</a>
-                </div>
-            </div>
-        </form>
-    </div>
+        <div class="form-group">
+          {{ form.username(class="form-control rounded-0", placeholder="Username") }} {% for error in
+          form.username.errors %}
+          <span style="color: #dc3545">{{ error }}</span>
+          {% endfor %}
+        </div>
+        <div class="form-group">
+          {{ form.password(class="form-control rounded-0", placeholder="Password") }} {% for error in
+          form.password.errors %}
+          <span style="color: #dc3545">{{ error }}</span>
+          {% endfor %}
+        </div>
+        <div>{{ form.submit(class="btn btn-block btn-primary rounded-0") }}</div>
+        <div style="margin-top: 15px; display: flex; justify-content: center">
+          <span style="margin-right: 4px">Not Registered?</span>
+          <a href="{{ url_for('register') }}">Create an account</a>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
 {% endblock %}

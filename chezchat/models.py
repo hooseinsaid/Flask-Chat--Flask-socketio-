@@ -2,12 +2,12 @@ import os
 import secrets
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-from chezchat import db, ma, login, app
+from chezchat import db, ma, login, app, DATABASE_URL
 from flask_login import UserMixin
 
 @app.before_request
 def before_request():
-    database_name = os.path.basename(os.environ.get('DATABASE_URL'))
+    database_name = os.path.basename(os.environ.get('DATABASE_URL') or DATABASE_URL)
     db_dir = os.path.join(app.root_path, database_name)
     if not os.path.exists(db_dir):
         db.create_all()

@@ -8,12 +8,14 @@ from flask_socketio import SocketIO
 from flask_login import LoginManager
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'Thisshouldbeasecret'
 socketio = SocketIO(app, engineio_logger=True, logger=True, cors_allowed_origins='*')
 
 manager = Manager(app)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+DATABASE_URL = 'sqlite:///database.db'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)

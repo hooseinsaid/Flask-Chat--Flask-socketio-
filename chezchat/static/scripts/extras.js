@@ -1,290 +1,268 @@
 localStorage.clear();
 
 function ajaxCalls(params, element, callback) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.open("POST", params.url, true);
-    xhttp.setRequestHeader("Content-Type", "application/json"); 
+  var xhttp = new XMLHttpRequest();
+  xhttp.open("POST", params.url, true);
+  xhttp.setRequestHeader("Content-Type", "application/json");
 
-    xhttp.onreadystatechange = function() {
-        if (this.readyState === 4 && this.status === 200) {
-            var response = JSON.parse(this.responseText);
-            if (callback != null) {
-                callback(response, element);
-            }
-        }
-    };
-    var data = JSON.stringify({[params.key]: params.payload});
-    xhttp.send(data);
+  xhttp.onreadystatechange = function () {
+    if (this.readyState === 4 && this.status === 200) {
+      var response = JSON.parse(this.responseText);
+      if (callback != null) {
+        callback(response, element);
+      }
+    }
+  };
+  var data = JSON.stringify({ [params.key]: params.payload });
+  xhttp.send(data);
 }
 
 function addUser(element) {
-    var userUsername = element.value
-    var params = {"url": "/add-user", "payload": userUsername, "key": "user_username"};
-    ajaxCalls(params, element, processAddUser);
+  var userUsername = element.value;
+  var params = { url: "/add-user", payload: userUsername, key: "user_username" };
+  ajaxCalls(params, element, processAddUser);
 }
 
 function processAddUser(data, element) {
-    
-    var userName = element.name;
-    var userUsername = element.value;
+  var userName = element.name;
+  var userUsername = element.value;
 
-    var div = createElement(
-        "div", {
-            "id": data["roomID"], 
-            "class": "user-list", 
-            "onclick": "getCurrentRoom(this); verify_status()"
-        }
-    );
+  var div = createElement("div", {
+    id: data["roomID"],
+    class: "user-list",
+    onclick: "getCurrentRoom(this); verify_status()",
+  });
 
-    var divWrap = createElement("div", {"class": "noWrapDisplay"});
+  var divWrap = createElement("div", { class: "noWrapDisplay" });
 
-    
-    var div2 = createElement("div", {"class": "name-section"});
-    
-    var nameSpan = createElement("span", {"class": "name-header"});
-    nameSpan.innerHTML = userName;
+  var div2 = createElement("div", { class: "name-section" });
 
-    var timeSpan = createElement("span", {"class": "time-info"});
+  var nameSpan = createElement("span", { class: "name-header" });
+  nameSpan.innerHTML = userName;
 
-    appendChildren(div2, [nameSpan, timeSpan])
+  var timeSpan = createElement("span", { class: "time-info" });
 
-    var div3 = createElement("div", {"class": "roomDivInfo"});
-    var lastMessageSpan = createElement("span", {"class": "lastMessage msg"});
-    var lastMessageTypingSpan = createElement("span", {"class": "lastMessage typing", "hidden": true});
-    var badgeCounterSpan = createElement("span", {"class": "badgeCounter"})
+  appendChildren(div2, [nameSpan, timeSpan]);
 
-    appendChildren(div3, [lastMessageSpan, lastMessageTypingSpan, badgeCounterSpan])
+  var div3 = createElement("div", { class: "roomDivInfo" });
+  var lastMessageSpan = createElement("span", { class: "lastMessage msg" });
+  var lastMessageTypingSpan = createElement("span", { class: "lastMessage typing", hidden: true });
+  var badgeCounterSpan = createElement("span", { class: "badgeCounter" });
 
-    appendChildren(divWrap, [div2, div3])
+  appendChildren(div3, [lastMessageSpan, lastMessageTypingSpan, badgeCounterSpan]);
 
-    var button = createElement(
-        "button", {
-            "class": "btn btn-danger btn-sm", 
-            "onclick": "toModal(this);",
-            "name" : userName,
-            "value": userUsername
-        }
-    );
+  appendChildren(divWrap, [div2, div3]);
 
-    var buttonIcon = createElement("i", {"class": "fas fa-user-minus", "aria-hidden": "true"});
-    appendChildren(button, [buttonIcon])
+  var button = createElement("button", {
+    class: "btn btn-danger btn-sm",
+    onclick: "toModal(this);",
+    name: userName,
+    value: userUsername,
+  });
 
-    appendChildren(div, [divWrap, button])
-    document.getElementById("chattables").append(div);
+  var buttonIcon = createElement("i", { class: "fas fa-user-minus", "aria-hidden": "true" });
+  appendChildren(button, [buttonIcon]);
 
-    element.parentNode.remove();
+  appendChildren(div, [divWrap, button]);
+  document.getElementById("chattables").append(div);
+
+  element.parentNode.remove();
 }
 
 function removeUser(element) {
-    
-    var roomID = element.parentNode.id;
+  var roomID = element.parentNode.id;
 
-    var params = {"url": "/remove-user", "payload": roomID, "key": "room_id"};
-    ajaxCalls(params, element, processRemoveUser);
+  var params = { url: "/remove-user", payload: roomID, key: "room_id" };
+  ajaxCalls(params, element, processRemoveUser);
 
-    window.event.stopPropagation();
+  window.event.stopPropagation();
 }
 
 function processRemoveUser(data, element) {
+  var friendName = element.name;
+  var friendUsername = element.value;
 
-    var friendName = element.name;
-    var friendUsername = element.value;
+  // only so if the current user is currently on the user to remove page
+  if (element.value === getUser.innerHTML) {
+    resetChatArea(false, false, true, true);
+  }
 
-    // only so if the current user is currently on the user to remove page
-    if (element.value === getUser.innerHTML) {
-        resetChatArea(false, false, true, true);
-    }
+  var div = createElement("div", { class: "user-list" });
 
-    var div = createElement("div", {"class": "user-list"});
+  var divWrap = createElement("div", { class: "noWrapDisplay" });
 
-    var divWrap = createElement("div", {"class": "noWrapDisplay"});
+  var div2 = createElement("div", { class: "name-section" });
 
-    var div2 = createElement("div", {"class": "name-section"});
+  var nameSpan = createElement("span", { class: "name-header" });
+  nameSpan.innerHTML = friendName;
 
-    var nameSpan = createElement("span", {"class": "name-header"});
-    nameSpan.innerHTML = friendName;
+  appendChildren(div2, [nameSpan]);
 
-    appendChildren(div2, [nameSpan])
+  appendChildren(divWrap, [div2]);
 
-    appendChildren(divWrap, [div2])
-    
-    var button = createElement(
-        "button", {
-            "class": "btn btn-success btn-sm", 
-            "onclick": "addUser(this);",
-            "name": friendName,
-            "value": friendUsername
-        }
-    );
+  var button = createElement("button", {
+    class: "btn btn-success btn-sm",
+    onclick: "addUser(this);",
+    name: friendName,
+    value: friendUsername,
+  });
 
-    var buttonIcon = createElement("i", {"class": "fas fa-user-plus", "aria-hidden": "true"});
-    appendChildren(button, [buttonIcon])
+  var buttonIcon = createElement("i", { class: "fas fa-user-plus", "aria-hidden": "true" });
+  appendChildren(button, [buttonIcon]);
 
-    appendChildren(div, [divWrap, button])
+  appendChildren(div, [divWrap, button]);
 
-    document.getElementById("availableUsers").append(div);
+  document.getElementById("availableUsers").append(div);
 
-    /* here because this function is also used to append new users whose elements
+  /* here because this function is also used to append new users whose elements
     are not previously on DOM only to be now appended. Hence they don't exist prior
     so no parentNode to remove */
-    if (element.parentNode) {
-        element.parentNode.remove();
-    }
+  if (element.parentNode) {
+    element.parentNode.remove();
+  }
 }
 
 function joinRoom(element) {
-    var roomID = element.value;
+  var roomID = element.value;
 
-    var params = {"url": "/join-room", "payload": roomID, "key": "room_id"};
-    ajaxCalls(params, element, processJoinRoom);
+  var params = { url: "/join-room", payload: roomID, key: "room_id" };
+  ajaxCalls(params, element, processJoinRoom);
 }
 
 function processJoinRoom(data, element) {
+  var roomID = element.value;
+  var roomName = element.name;
 
-    var roomID = element.value;
-    var roomName = element.name;
+  var div = createElement("div", {
+    class: "user-list",
+    onclick: "getCurrentRoom(this)",
+    id: roomID,
+  });
 
-    var div = createElement(
-        "div", {
-            "class": "user-list", 
-            "onclick": "getCurrentRoom(this)",
-            "id": roomID
-        }
-    );
+  var divWrap = createElement("div", { class: "noWrapDisplay" });
 
-    var divWrap = createElement("div", {"class": "noWrapDisplay"});
+  var div2 = createElement("div", { class: "name-section" });
 
-    var div2 = createElement("div", {"class": "name-section"});
+  var nameSpan = createElement("span", { class: "name-header" });
+  nameSpan.innerHTML = roomName;
 
-    var nameSpan = createElement("span", {"class": "name-header"});
-    nameSpan.innerHTML = roomName;
+  var groupMarkerSpan = createElement("span", { class: "group-marker" });
+  groupMarkerSpan.innerHTML = "group";
 
-    var groupMarkerSpan = createElement("span", {"class": "group-marker"});
-    groupMarkerSpan.innerHTML = "group";
+  var timeSpan = createElement("span", { class: "time-info" });
+  timeSpan.innerHTML = checkDate(data.room_last_message.timestamp);
 
-    var timeSpan = createElement("span", {"class": "time-info"});
-    timeSpan.innerHTML = checkDate(data.room_last_message.timestamp);
+  appendChildren(div2, [nameSpan, groupMarkerSpan, timeSpan]);
 
-    appendChildren(div2, [nameSpan, groupMarkerSpan, timeSpan])
+  var div3 = createElement("div", { class: "roomDivInfo" });
 
+  var lastMessageSpan = createElement("span", { class: "lastMessage msg" });
+  lastMessageSpan.innerHTML = `${data.room_last_message.author}: ${data.room_last_message.messages}`;
 
-    var div3 = createElement("div", {"class": "roomDivInfo"});
+  var lastMessageTypingSpan = createElement("span", { class: "lastMessage typing group", hidden: true });
 
-    var lastMessageSpan = createElement("span", {"class": "lastMessage msg"});
-    lastMessageSpan.innerHTML = `${data.room_last_message.author}: ${data.room_last_message.messages}`;
+  var badgeCounterSpan = createElement("span", { class: "badgeCounter" });
 
-    var lastMessageTypingSpan = createElement("span", {"class": "lastMessage typing group", "hidden": true});
+  appendChildren(div3, [lastMessageSpan, lastMessageTypingSpan, badgeCounterSpan]);
 
-    var badgeCounterSpan = createElement("span", {"class": "badgeCounter"})
+  appendChildren(divWrap, [div2, div3]);
 
-    appendChildren(div3, [lastMessageSpan, lastMessageTypingSpan, badgeCounterSpan])
+  var button = createElement("button", {
+    class: "btn btn-danger btn-sm roomView",
+    onclick: "leaveRoom(this);",
+    name: roomName,
+    value: roomID,
+  });
 
-    appendChildren(divWrap, [div2, div3])
+  var spanText = createElement("span", { class: "font-weight-bold" });
+  spanText.innerHTML = "Exit";
 
-    var button = createElement(
-        "button", {
-            "class": "btn btn-danger btn-sm roomView", 
-            "onclick": "leaveRoom(this);",
-            "name": roomName,
-            "value": roomID
-        }
-    );
+  appendChildren(button, [spanText]);
 
-    var spanText = createElement("span", {"class": "font-weight-bold"});
-    spanText.innerHTML = "Exit";
+  appendChildren(div, [divWrap, button]);
 
-    appendChildren(button, [spanText])
+  document.getElementById("chattables").append(div);
 
-
-    appendChildren(div, [divWrap, button])
-
-
-    document.getElementById("chattables").append(div);
-
-    element.parentNode.remove();
+  element.parentNode.remove();
 }
 
 function leaveRoom(element) {
-    
-    var roomID = element.value;
-    var roomName = element.name;
+  var roomID = element.value;
+  var roomName = element.name;
 
-    var params = {"url": "/leave-room", "payload": roomID, "key": "room_id"};
-    ajaxCalls(params, element, processLeaveRoom);
+  var params = { url: "/leave-room", payload: roomID, key: "room_id" };
+  ajaxCalls(params, element, processLeaveRoom);
 
-    window.event.stopPropagation();
+  window.event.stopPropagation();
 }
 
 function resetChatArea(val1, val2, val3, val4) {
-    userStatusInfo.innerHTML = "";
-    currentRoomName.innerHTML = "";
-    getUser.innerHTML = "";
-    document.getElementById("pre-user-select").hidden = val1;
-    document.getElementById("pre-user-msg").hidden = val2;
-    document.getElementById("pre-user-spinner").hidden = val3;
-    localStorage.removeItem("current_room_id");
-    clearInputResources(val4);
+  userStatusInfo.innerHTML = "";
+  currentRoomName.innerHTML = "";
+  getUser.innerHTML = "";
+  document.getElementById("pre-user-select").hidden = val1;
+  document.getElementById("pre-user-msg").hidden = val2;
+  document.getElementById("pre-user-spinner").hidden = val3;
+  localStorage.removeItem("current_room_id");
+  clearInputResources(val4);
 }
 
 function processLeaveRoom(data, element) {
-    var roomID = element.value;
-    var roomName = element.name;
+  var roomID = element.value;
+  var roomName = element.name;
 
-    if (roomID === localStorage.getItem("current_room_id")) {
-        resetChatArea(false, false, true, true);
-    }
+  if (roomID === localStorage.getItem("current_room_id")) {
+    resetChatArea(false, false, true, true);
+  }
 
-    var div = createElement("div", {"class": "user-list"});
+  var div = createElement("div", { class: "user-list" });
 
-    var divWrap = createElement("div", {"class": "noWrapDisplay"});
+  var divWrap = createElement("div", { class: "noWrapDisplay" });
 
-    var div2 = createElement("div", {"class": "name-section"});
+  var div2 = createElement("div", { class: "name-section" });
 
-    var nameSpan = createElement("span", {"class": "name-header"});
-    nameSpan.innerHTML = roomName;
+  var nameSpan = createElement("span", { class: "name-header" });
+  nameSpan.innerHTML = roomName;
 
-    var groupMarkerSpan = createElement("span", {"class": "group-marker"});
-    groupMarkerSpan.innerHTML = "group";
+  var groupMarkerSpan = createElement("span", { class: "group-marker" });
+  groupMarkerSpan.innerHTML = "group";
 
-    appendChildren(div2, [nameSpan, groupMarkerSpan])
+  appendChildren(div2, [nameSpan, groupMarkerSpan]);
 
-    appendChildren(divWrap, [div2])
+  appendChildren(divWrap, [div2]);
 
-    var button = createElement(
-        "button", {
-            "class": "btn btn-success btn-sm", 
-            "onclick": "joinRoom(this);",
-            "name": roomName,
-            "value": roomID
-        }
-    );
+  var button = createElement("button", {
+    class: "btn btn-success btn-sm",
+    onclick: "joinRoom(this);",
+    name: roomName,
+    value: roomID,
+  });
 
-    var spanText = createElement("span", {"class": "font-weight-bold"});
-    spanText.innerHTML = "Join";
-    appendChildren(button, [spanText])
+  var spanText = createElement("span", { class: "font-weight-bold" });
+  spanText.innerHTML = "Join";
+  appendChildren(button, [spanText]);
 
-    appendChildren(div, [divWrap, button])
+  appendChildren(div, [divWrap, button]);
 
+  document.getElementById("availableRooms").append(div);
 
-    document.getElementById("availableRooms").append(div);
-
-    if (element.parentNode) {
-        element.parentNode.remove();
-    }
+  if (element.parentNode) {
+    element.parentNode.remove();
+  }
 }
 
 function createElement(element, attributes) {
-    var newElement = document.createElement(element);
+  var newElement = document.createElement(element);
 
-    for (key in attributes) {
-        newElement.setAttribute(key, attributes[key])
-    }
+  for (let key in attributes) {
+    newElement.setAttribute(key, attributes[key]);
+  }
 
-    return newElement;
+  return newElement;
 }
 
 function appendChildren(parent, children) {
-    for (child in children) {
-        parent.appendChild(children[child]);
-    }
+  for (let child in children) {
+    parent.appendChild(children[child]);
+  }
 }
