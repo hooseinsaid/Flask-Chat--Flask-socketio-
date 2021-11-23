@@ -11,4 +11,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD [ "python", "run.py", "runserver" ]
+# CMD [ "python", "run.py", "runserver" ]

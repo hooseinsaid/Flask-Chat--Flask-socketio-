@@ -7,6 +7,7 @@ services:
     image: flask-chat-image
     volumes:
       - .:/flask-chat
+    command: gunicorn --bind 0.0.0.0:5000 --worker-class eventlet -w 1 run:app runserver
     ports:
       - 5000:5000
     environment:
