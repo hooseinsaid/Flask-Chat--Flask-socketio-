@@ -1,1 +1,1 @@
-web: gunicorn --worker-class eventlet -w 1 run:app runserver
+web: gunicorn -c ./gunicorn.conf.py run:app runserver
