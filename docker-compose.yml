@@ -15,8 +15,7 @@ services:
     depends_on:
       - db
   db:
-    container_name: db
-    image: postgres:latest
+    image: postgres:14.0-alpine
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
