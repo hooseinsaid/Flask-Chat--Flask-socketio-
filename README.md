@@ -1,15 +1,23 @@
 # Flask-Chat--Flask-socketio-
 
-## Two ways to get started:
+## Getting started quickly
+Clone this repository and rename the `.env.example` in the root of the project to `.env`
 
-## 1. Running on local machine
-- Clone this repo
-- `pip install -r requirements.txt` to install all req'd dependencies
-- `python run.py runserver` to get the server initialized for eventlet
+Install requirements with the `requirements.txt` file
+```
+$ pip install -r requirements.txt
+```
 
-## 2. Running with Docker and Docker Compose
-- Clone this repo
-- run `docker-compose up` from the root folder
+## Running on local machine
+to get the server initialized for eventlet run
+```
+$ python run.py runserver
+```
+## Running with Docker and Docker Compose
+from the root folder run
+```
+docker-compose up
+```
 
 ## Heroku
 There's a deployment on Heroku currently at: https://flask-chatrrr.herokuapp.com/
