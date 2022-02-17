@@ -18,5 +18,5 @@ max_line_length = 119
 [Makefile]
 indent_style = tab
 
-[*.{yml,yaml}]
+[*.{yml,yaml,css,js}]
 indent_size = 2
